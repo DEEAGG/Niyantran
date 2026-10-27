@@ -215,24 +215,155 @@ CREATE INDEX IF NOT EXISTS idx_reg_clauses_page ON regulatory_clauses(source_id,
 CREATE INDEX IF NOT EXISTS idx_reg_sources_status ON regulatory_sources(processing_status, verification_status);
 """
 
+
+def is_postgres() -> bool:
+    """Returns True if DATABASE_URL is configured for a PostgreSQL connection."""
+    url = os.getenv("DATABASE_URL", "").strip().lower()
+    return url.startswith("postgres://") or url.startswith("postgresql://")
+
+
+class PostgresRow(dict):
+    """Provides dual key and integer-index access matching sqlite3.Row behavior."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._keys = list(self.keys())
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return super().__getitem__(self._keys[item])
+        return super().__getitem__(item)
+
+
+class PostgresCursorWrapper:
+    """Wraps a psycopg cursor translating SQLite ? parameter syntax and PRAGMAs."""
+    def __init__(self, raw_cursor):
+        self.raw_cursor = raw_cursor
+        self.lastrowid = None
+
+    def _translate_query(self, sql: str) -> str:
+        trimmed = sql.strip()
+        # PRAGMA statements are SQLite-specific no-ops in PostgreSQL
+        if trimmed.upper().startswith("PRAGMA"):
+            return ""
+        # Convert SQLite ? parameter placeholders to PostgreSQL %s
+        return trimmed.replace("?", "%s")
+
+    def execute(self, sql: str, params=None):
+        translated = self._translate_query(sql)
+        if not translated:
+            return self
+
+        # Emulate SQLite lastrowid pattern for audit_log insertion
+        is_audit_insert = "INSERT INTO audit_log" in translated and "RETURNING" not in translated.upper()
+        if is_audit_insert:
+            translated += " RETURNING id"
+
+        if params is not None:
+            self.raw_cursor.execute(translated, tuple(params))
+        else:
+            self.raw_cursor.execute(translated)
+
+        if is_audit_insert:
+            row = self.raw_cursor.fetchone()
+            if row:
+                self.lastrowid = row[0] if isinstance(row, (tuple, list)) else row.get("id")
+
+        return self
+
+    def executemany(self, sql: str, params_seq):
+        translated = self._translate_query(sql)
+        if not translated:
+            return self
+        self.raw_cursor.executemany(translated, [tuple(p) for p in params_seq])
+        return self
+
+    def fetchone(self):
+        if not self.raw_cursor.description:
+            return None
+        row = self.raw_cursor.fetchone()
+        if row is None:
+            return None
+        colnames = [desc[0] for desc in self.raw_cursor.description]
+        return PostgresRow({colnames[i]: row[i] for i in range(len(colnames))})
+
+    def fetchall(self):
+        if not self.raw_cursor.description:
+            return []
+        rows = self.raw_cursor.fetchall()
+        colnames = [desc[0] for desc in self.raw_cursor.description]
+        return [PostgresRow({colnames[i]: r[i] for i in range(len(colnames))}) for r in rows]
+
+    def __iter__(self):
+        return iter(self.fetchall())
+
+
+class PostgresConnectionWrapper:
+    """Wraps psycopg connection providing sqlite3-compatible interface and execute methods."""
+    def __init__(self, raw_conn):
+        self.raw_conn = raw_conn
+        self.row_factory = None
+
+    def execute(self, sql: str, params=None):
+        cursor = PostgresCursorWrapper(self.raw_conn.cursor())
+        return cursor.execute(sql, params)
+
+    def executemany(self, sql: str, params_seq):
+        cursor = PostgresCursorWrapper(self.raw_conn.cursor())
+        return cursor.executemany(sql, params_seq)
+
+    def executescript(self, sql: str):
+        with self.raw_conn.cursor() as cur:
+            cur.execute(sql)
+        return self
+
+    def commit(self):
+        self.raw_conn.commit()
+
+    def rollback(self):
+        self.raw_conn.rollback()
+
+    def close(self):
+        self.raw_conn.close()
+
+
 @contextmanager
 def get_connection(db_path: Optional[Path] = None):
- target = db_path if db_path is not None else get_db_path()
- conn = sqlite3.connect(target)
- conn.row_factory = sqlite3.Row
- conn.execute("PRAGMA foreign_keys = ON")
- try:
-  yield conn
-  conn.commit()
- except Exception:
-  conn.rollback()
-  raise
- finally:
-  conn.close()
+    if is_postgres() and db_path is None:
+        import psycopg
+        db_url = os.getenv("DATABASE_URL", "").strip()
+        if db_url.startswith("postgres://"):
+            db_url = "postgresql://" + db_url[len("postgres://"):]
+        raw_conn = psycopg.connect(db_url)
+        conn = PostgresConnectionWrapper(raw_conn)
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+    else:
+        target = db_path if db_path is not None else get_db_path()
+        conn = sqlite3.connect(target)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
-def migrate_schema(conn: sqlite3.Connection):
+
+def migrate_schema(conn):
     """Safely apply incremental schema migrations without data loss."""
-    cols = [r[1] for r in conn.execute("PRAGMA table_info(applications)").fetchall()]
+    if is_postgres():
+        cols = [r[0] for r in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'applications'").fetchall()]
+    else:
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(applications)").fetchall()]
     if "user_id" not in cols:
         conn.execute("ALTER TABLE applications ADD COLUMN user_id TEXT")
     if "institution_id" not in cols:
@@ -296,6 +427,19 @@ def seed_default_users(conn: sqlite3.Connection):
     conn.commit()
 
 def init_db(db_path: Optional[Path] = None):
+    if is_postgres() and db_path is None:
+        schema_path = BASE_DIR / "scripts" / "schema_postgres.sql"
+        if schema_path.exists():
+            with open(schema_path, "r", encoding="utf-8") as f:
+                schema_sql = f.read()
+        else:
+            schema_sql = SCHEMA
+        with get_connection() as conn:
+            conn.executescript(schema_sql)
+            conn.commit()
+            migrate_schema(conn)
+            seed_default_users(conn)
+        return "postgresql"
     target = db_path if db_path is not None else get_db_path()
     with get_connection(target) as conn:
         conn.executescript(SCHEMA)
