@@ -112,8 +112,7 @@ def run_dry_run(items: List[Dict[str, Any]]):
     if supabase_ready:
         print(f"Target Bucket      : {cfg['bucket']}")
         print(f"Project URL        : {cfg['url']}")
-        masked_key = f"{cfg['key'][:8]}...{cfg['key'][-4:]}" if len(cfg['key']) > 12 else "***"
-        print(f"Service Role Key   : {masked_key}")
+        print("Service Role Key   : [CONFIGURED / HIDDEN]")
     else:
         print("Missing Env Vars   : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY")
     print("----------------------------------------------------------------")
