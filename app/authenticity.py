@@ -10,6 +10,7 @@ from PIL import Image
 import pymupdf as fitz
 
 from app.db import DOCUMENTS_DIR, add_audit_entry
+from app.storage import get_file_path
 
 SUSPICIOUS_PRODUCERS = [
     "ilovepdf",
@@ -228,8 +229,7 @@ def evaluate_document_authenticity(conn, document_id: str) -> List[Dict[str, Any
     if not doc:
         raise ValueError(f"Document {document_id} not found")
 
-    filename = Path(doc["stored_path"]).name
-    file_path = DOCUMENTS_DIR / filename
+    file_path = get_file_path(doc["stored_path"])
     expected_sha256 = doc["sha256"]
     application_id = doc["application_id"]
 

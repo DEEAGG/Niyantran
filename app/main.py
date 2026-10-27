@@ -23,6 +23,7 @@ from app.db import (
     DOCUMENTS_DIR,
     REGULATORY_SOURCES_DIR,
 )
+from app.storage import save_file, get_file_path
 from app.regulatory_ingestion import (
     ingest_regulatory_pdf,
     update_clause_verification,
@@ -785,14 +786,13 @@ async def upload_document(
     file_size = len(content)
     sha256_hash = hashlib.sha256(content).hexdigest()
 
-    # Dedicated local storage outside source-code directory with UUID filename
+    # Dedicated storage outside source-code directory with UUID filename
     storage_uuid = uuid.uuid4().hex
     stored_filename = f"{storage_uuid}{ext}"
-    stored_file_path = DOCUMENTS_DIR / stored_filename
     relative_stored_path = f"documents/{stored_filename}"
 
-    # Write file safely
-    stored_file_path.write_bytes(content)
+    # Write file safely using unified storage adapter (local + R2)
+    stored_file_path = save_file(relative_stored_path, content, mime_type=mime_type)
 
     doc_id = f"DOC-{uuid.uuid4().hex[:12].upper()}"
     uploaded_at = datetime.now(timezone.utc).isoformat()
@@ -1061,9 +1061,9 @@ def extract_stored_document(document_id: str, current_user: Dict[str, Any] = Dep
     with get_connection() as conn:
         doc = check_document_access(conn, document_id, current_user)
 
-        filename = Path(doc["stored_path"]).name
-        file_path = DOCUMENTS_DIR / filename
+        file_path = get_file_path(doc["stored_path"])
         if not file_path.exists():
+            filename = Path(doc["stored_path"]).name
             raise HTTPException(status_code=400, detail=f"Document file missing from storage: {filename}")
 
         next_run_row = conn.execute(
@@ -2419,8 +2419,7 @@ def get_document_page_image(
     with get_connection() as conn:
         doc = check_document_access(conn, document_id, current_user)
 
-        filename = Path(doc["stored_path"]).name
-        file_path = DOCUMENTS_DIR / filename
+        file_path = get_file_path(doc["stored_path"])
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="Physical document file not found")
 
@@ -3565,7 +3564,7 @@ def get_regulatory_source_page_image(source_id: str, page_number: int):
         if not source:
             raise HTTPException(status_code=404, detail="Regulatory source not found")
 
-        file_path = Path(source["stored_path"])
+        file_path = get_file_path(source["stored_path"])
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="Stored PDF file not found on disk")
 
