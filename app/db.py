@@ -68,6 +68,7 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE TABLE IF NOT EXISTS applications (
  id TEXT PRIMARY KEY, application_type TEXT NOT NULL, applicant_name TEXT,
  institution_name TEXT, status TEXT NOT NULL DEFAULT 'draft',
+ user_id TEXT, institution_id TEXT,
  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS documents (

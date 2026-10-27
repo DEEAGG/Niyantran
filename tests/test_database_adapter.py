@@ -214,4 +214,31 @@ def test_turso_smoke_test_live():
         client.close()
 
 
+def test_sqlite_to_turso_migration_topological_sort():
+    """Verify that get_sqlite_tables_and_deps correctly resolves all 20 tables in foreign-key order."""
+    import sqlite3
+    from scripts.migrate_sqlite_to_turso import get_sqlite_tables_and_deps
+    from app.db import get_db_path
+
+    conn = sqlite3.connect(f"file:{get_db_path().resolve()}?mode=ro", uri=True)
+    try:
+        order, deps, cols = get_sqlite_tables_and_deps(conn)
+        assert len(order) == 20
+        # Assert parent tables precede dependent children
+        assert order.index("applications") < order.index("documents")
+        assert order.index("documents") < order.index("extraction_runs")
+        assert order.index("extraction_runs") < order.index("extracted_fields")
+        assert order.index("regulatory_sources") < order.index("regulatory_clauses")
+        assert order.index("rules") < order.index("rule_sources")
+        assert order.index("rules") < order.index("ruleset_rules")
+        assert order.index("rulesets") < order.index("validation_runs")
+        assert order.index("validation_runs") < order.index("findings")
+        assert order.index("findings") < order.index("decisions")
+        assert "audit_log" in order
+        assert "users" in order
+    finally:
+        conn.close()
+
+
+
 
