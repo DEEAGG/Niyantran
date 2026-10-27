@@ -9,6 +9,7 @@ import {
   SlidersHorizontal,
   ChevronRight
 } from 'lucide-react';
+import { USE_MOCK_API } from '@/services/apiClient';
 
 const routeTitles = {
   dashboard: 'Regulatory Dashboard',
@@ -27,7 +28,7 @@ const routeTitles = {
 export default function Header({ onMenuClick, isCollapsed }) {
   const location = useLocation();
   const [currentDate, setCurrentDate] = useState('');
-  const isMock = import.meta.env.VITE_USE_MOCK_API !== 'false';
+  const isMock = USE_MOCK_API;
 
   useEffect(() => {
     const now = new Date();

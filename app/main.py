@@ -45,6 +45,7 @@ from app.auth import (
     verify_reviewer_permission,
     require_role,
     require_permission,
+    IS_PRODUCTION,
 )
 
 
@@ -103,15 +104,21 @@ class ApplicationCreate(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    
+    # In production or serverless environments, skip synthetic demo data seeding to prevent cold-start latency
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    should_seed_demo = not IS_PRODUCTION and not is_serverless and not os.getenv("SKIP_DEMO_SEEDING")
+
     with get_connection() as conn:
         seed_initial_regulatory_sources_if_empty(conn)
-        app_count = conn.execute("SELECT COUNT(*) as cnt FROM applications").fetchone()["cnt"]
-        if app_count == 0:
-            try:
-                from scripts.seed_demo_applications import seed
-                seed()
-            except Exception as exc:
-                print(f"[Lifespan] Note: initial demo seed: {exc}")
+        if should_seed_demo:
+            app_count = conn.execute("SELECT COUNT(*) as cnt FROM applications").fetchone()["cnt"]
+            if app_count == 0:
+                try:
+                    from scripts.seed_demo_applications import seed
+                    seed()
+                except Exception as exc:
+                    print(f"[Lifespan] Note: initial demo seed: {exc}")
     yield
 
 
@@ -917,6 +924,7 @@ async def extract_document(file: UploadFile = File(...)):
         if filename.endswith(".pdf"):
             pdf = fitz.open(stream=content, filetype="pdf")
             pages = []
+            ocr_errors = []
             try:
                 for number, page in enumerate(pdf, start=1):
                     text = page.get_text().strip()
@@ -927,12 +935,20 @@ async def extract_document(file: UploadFile = File(...)):
                             image = Image.open(io.BytesIO(pix.tobytes("png")))
                             text = pytesseract.image_to_string(image).strip()
                             method = "Tesseract OCR"
-                        except Exception:
-                            # OCR engine not installed or unavailable in serverless runtime
-                            pass
+                        except Exception as ocr_err:
+                            ocr_errors.append(f"Page {number}: OCR unavailable ({ocr_err})")
+                            method = "OCR Unavailable"
                     pages.append({"page": number, "method": method, "text": text})
             finally:
                 pdf.close()
+
+            # If all pages required OCR and OCR failed completely (zero extracted text):
+            total_text = "".join(p["text"] for p in pages).strip()
+            if not total_text and ocr_errors:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Scanned PDF extraction failed: OCR engine (Tesseract) is unavailable on this system. Details: {'; '.join(ocr_errors)}"
+                )
             return {
                 "filename": file.filename,
                 "pages_processed": len(pages),
@@ -1067,17 +1083,18 @@ def extract_stored_document(document_id: str, current_user: Dict[str, Any] = Dep
                 INSERT INTO extraction_runs (id, document_id, run_number, method, status, started_at, completed_at, error_message)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (run_id, document_id, run_number, "unknown", "failed", now_start, now_err, str(exc)),
+                (run_id, document_id, run_number, "tesseract_ocr", "failed", now_start, now_err, str(exc)),
             )
             raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}")
 
         now_end = datetime.now(timezone.utc).isoformat()
+        warning_msg = extraction_result.get("warning_message")
         conn.execute(
             """
             INSERT INTO extraction_runs (id, document_id, run_number, method, status, started_at, completed_at, error_message)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (run_id, document_id, run_number, extraction_result["method"], "completed", now_start, now_end, None),
+            (run_id, document_id, run_number, extraction_result["method"], "completed", now_start, now_end, warning_msg),
         )
 
         extracted_field_records = []

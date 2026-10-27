@@ -254,3 +254,74 @@ def test_cryptographic_audit_ledger_integrity():
         chain_res = verify_audit_chain(conn)
         assert chain_res["verified"] is True
         assert chain_res["total_records"] > 1000
+
+
+def test_production_jwt_secret_required():
+    """Validates that production mode fails safely with RuntimeError if JWT_SECRET_KEY is missing or placeholder."""
+    orig_env = os.environ.get("NIYANTRAN_ENV")
+    orig_key = os.environ.get("JWT_SECRET_KEY")
+    try:
+        os.environ["NIYANTRAN_ENV"] = "production"
+        if "JWT_SECRET_KEY" in os.environ:
+            del os.environ["JWT_SECRET_KEY"]
+
+        with pytest.raises(RuntimeError, match="JWT_SECRET_KEY environment variable is required in production mode"):
+            import importlib
+            importlib.reload(auth_module)
+    finally:
+        if orig_env is not None:
+            os.environ["NIYANTRAN_ENV"] = orig_env
+        else:
+            os.environ.pop("NIYANTRAN_ENV", None)
+        if orig_key is not None:
+            os.environ["JWT_SECRET_KEY"] = orig_key
+        else:
+            os.environ.pop("JWT_SECRET_KEY", None)
+        import importlib
+        importlib.reload(auth_module)
+
+
+def test_scanned_pdf_ocr_failure_reported_explicitly(monkeypatch, tmp_path):
+    """
+    Validates that if a scanned PDF (no digital text) undergoes extraction when
+    the OCR engine (Tesseract) is unavailable, an explicit failure is raised
+    and never reported as a successful extraction with 0 fields.
+    """
+    from app.extractor import extract_document_fields
+
+    scanned_pdf_path = tmp_path / "scanned_doc.pdf"
+    doc = fitz.open()
+    doc.new_page(width=595, height=842)
+    doc.save(str(scanned_pdf_path))
+    doc.close()
+
+    def mock_extract_from_image(img, page_num=1):
+        raise RuntimeError("Tesseract binary not found in PATH")
+
+    monkeypatch.setattr("app.extractor.extract_from_image", mock_extract_from_image)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        extract_document_fields(scanned_pdf_path)
+
+    assert "OCR engine (Tesseract) is unavailable" in str(exc_info.value)
+
+
+def test_direct_extract_scanned_pdf_ocr_unavailable(monkeypatch):
+    """Verifies that POST /api/documents/extract returns HTTP 503 when a scanned PDF requires OCR but Tesseract fails."""
+    doc = fitz.open()
+    doc.new_page(width=595, height=842)
+    pdf_bytes = doc.tobytes()
+    doc.close()
+
+    def mock_ocr(image):
+        raise RuntimeError("tesseract binary missing")
+
+    monkeypatch.setattr("pytesseract.image_to_string", mock_ocr)
+
+    res = client.post(
+        "/api/documents/extract",
+        files={"file": ("scanned_blank.pdf", pdf_bytes, "application/pdf")},
+    )
+    assert res.status_code == 503
+    assert "OCR engine (Tesseract) is unavailable" in res.json()["detail"]
+

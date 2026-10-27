@@ -28,18 +28,20 @@ from pydantic import BaseModel, Field
 NIYANTRAN_ENV = os.getenv("NIYANTRAN_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
 IS_PRODUCTION = NIYANTRAN_ENV == "production"
 
-# In production, ALLOW_DEV_HEADERS defaults to False; in development, defaults to True
-ALLOW_DEV_HEADERS = os.getenv(
-    "ALLOW_DEV_HEADERS",
-    "false" if IS_PRODUCTION else "true"
-).strip().lower() in ("true", "1", "yes")
+# In production, ALLOW_DEV_HEADERS is strictly False; in development, defaults to True unless disabled
+if IS_PRODUCTION:
+    ALLOW_DEV_HEADERS = False
+else:
+    ALLOW_DEV_HEADERS = os.getenv("ALLOW_DEV_HEADERS", "true").strip().lower() in ("true", "1", "yes")
 
 # Secret key resolution (no hardcoded secrets in source)
 _env_secret = os.getenv("JWT_SECRET_KEY")
-if not _env_secret:
+if not _env_secret or _env_secret.strip() == "change_this_to_a_secure_random_string_in_production":
     if IS_PRODUCTION:
-        # Generate an ephemeral secret but log critical warning
-        _env_secret = secrets.token_hex(32)
+        raise RuntimeError(
+            "CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET_KEY environment variable is required in production mode. "
+            "Ephemeral or placeholder secrets must not be generated in production as they cause session desynchronization across serverless cold starts."
+        )
     else:
         # Development fallback ephemeral secret
         _env_secret = "dev-secret-" + secrets.token_hex(16)

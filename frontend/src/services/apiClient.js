@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-export const USE_MOCK_API = false;
+
+// Safe production default: mock mode is strictly disabled unless explicitly enabled via VITE_USE_MOCK_API='true'
+export const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true';
 
 // Production Axios client for FastAPI backend integration
 export const apiClient = axios.create({

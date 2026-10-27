@@ -405,7 +405,7 @@ def extract_fields_from_text(
     return extracted
 
 
-def extract_from_pdf_page(page, page_num: int) -> Tuple[List[Dict[str, Any]], str]:
+def extract_from_pdf_page(page, page_num: int) -> Tuple[List[Dict[str, Any]], str, Optional[str]]:
     text = page.get_text().strip()
     if len(text) >= 20:
         method = "pdf_text"
@@ -431,12 +431,15 @@ def extract_from_pdf_page(page, page_num: int) -> Tuple[List[Dict[str, Any]], st
                     }
             f["bbox"] = bbox
             f["bbox_json"] = json.dumps(bbox) if bbox else None
-        return fields, method
+        return fields, method, None
     else:
         pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
         img = Image.open(io.BytesIO(pix.tobytes("png")))
-        fields, method = extract_from_image(img, page_num=page_num)
-        return fields, method
+        try:
+            fields, method = extract_from_image(img, page_num=page_num)
+            return fields, method, None
+        except Exception as ocr_err:
+            return [], "ocr_unavailable", f"Page {page_num}: OCR engine unavailable ({ocr_err})"
 
 
 def extract_from_image(image: Image.Image, page_num: int = 1) -> Tuple[List[Dict[str, Any]], str]:
@@ -455,8 +458,8 @@ def extract_from_image(image: Image.Image, page_num: int = 1) -> Tuple[List[Dict
         text = " ".join(words_list)
         if not text:
             text = pytesseract.image_to_string(processed_img).strip()
-    except Exception:
-        return [], method
+    except Exception as exc:
+        raise RuntimeError(f"OCR engine (Tesseract) execution failed or binary is missing: {exc}") from exc
 
     valid_confs = [float(c) for c in ocr_data.get("conf", []) if float(c) > 0]
     avg_conf = (sum(valid_confs) / len(valid_confs)) if valid_confs else 75.0
@@ -535,9 +538,12 @@ def extract_document_fields(file_path: Path, mime_type: Optional[str] = None) ->
 
             # 2. Extract fields for regulatory documents
             max_pages = min(total_pages, 25)
+            ocr_warnings = []
             for page_idx in range(1, max_pages + 1):
                 page = doc[page_idx - 1]
-                page_fields, page_method = extract_from_pdf_page(page, page_num=page_idx)
+                page_fields, page_method, page_warn = extract_from_pdf_page(page, page_num=page_idx)
+                if page_warn:
+                    ocr_warnings.append(page_warn)
                 methods_used.add(page_method)
                 for f in page_fields:
                     existing = next((ef for ef in all_fields if ef["field_name"] == f["field_name"]), None)
@@ -549,13 +555,25 @@ def extract_document_fields(file_path: Path, mime_type: Optional[str] = None) ->
 
                 if len(all_fields) >= len(FIELD_NAMES) and all(f["confidence"] >= 0.85 for f in all_fields):
                     break
+
+            # If all pages required OCR and OCR failed (zero fields extracted due to missing/failing OCR)
+            if len(all_fields) == 0 and ocr_warnings:
+                raise RuntimeError(
+                    f"Scanned PDF extraction failed: OCR engine (Tesseract) is unavailable on this system. "
+                    f"Details: {'; '.join(ocr_warnings)}"
+                )
         finally:
             doc.close()
     else:  # Image (.png, .jpg, .jpeg)
         img = Image.open(file_path)
-        img_fields, img_method = extract_from_image(img, page_num=1)
-        methods_used.add(img_method)
-        all_fields.extend(img_fields)
+        try:
+            img_fields, img_method = extract_from_image(img, page_num=1)
+            methods_used.add(img_method)
+            all_fields.extend(img_fields)
+        except Exception as ocr_err:
+            raise RuntimeError(
+                f"Scanned image extraction failed: OCR engine (Tesseract) is unavailable. Details: {ocr_err}"
+            ) from ocr_err
         classification = {
             "is_regulatory": True,
             "document_type": "scanned_image",
@@ -570,6 +588,8 @@ def extract_document_fields(file_path: Path, mime_type: Optional[str] = None) ->
         "document_type_display": classification.get("document_type_display"),
         "is_regulatory_document": classification.get("is_regulatory", True),
         "fields": all_fields,
+        "warning_message": "; ".join(ocr_warnings) if 'ocr_warnings' in locals() and ocr_warnings else None,
+        "ocr_warnings": ocr_warnings if 'ocr_warnings' in locals() else [],
     }
 
 
