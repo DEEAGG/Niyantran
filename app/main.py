@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, status, Response, Request, Depends, Header\nfrom fastapi.responses import FileResponse\nfrom fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, status, Response, Request, Depends, Header
+from fastapi.responses import FileResponse\nfrom fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from PIL import Image, ImageDraw
@@ -153,9 +154,25 @@ async def favicon():
 app.include_router(auth_router)
 
 
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+FRONTEND_INDEX = FRONTEND_DIST / "index.html"
+FRONTEND_ASSETS = FRONTEND_DIST / "assets"
+if FRONTEND_ASSETS.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="frontend-assets")
+
+
 @app.get("/")
 def home():
+    if FRONTEND_INDEX.is_file():
+        return FileResponse(str(FRONTEND_INDEX))
     return {"project": "Niyantran", "status": "running"}
+
+
+@app.get("/index.html", include_in_schema=False)
+def frontend_index():
+    if FRONTEND_INDEX.is_file():
+        return FileResponse(str(FRONTEND_INDEX))
+    raise HTTPException(status_code=404, detail="Frontend build not found")
 
 
 @app.get("/api/health")
@@ -3588,4 +3605,13 @@ def get_regulatory_source_page_image(source_id: str, page_number: int):
 
 
 
-\n\n# Serve React Router client-side routes after all API routes have been registered.\n@app.get("/{full_path:path}", include_in_schema=False)\ndef spa_fallback(full_path: str):\n    if full_path == "api" or full_path.startswith("api/"):\n        raise HTTPException(status_code=404, detail="Not Found")\n    if FRONTEND_INDEX.is_file():\n        return FileResponse(str(FRONTEND_INDEX))\n    raise HTTPException(status_code=404, detail="Not Found")\n
+
+
+# Serve React Router client-side routes after all API routes have been registered.
+@app.get("/{full_path:path}", include_in_schema=False)
+def spa_fallback(full_path: str):
+    if full_path == "api" or full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not Found")
+    if FRONTEND_INDEX.is_file():
+        return FileResponse(str(FRONTEND_INDEX))
+    raise HTTPException(status_code=404, detail="Not Found")
