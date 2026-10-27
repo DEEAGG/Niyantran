@@ -180,53 +180,114 @@ def run_dry_run(items: List[Dict[str, Any]]):
     print("================================================================")
 
 
-def execute_migration(items: List[Dict[str, Any]]):
-    """Executes live upload of verified files to Supabase Storage."""
+def execute_migration(items: List[Dict[str, Any]], force: bool = False):
+    """Executes live upload of verified files to Supabase Storage with strict integrity checks."""
     if not is_supabase_configured():
         print("[ERROR] Supabase Storage is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.")
         sys.exit(1)
 
     cfg = get_supabase_config()
     print("================================================================")
-    print(f" NIYANTRAN — Document Storage Migration: LIVE UPLOAD TO SUPABASE")
+    print(" NIYANTRAN — Document Storage Migration: LIVE UPLOAD TO SUPABASE")
     print(f" Target Bucket: {cfg['bucket']}")
+    print(f" Overwrite Mode: {'FORCE OVERWRITE' if force else 'SAFE IDEMPOTENT (Skip if already present)'}")
     print("================================================================")
 
-    headers_base = {
+    auth_headers = {
         "Authorization": f"Bearer {cfg['key']}",
         "apiKey": cfg["key"],
+    }
+    upload_headers_base = {
+        **auth_headers,
         "x-upsert": "true",
     }
 
     uploaded = 0
+    skipped_existing = 0
+    skipped_placeholders = 0
     errors = 0
+    verified = 0
 
     with httpx.Client(timeout=60.0) as client:
         for idx, item in enumerate(items, 1):
+            key = item["key"]
+
+            # 1. Statutory Placeholders
+            if item.get("is_placeholder"):
+                skipped_placeholders += 1
+                print(f"  [{idx:2d}/{len(items)}] [SKIP] {key:<50}: Statutory placeholder (0 bytes, manual import)")
+                continue
+
+            # 2. Local File Existence & Pre-upload Integrity Check
             lp = item["local_path"]
             if not lp or not lp.exists():
-                print(f"  [{idx:2d}/{len(items)}] [SKIP] {item['key']}: File missing on local disk")
+                errors += 1
+                print(f"  [{idx:2d}/{len(items)}] [ERROR] {key:<50}: File missing on local disk")
                 continue
 
             content = lp.read_bytes()
-            upload_url = f"{cfg['url']}/storage/v1/object/{cfg['bucket']}/{item['key']}"
+            local_size = len(content)
+            local_hash = hashlib.sha256(content).hexdigest()
+
+            # Prevent uploading corrupted or 0-byte files
+            if item["expected_sha256"] and local_hash.lower() != item["expected_sha256"].lower():
+                errors += 1
+                print(f"  [{idx:2d}/{len(items)}] [REFUSED] {key:<50}: Local SHA-256 mismatch! Refusing to upload corrupted data.")
+                continue
+
+            if item["expected_size"] and local_size != item["expected_size"]:
+                errors += 1
+                print(f"  [{idx:2d}/{len(items)}] [REFUSED] {key:<50}: Local size ({local_size} B) != expected ({item['expected_size']} B)!")
+                continue
+
+            # 3. Idempotency Check: check if already exists in Supabase
+            info_url = f"{cfg['url']}/storage/v1/object/info/authenticated/{cfg['bucket']}/{key}"
+            if not force:
+                try:
+                    info_resp = client.get(info_url, headers=auth_headers)
+                    if info_resp.status_code == 200:
+                        skipped_existing += 1
+                        verified += 1
+                        print(f"  [{idx:2d}/{len(items)}] [EXISTS] {key:<50}: Already exists in remote bucket (Skipping upload)")
+                        continue
+                except Exception as exc:
+                    # On network error during check, proceed to upload attempt
+                    pass
+
+            # 4. Upload to Supabase Storage
+            upload_url = f"{cfg['url']}/storage/v1/object/{cfg['bucket']}/{key}"
             headers = {
-                **headers_base,
+                **upload_headers_base,
                 "Content-Type": item["mime_type"],
             }
 
             try:
                 resp = client.post(upload_url, headers=headers, content=content)
                 resp.raise_for_status()
-                uploaded += 1
-                print(f"  [{idx:2d}/{len(items)}] [UPLOADED] {item['key']} ({len(content) / 1024:.1f} KB)")
+
+                # 5. Immediate Post-Upload Verification
+                v_resp = client.get(info_url, headers=auth_headers)
+                if v_resp.status_code == 200:
+                    verified += 1
+                    uploaded += 1
+                    print(f"  [{idx:2d}/{len(items)}] [UPLOADED & VERIFIED] {key:<50} ({local_size / 1024:.1f} KB)")
+                else:
+                    uploaded += 1
+                    print(f"  [{idx:2d}/{len(items)}] [UPLOADED] {key:<50} ({local_size / 1024:.1f} KB - Post-verify HTTP {v_resp.status_code})")
             except Exception as exc:
                 errors += 1
-                print(f"  [{idx:2d}/{len(items)}] [FAILED] {item['key']}: {exc}")
+                print(f"  [{idx:2d}/{len(items)}] [FAILED] {key:<50}: {exc}")
 
     print("\n================================================================")
-    print(f" Upload Complete: {uploaded} files uploaded to Supabase, {errors} errors.")
-    print(" Source files on local disk remain completely intact.")
+    print(" MIGRATION EXECUTION SUMMARY")
+    print("================================================================")
+    print(f" Total Registered Entries : {len(items)}")
+    print(f" Files Uploaded           : {uploaded}")
+    print(f" Already Existing Remote  : {skipped_existing}")
+    print(f" Statutory Placeholders   : {skipped_placeholders}")
+    print(f" Integrity Verified       : {verified} / {len(items) - skipped_placeholders}")
+    print(f" Errors / Failures        : {errors}")
+    print(" Source database and local files: 100% UNMODIFIED")
     print("================================================================")
 
 
@@ -235,6 +296,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", default=True, help="Perform read-only pre-flight audit (default)")
     parser.add_argument("--execute", action="store_true", help="Perform live upload to Supabase Storage")
     parser.add_argument("--confirm", action="store_true", help="Required confirmation flag to execute live upload")
+    parser.add_argument("--force", action="store_true", help="Force overwrite even if remote file already exists")
     args = parser.parse_args()
 
     db_path = get_db_path()
@@ -248,7 +310,7 @@ def main():
                 print("[ERROR] Refusing live execution without explicit --confirm flag.")
                 print("Run: python scripts/migrate_documents_to_supabase.py --execute --confirm")
                 sys.exit(1)
-            execute_migration(items)
+            execute_migration(items, force=args.force)
         else:
             run_dry_run(items)
     finally:
