@@ -325,3 +325,33 @@ def test_direct_extract_scanned_pdf_ocr_unavailable(monkeypatch):
     assert res.status_code == 503
     assert "OCR engine (Tesseract) is unavailable" in res.json()["detail"]
 
+
+def test_vercel_configuration_routing():
+    """Validates that vercel.json rewrites both /api and /api/* to api/index.py and SPA to index.html."""
+    import json
+    from pathlib import Path
+
+    vercel_path = Path(__file__).resolve().parent.parent / "vercel.json"
+    assert vercel_path.exists(), "vercel.json must exist in project root"
+
+    with open(vercel_path, "r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    assert config.get("version") == 2
+    assert "buildCommand" in config
+    assert config.get("outputDirectory") == "frontend/dist"
+
+    rewrites = config.get("rewrites", [])
+    rewrite_map = {r["source"]: r["destination"] for r in rewrites}
+
+    assert rewrite_map.get("/api") == "/api/index.py", "/api must rewrite to /api/index.py"
+    assert rewrite_map.get("/api/(.*)") == "/api/index.py", "/api/(.*) must rewrite to /api/index.py"
+    assert rewrite_map.get("/(.*)") == "/index.html", "/(.*) must rewrite to /index.html"
+
+    # Verify serverless entrypoint exists and exports app
+    api_entry = Path(__file__).resolve().parent.parent / "api" / "index.py"
+    assert api_entry.exists(), "api/index.py must exist"
+    from api.index import app as vercel_app
+    assert vercel_app is not None
+
+
