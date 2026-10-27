@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, status, Response, Request, Depends, Header
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
@@ -166,6 +166,8 @@ if FRONTEND_ASSETS.is_dir():
 def home():
     if FRONTEND_INDEX.is_file():
         return FileResponse(str(FRONTEND_INDEX))
+    if os.getenv("VERCEL"):
+        return RedirectResponse(url="https://niyantran-web.vercel.app/", status_code=307)
     return {"project": "Niyantran", "status": "running"}
 
 
