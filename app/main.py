@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, status, Response, Request, Depends, Header
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, status, Response, Request, Depends, Header\nfrom fastapi.responses import FileResponse\nfrom fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from PIL import Image, ImageDraw
@@ -3588,3 +3588,4 @@ def get_regulatory_source_page_image(source_id: str, page_number: int):
 
 
 
+\n\n# Serve React Router client-side routes after all API routes have been registered.\n@app.get("/{full_path:path}", include_in_schema=False)\ndef spa_fallback(full_path: str):\n    if full_path == "api" or full_path.startswith("api/"):\n        raise HTTPException(status_code=404, detail="Not Found")\n    if FRONTEND_INDEX.is_file():\n        return FileResponse(str(FRONTEND_INDEX))\n    raise HTTPException(status_code=404, detail="Not Found")\n
