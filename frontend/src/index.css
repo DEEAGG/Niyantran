@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Concept: "Quiet intelligence. Clear decisions." */
+  :root,
+  .theme-ivory,
+  .theme-experimental,
+  .theme-obsidian {
+    --background: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface-elevated: #FFFFFF;
+    --surface-hover: #F2EFE9;
+    --surface-secondary: #EFECE6;
+
+    --text-primary: #171A20;
+    --text-secondary: #696C73;
+    --text-muted: #8E929B;
+
+    --border: #E4E2DC;
+    --border-strong: #D1CEC5;
+    --border-subtle: #ECEAE4;
+
+    /* Primary Identity: Vermilion Red-Orange */
+    --accent: #E43D12;
+    --accent-hover: #CC340E;
+    --accent-foreground: #FFFFFF;
+    --accent-secondary: #FDF1EE;
+    --accent-glow: rgba(228, 61, 18, 0.16);
+
+    /* Brand Graphic Accents: Vermilion, Rose Pink, Golden Yellow */
+    --color-brand-vermilion: #E43D12;
+    --color-brand-vermilion-surface: #FDF1EE;
+    --color-brand-pink: #D6536D;
+    --color-brand-pink-surface: #FCF1F3;
+    --color-brand-yellow: #EFB112;
+    --color-brand-yellow-surface: #FEF9EB;
+
+    --input-background: #FFFFFF;
+    --input-text: #171A20;
+    --popover-background: #FFFFFF;
+    --popover-text: #171A20;
+    --focus-ring: rgba(228, 61, 18, 0.35);
+
+    --status-success: #18794E;
+    --status-success-bg: #EBF6EE;
+    --status-warning: #B45309;
+    --status-warning-bg: #FEF3C7;
+    --status-pending: #D97706;
+    --status-error: #CE2C31;
+    --status-error-bg: #FDF2F2;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* Explicit theme-aware styles for native selects and options to avoid OS whiteout */
+  select,
+  select option {
+    background-color: #FFFFFF !important;
+    color: #171A20 !important;
+  }
+
+  /* Form inputs and textareas */
+  input,
+  textarea {
+    background-color: var(--input-background);
+    color: var(--input-text);
+  }
+}
+
+/* Custom Softer Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+/* Dedicated Solid Opaque Dropdown Menu */
+.dropdown-menu {
+  background-color: #FFFFFF !important;
+  color: #171A20 !important;
+  border: 1px solid #E4E2DC !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04) !important;
+  z-index: 1000 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.dropdown-item {
+  transition: background-color 0.15s ease-in-out;
+  border-radius: 6px;
+  color: #171A20;
+}
+
+.dropdown-item:hover {
+  background-color: #F7F6F2 !important;
+}
+
+/* Primary Action Button Styling */
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(67, 87, 232, 0.2);
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  box-shadow: 0 4px 12px var(--accent-glow);
+}

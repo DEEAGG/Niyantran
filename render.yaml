@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: niyantran-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: standard
+    disk:
+      name: niyantran-data
+      mountPath: /app/data
+      sizeGB: 1
+    healthCheckPath: /api/health
+    envVars:
+      - key: NIYANTRAN_ENV
+        value: production
+      - key: CORS_ORIGINS
+        value: "*"

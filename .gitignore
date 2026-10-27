@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.playwright/
+.playwright-cli/
+
+# Environment and Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Data, Local SQLite & Uploaded Documents (Preserve privacy and prevent repo bloat)
+data/
+*.db
+*.db-journal
+*.db.backup
+
+# Node & Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+node_modules/
+
+# Vercel
+.vercel/
+
+# Temporary / Scratch & Artifacts
+scratch/*.json
+scratch/*.png
+*.png
+!frontend/public/*.png
+!frontend/public/*.svg
