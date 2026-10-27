@@ -45,6 +45,7 @@ from app.db import (
     get_turso_config,
     normalize_turso_url,
     verify_audit_chain,
+    compute_entry_hash,
     SCHEMA,
     TursoConnectionWrapper,
 )
@@ -244,6 +245,50 @@ def run_dry_run(sqlite_path: Path, turso_url: str, turso_token: Optional[str], b
         sqlite_conn.close()
 
 
+def verify_remote_audit_chain(client: libsql_client.ClientSync, expected_count: int, chunk_size: int = 1000) -> Dict[str, any]:
+    """Verifies audit chain in chunks over HTTP to ensure memory and network safety."""
+    prev_hash = "GENESIS"
+    verified_count = 0
+
+    for offset in range(0, expected_count, chunk_size):
+        res = client.execute(
+            f"SELECT id, event_type, actor, entity_type, entity_id, event_json, previous_hash, entry_hash, created_at "
+            f"FROM audit_log ORDER BY id ASC LIMIT {chunk_size} OFFSET {offset}"
+        )
+        for r in res.rows:
+            if r["previous_hash"] != prev_hash:
+                return {
+                    "verified": False,
+                    "error": f"Chain broken at record ID {r['id']}: previous_hash '{r['previous_hash']}' != expected '{prev_hash}'",
+                    "total_records": verified_count,
+                    "failed_record_id": r["id"],
+                }
+            expected_hash = compute_entry_hash(
+                previous_hash=r["previous_hash"],
+                event_type=r["event_type"],
+                actor=r["actor"],
+                entity_type=r["entity_type"],
+                entity_id=r["entity_id"],
+                event_json=r["event_json"],
+                created_at=r["created_at"],
+            )
+            if r["entry_hash"] != expected_hash:
+                return {
+                    "verified": False,
+                    "error": f"Tampered record at ID {r['id']}: entry_hash '{r['entry_hash']}' != expected '{expected_hash}'",
+                    "total_records": verified_count,
+                    "failed_record_id": r["id"],
+                }
+            prev_hash = r["entry_hash"]
+            verified_count += 1
+
+    return {
+        "verified": True,
+        "total_records": verified_count,
+        "latest_hash": prev_hash if verified_count > 0 else "GENESIS",
+    }
+
+
 def execute_migration(sqlite_path: Path, turso_url: str, turso_token: Optional[str], batch_size: int = 150):
     """Executes live migration with safety checks and exact post-migration validation."""
     print("================================================================")
@@ -272,9 +317,11 @@ def execute_migration(sqlite_path: Path, turso_url: str, turso_token: Optional[s
             print("Refusing to overwrite existing data. Clear remote database or verify configuration.")
             sys.exit(1)
 
+        # 0. Source baseline health
+        src_health = verify_source_integrity(sqlite_conn)
+
         # 1. Deploy Schema DDL
         print("\n[PHASE 1] Creating Schema and Indexes on Turso...")
-        # Split SCHEMA into clean statements
         ddl_statements = [s.strip() for s in SCHEMA.split(";") if s.strip()]
         for stmt in ddl_statements:
             turso_client.execute(stmt)
@@ -291,7 +338,6 @@ def execute_migration(sqlite_path: Path, turso_url: str, turso_token: Optional[s
             quoted_cols = ", ".join([f'"{c}"' for c in col_names])
             insert_sql = f'INSERT INTO "{table_name}" ({quoted_cols}) VALUES ({placeholders})'
 
-            # Fetch rows from SQLite in order
             cur = sqlite_conn.cursor()
             order_by = "id ASC" if "id" in col_names else "rowid ASC"
             rows = cur.execute(f'SELECT * FROM "{table_name}" ORDER BY {order_by}').fetchall()
@@ -301,11 +347,13 @@ def execute_migration(sqlite_path: Path, turso_url: str, turso_token: Optional[s
                 print(f"  [{idx:2d}/{len(order)}] {table_name:<22}:      0 rows (table empty, skipped)")
                 continue
 
-            # Batch insert into Turso
             batches_count = (len(rows) + batch_size - 1) // batch_size
             for b_idx in range(batches_count):
                 batch_rows = rows[b_idx * batch_size : (b_idx + 1) * batch_size]
-                batch_stmts = [(insert_sql, [row[c] for c in col_names]) for row in batch_rows]
+                # Prepend PRAGMA foreign_keys = OFF to handle internal self-referencing forward references
+                batch_stmts = [("PRAGMA foreign_keys = OFF", [])] + [
+                    (insert_sql, [row[c] for c in col_names]) for row in batch_rows
+                ]
                 turso_client.batch(batch_stmts)
 
             print(f"  [{idx:2d}/{len(order)}] {table_name:<22}: {len(rows):6d} rows migrated ({batches_count} batches)")
@@ -327,16 +375,28 @@ def execute_migration(sqlite_path: Path, turso_url: str, turso_token: Optional[s
             print(f"\n[FAILED] Data migration mismatch detected in {len(mismatches)} tables!")
             sys.exit(2)
 
+        # 3b. Verify Foreign Key Referential Integrity Across All Tables
+        print("\n[PHASE 3b] Verifying Foreign Key Referential Integrity...")
+        fk_check = turso_client.execute("PRAGMA foreign_key_check")
+        if fk_check.rows:
+            print(f"[ERROR] Foreign key violations detected on Turso: {len(fk_check.rows)}")
+            for v in fk_check.rows:
+                print(f"  Violation: {v}")
+            sys.exit(3)
+        print("  [OK] PRAGMA foreign_key_check passed: 100% of all foreign key relationships are valid.")
+
         # 4. Cryptographic Audit Chain Verification on Turso
         print("\n[PHASE 4] Verifying Cryptographic Audit Chain on Remote Turso...")
-        turso_conn = TursoConnectionWrapper(turso_client)
-        turso_chain = verify_audit_chain(turso_conn)
-        print(f"  Audit records verified : {turso_chain['total_records']}")
+        turso_chain = verify_remote_audit_chain(turso_client, expected_count=src_counts["audit_log"])
+        print(f"  Source ledger records  : {src_health['audit_records']}")
+        print(f"  Turso ledger records   : {turso_chain['total_records']}")
         print(f"  Chain integrity        : {'VALID' if turso_chain['verified'] else 'INVALID'}")
-        print(f"  Latest ledger hash     : {turso_chain['latest_hash']}")
+        print(f"  Source latest hash     : {src_health['latest_hash']}")
+        print(f"  Turso latest hash      : {turso_chain['latest_hash']}")
 
-        assert turso_chain["verified"] is True, "Remote Turso audit chain validation failed!"
-        assert turso_chain["total_records"] == src_counts["audit_log"], "Audit log count mismatch!"
+        assert turso_chain["verified"] is True, f"Remote Turso audit chain validation failed: {turso_chain.get('error')}"
+        assert turso_chain["total_records"] == src_health["audit_records"], "Audit log record count mismatch!"
+        assert turso_chain["latest_hash"] == src_health["latest_hash"], "Audit log cryptographic hash mismatch!"
 
         print("\n================================================================")
         print(" MIGRATION COMPLETED SUCCESSFULLY")
