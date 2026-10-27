@@ -5,6 +5,14 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/api",
+      "destination": "https://niyantran-indiadeepanshaggarwal-3442s-projects.vercel.app/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://niyantran-indiadeepanshaggarwal-3442s-projects.vercel.app/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
