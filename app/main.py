@@ -105,6 +105,13 @@ async def lifespan(app: FastAPI):
     init_db()
     with get_connection() as conn:
         seed_initial_regulatory_sources_if_empty(conn)
+        app_count = conn.execute("SELECT COUNT(*) as cnt FROM applications").fetchone()["cnt"]
+        if app_count == 0:
+            try:
+                from scripts.seed_demo_applications import seed
+                seed()
+            except Exception as exc:
+                print(f"[Lifespan] Note: initial demo seed: {exc}")
     yield
 
 
