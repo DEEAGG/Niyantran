@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from contextlib import contextmanager
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -222,6 +222,86 @@ def is_postgres() -> bool:
     return url.startswith("postgres://") or url.startswith("postgresql://")
 
 
+def is_turso() -> bool:
+    """Returns True if TURSO_DATABASE_URL is set or DATABASE_URL starts with libsql://, wss://, or ws://."""
+    turso_url = os.getenv("TURSO_DATABASE_URL", "").strip().lower()
+    db_url = os.getenv("DATABASE_URL", "").strip().lower()
+    return bool(turso_url) or db_url.startswith(("libsql://", "wss://", "ws://"))
+
+
+def get_turso_config() -> Tuple[str, Optional[str]]:
+    url = os.getenv("TURSO_DATABASE_URL") or os.getenv("DATABASE_URL", "")
+    auth_token = os.getenv("TURSO_AUTH_TOKEN")
+    return url, auth_token
+
+
+class TursoCursorWrapper:
+    """Wraps a libsql-client ResultSet providing sqlite3 cursor-compatible fetch and lastrowid."""
+    def __init__(self, result_set=None, last_insert_rowid=None):
+        self._rows = list(result_set.rows) if result_set is not None else []
+        self._index = 0
+        if last_insert_rowid is not None:
+            self.lastrowid = last_insert_rowid
+        elif result_set is not None:
+            self.lastrowid = result_set.last_insert_rowid
+        else:
+            self.lastrowid = None
+
+    def fetchone(self):
+        if self._index < len(self._rows):
+            row = self._rows[self._index]
+            self._index += 1
+            return row
+        return None
+
+    def fetchall(self):
+        remaining = self._rows[self._index:]
+        self._index = len(self._rows)
+        return remaining
+
+    def __iter__(self):
+        return iter(self.fetchall())
+
+
+class TursoConnectionWrapper:
+    """Wraps a libsql-client ClientSync providing sqlite3-compatible execute methods."""
+    def __init__(self, client):
+        self.client = client
+        self.row_factory = None
+
+    def execute(self, sql: str, params=None):
+        if params is not None:
+            args = list(params) if isinstance(params, (list, tuple)) else params
+            res = self.client.execute(sql, args)
+        else:
+            res = self.client.execute(sql)
+        return TursoCursorWrapper(res)
+
+    def executemany(self, sql: str, params_seq):
+        last_rowid = None
+        for p in params_seq:
+            args = list(p) if isinstance(p, (list, tuple)) else p
+            res = self.client.execute(sql, args)
+            if res.last_insert_rowid is not None:
+                last_rowid = res.last_insert_rowid
+        return TursoCursorWrapper(last_insert_rowid=last_rowid)
+
+    def executescript(self, sql: str):
+        statements = [s.strip() for s in sql.split(";") if s.strip()]
+        if statements:
+            self.client.batch(statements)
+        return self
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    def close(self):
+        self.client.close()
+
+
 class PostgresRow(dict):
     """Provides dual key and integer-index access matching sqlite3.Row behavior."""
     def __init__(self, *args, **kwargs):
@@ -328,7 +408,20 @@ class PostgresConnectionWrapper:
 
 @contextmanager
 def get_connection(db_path: Optional[Path] = None):
-    if is_postgres() and db_path is None:
+    if is_turso() and db_path is None:
+        import libsql_client
+        url, auth_token = get_turso_config()
+        client = libsql_client.create_client_sync(url=url, auth_token=auth_token)
+        conn = TursoConnectionWrapper(client)
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+    elif is_postgres() and db_path is None:
         import psycopg
         db_url = os.getenv("DATABASE_URL", "").strip()
         if db_url.startswith("postgres://"):
@@ -427,6 +520,13 @@ def seed_default_users(conn: sqlite3.Connection):
     conn.commit()
 
 def init_db(db_path: Optional[Path] = None):
+    if is_turso() and db_path is None:
+        with get_connection() as conn:
+            conn.executescript(SCHEMA)
+            conn.commit()
+            migrate_schema(conn)
+            seed_default_users(conn)
+        return "turso"
     if is_postgres() and db_path is None:
         schema_path = BASE_DIR / "scripts" / "schema_postgres.sql"
         if schema_path.exists():
