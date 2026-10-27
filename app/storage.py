@@ -2,12 +2,17 @@
 NIYANTRAN — Unified Document Storage Adapter.
 
 Provides seamless local-disk storage for development and testing, and
-Cloudflare R2 (S3-compatible) persistent object storage for production (Vercel Serverless).
+persistent remote object storage for production (Supabase Storage or Cloudflare R2 / S3-compatible).
 
 Architecture:
-- Preserves exact database paths ("documents/<uuid>.<ext>") as object keys in R2.
-- When R2 is enabled, reads act as a read-through cache to /tmp for fast rendering with PyMuPDF/Pillow.
-- When R2 is unconfigured, falls back completely to local disk storage with zero external dependencies.
+- Preserves exact database paths ("documents/<uuid>.<ext>") as object keys in remote storage.
+- Storage Priority:
+    1. Supabase Storage (if SUPABASE_URL & SUPABASE_SERVICE_ROLE_KEY are configured)
+    2. Cloudflare R2 / S3 (if R2_BUCKET_NAME & credentials are configured)
+    3. Local filesystem (data/documents/ or /tmp cache in serverless)
+- When remote storage is enabled, reads act as a read-through cache to /tmp for fast rendering with PyMuPDF/Pillow.
+- When remote storage is unconfigured, falls back completely to local disk storage with zero external dependencies.
+- Kept strictly private on server-side; credentials are never passed to the frontend.
 """
 
 import os
@@ -15,6 +20,8 @@ import io
 import shutil
 from pathlib import Path
 from typing import Optional, Dict, Any, Union
+
+import httpx
 
 from app.db import DATA_DIR, DOCUMENTS_DIR, REGULATORY_SOURCES_DIR
 
@@ -27,6 +34,76 @@ except (PermissionError, OSError):
 
 _s3_client = None
 
+
+# --- Supabase Storage Integration ---
+
+def is_supabase_configured() -> bool:
+    """Returns True if Supabase Storage credentials are set."""
+    url = os.getenv("SUPABASE_URL", "").strip()
+    key = (os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY", "")).strip()
+    return bool(url and key)
+
+
+def get_supabase_config() -> Dict[str, str]:
+    """Resolves Supabase Storage configuration settings."""
+    url = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+    key = (os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY", "")).strip()
+    bucket = (os.getenv("SUPABASE_STORAGE_BUCKET") or os.getenv("SUPABASE_BUCKET", "niyantran-documents")).strip()
+    return {
+        "url": url,
+        "key": key,
+        "bucket": bucket,
+    }
+
+
+def _supabase_upload(key: str, content: bytes, mime_type: Optional[str] = None) -> None:
+    """Uploads file content to a private Supabase Storage bucket using service role credentials."""
+    cfg = get_supabase_config()
+    upload_url = f"{cfg['url']}/storage/v1/object/{cfg['bucket']}/{key}"
+    headers = {
+        "Authorization": f"Bearer {cfg['key']}",
+        "apiKey": cfg["key"],
+        "Content-Type": mime_type or "application/octet-stream",
+        "x-upsert": "true",
+    }
+    with httpx.Client(timeout=30.0) as client:
+        resp = client.post(upload_url, headers=headers, content=content)
+        resp.raise_for_status()
+
+
+def _supabase_download(key: str) -> Optional[bytes]:
+    """Downloads file bytes from a private Supabase Storage bucket using service role credentials."""
+    cfg = get_supabase_config()
+    download_url = f"{cfg['url']}/storage/v1/object/authenticated/{cfg['bucket']}/{key}"
+    headers = {
+        "Authorization": f"Bearer {cfg['key']}",
+        "apiKey": cfg["key"],
+    }
+    with httpx.Client(timeout=30.0) as client:
+        resp = client.get(download_url, headers=headers)
+        if resp.status_code == 404:
+            return None
+        resp.raise_for_status()
+        return resp.content
+
+
+def _supabase_exists(key: str) -> bool:
+    """Checks whether an object exists in a private Supabase Storage bucket."""
+    cfg = get_supabase_config()
+    info_url = f"{cfg['url']}/storage/v1/object/info/authenticated/{cfg['bucket']}/{key}"
+    headers = {
+        "Authorization": f"Bearer {cfg['key']}",
+        "apiKey": cfg["key"],
+    }
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(info_url, headers=headers)
+            return resp.status_code == 200
+    except Exception:
+        return False
+
+
+# --- Cloudflare R2 / S3 Integration ---
 
 def is_r2_configured() -> bool:
     """Returns True if Cloudflare R2 (or S3-compatible) storage environment variables are set."""
@@ -83,6 +160,11 @@ def get_s3_client():
     return _s3_client
 
 
+def is_remote_storage_configured() -> bool:
+    """Returns True if any remote object storage (Supabase or R2/S3) is configured."""
+    return is_supabase_configured() or is_r2_configured()
+
+
 def _normalize_key(path_or_key: Union[str, Path]) -> str:
     """Normalizes relative path or key to forward-slash format (e.g. 'documents/xyz.pdf')."""
     s = str(path_or_key).replace("\\", "/")
@@ -110,7 +192,7 @@ def _get_local_candidate_paths(key: str) -> list[Path]:
 
 
 def save_file(relative_path: Union[str, Path], content: bytes, mime_type: Optional[str] = None) -> Path:
-    """Saves file content to local storage and R2 if configured. Returns local Path."""
+    """Saves file content to local storage and remote object storage (Supabase or R2) if configured."""
     key = _normalize_key(relative_path)
 
     # 1. Save to local storage / cache
@@ -126,8 +208,10 @@ def save_file(relative_path: Union[str, Path], content: bytes, mime_type: Option
         cache_target.write_bytes(content)
         saved_path = cache_target
 
-    # 2. Upload to Cloudflare R2 if configured
-    if is_r2_configured():
+    # 2. Upload to remote storage if configured (Priority: Supabase > R2)
+    if is_supabase_configured():
+        _supabase_upload(key, content, mime_type=mime_type)
+    elif is_r2_configured():
         s3 = get_s3_client()
         cfg = get_r2_config()
         extra_args = {}
@@ -147,7 +231,7 @@ def get_file_path(relative_path_or_key: Union[str, Path]) -> Path:
     """Resolves a local filesystem Path for reading.
     
     If local file exists, returns it immediately.
-    If not found locally and R2 is configured, downloads object from R2 into cache directory.
+    If not found locally and remote storage is configured, downloads object from Supabase/R2 into cache.
     """
     key = _normalize_key(relative_path_or_key)
 
@@ -156,16 +240,25 @@ def get_file_path(relative_path_or_key: Union[str, Path]) -> Path:
         if candidate.exists() and candidate.is_file():
             return candidate
 
-    # If missing locally and R2 is configured, download from R2
-    if is_r2_configured():
+    # Download from remote storage into local cache if missing
+    cache_path = CACHE_DIR / key
+    if is_supabase_configured():
+        try:
+            content = _supabase_download(key)
+            if content is not None:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                cache_path.write_bytes(content)
+                return cache_path
+        except Exception:
+            pass
+    elif is_r2_configured():
         s3 = get_s3_client()
         cfg = get_r2_config()
-        cache_path = CACHE_DIR / key
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         try:
             s3.download_file(cfg["bucket"], key, str(cache_path))
             return cache_path
-        except Exception as exc:
+        except Exception:
             pass
 
     # Return default local path (caller handles .exists() == False)
@@ -173,13 +266,18 @@ def get_file_path(relative_path_or_key: Union[str, Path]) -> Path:
 
 
 def get_file_bytes(relative_path_or_key: Union[str, Path]) -> Optional[bytes]:
-    """Reads and returns file bytes from local disk or R2."""
+    """Reads and returns file bytes from local disk, Supabase, or R2."""
     local_path = get_file_path(relative_path_or_key)
     if local_path.exists() and local_path.is_file():
         return local_path.read_bytes()
 
-    if is_r2_configured():
-        key = _normalize_key(relative_path_or_key)
+    key = _normalize_key(relative_path_or_key)
+    if is_supabase_configured():
+        try:
+            return _supabase_download(key)
+        except Exception:
+            return None
+    elif is_r2_configured():
         s3 = get_s3_client()
         cfg = get_r2_config()
         try:
@@ -192,13 +290,15 @@ def get_file_bytes(relative_path_or_key: Union[str, Path]) -> Optional[bytes]:
 
 
 def file_exists(relative_path_or_key: Union[str, Path]) -> bool:
-    """Checks whether a file exists locally or in R2."""
+    """Checks whether a file exists locally or in remote storage."""
     key = _normalize_key(relative_path_or_key)
     for candidate in _get_local_candidate_paths(key):
         if candidate.exists() and candidate.is_file():
             return True
 
-    if is_r2_configured():
+    if is_supabase_configured():
+        return _supabase_exists(key)
+    elif is_r2_configured():
         s3 = get_s3_client()
         cfg = get_r2_config()
         try:
