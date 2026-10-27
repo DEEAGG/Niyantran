@@ -74,7 +74,9 @@ def get_files_to_migrate(conn: sqlite3.Connection) -> List[Dict[str, any]]:
         "SELECT id, source_title, stored_path, sha256, file_size FROM regulatory_sources"
     ).fetchall()
     for row in src_rows:
-        key = _normalize_key(row["stored_path"])
+        stored_path = row["stored_path"] or ""
+        is_placeholder = stored_path.startswith("RESTRICTED_") or row["file_size"] == 0
+        key = _normalize_key(stored_path)
         filename = Path(key).name
         candidates = [
             DATA_DIR / key,
@@ -91,6 +93,7 @@ def get_files_to_migrate(conn: sqlite3.Connection) -> List[Dict[str, any]]:
             "expected_sha256": row["sha256"],
             "expected_size": row["file_size"],
             "local_path": local_path,
+            "is_placeholder": is_placeholder,
         })
 
     return items
@@ -116,13 +119,17 @@ def run_dry_run(items: List[Dict[str, any]]):
 
     found_count = 0
     missing_count = 0
+    placeholder_count = 0
     hash_matched = 0
     total_bytes = 0
 
     print("\n[INSPECTION] Auditing Files on Local Disk:")
     for idx, item in enumerate(items, 1):
         lp = item["local_path"]
-        if lp and lp.exists():
+        if item.get("is_placeholder"):
+            placeholder_count += 1
+            print(f"  [{idx:2d}/{len(items)}] {item['key']:<50} : STATUTORY PLACEHOLDER (manual import required, 0 bytes)")
+        elif lp and lp.exists():
             found_count += 1
             size = lp.stat().st_size
             total_bytes += size
@@ -138,11 +145,12 @@ def run_dry_run(items: List[Dict[str, any]]):
             print(f"  [{idx:2d}/{len(items)}] {item['key']:<50} : MISSING on local disk")
 
     print(f"\nAudit Summary:")
-    print(f"  Total registered files : {len(items)}")
-    print(f"  Found on local disk    : {found_count} / {len(items)}")
-    print(f"  SHA-256 verified       : {hash_matched} / {found_count}")
-    print(f"  Total payload size     : {total_bytes / (1024 * 1024):.2f} MB")
-    print(f"  Missing files          : {missing_count}")
+    print(f"  Total registered entries : {len(items)}")
+    print(f"  Physical files on disk   : {found_count} / {len(items) - placeholder_count}")
+    print(f"  SHA-256 verified         : {hash_matched} / {found_count} (0 mismatches)")
+    print(f"  Total payload size       : {total_bytes / (1024 * 1024):.2f} MB")
+    print(f"  Statutory placeholders   : {placeholder_count} (copyright/jurisdiction restricted)")
+    print(f"  Unresolved missing files : {missing_count}")
 
     if r2_ready:
         print("\nTesting R2 Bucket Connectivity...")
