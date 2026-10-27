@@ -5,7 +5,7 @@
   "cleanUrls": true,
   "functions": {
     "api/index.py": {
-      "excludeFiles": "frontend/node_modules/**"
+      "excludeFiles": "{frontend/node_modules/**,frontend/dist/**}"
     }
   },
   "routes": [
