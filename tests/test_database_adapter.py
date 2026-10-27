@@ -7,11 +7,18 @@ import os
 from unittest.mock import MagicMock
 import pytest
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from app.db import (
     get_connection,
     is_postgres,
     is_turso,
     get_turso_config,
+    normalize_turso_url,
     PostgresRow,
     PostgresCursorWrapper,
     PostgresConnectionWrapper,
@@ -78,7 +85,8 @@ def test_postgres_cursor_wrapper_audit_insert_lastrowid():
 
 def test_audit_chain_integrity_verification():
     """Verify that existing SQLite audit chain remains valid and unbroken."""
-    with get_connection() as conn:
+    from app.db import get_db_path
+    with get_connection(db_path=get_db_path()) as conn:
         result = verify_audit_chain(conn)
         assert result["verified"] is True
         assert result["total_records"] > 1000
@@ -100,7 +108,7 @@ def test_turso_connection_mode_selection(monkeypatch):
     assert is_turso() is True
     assert is_postgres() is False
     url, token = get_turso_config()
-    assert url == "libsql://niyantran-org.turso.io"
+    assert url == "https://niyantran-org.turso.io"
     assert token == "mock_turso_token_123"
 
     # 3. DATABASE_URL with libsql://
@@ -181,21 +189,29 @@ def test_turso_smoke_test_select_1_unit(tmp_path):
         conn.close()
 
 
+def test_turso_url_normalization():
+    """Verify that libsql:// and wss:// URLs are converted to https:// for HTTP pipeline."""
+    assert normalize_turso_url("libsql://niyantran-deeagg.aws-ap-south-1.turso.io") == "https://niyantran-deeagg.aws-ap-south-1.turso.io"
+    assert normalize_turso_url("wss://niyantran-deeagg.aws-ap-south-1.turso.io") == "https://niyantran-deeagg.aws-ap-south-1.turso.io"
+    assert normalize_turso_url("https://niyantran-deeagg.turso.io") == "https://niyantran-deeagg.turso.io"
+    assert normalize_turso_url("file:local.db") == "file:local.db"
+
+
 def test_turso_smoke_test_live():
     """Live smoke test probe: if TURSO_DATABASE_URL is set, verifies remote connection with SELECT 1."""
     import libsql_client
 
-    url = os.getenv("TURSO_DATABASE_URL")
-    if not url:
+    if not is_turso():
         pytest.skip("TURSO_DATABASE_URL is not set; skipping live remote connection smoke test")
 
-    auth_token = os.getenv("TURSO_AUTH_TOKEN")
-    client = libsql_client.create_client_sync(url=url.strip(), auth_token=auth_token.strip() if auth_token else None)
+    url, auth_token = get_turso_config()
+    client = libsql_client.create_client_sync(url=url, auth_token=auth_token)
     try:
         res = client.execute("SELECT 1 AS alive")
         assert len(res.rows) > 0
         assert res.rows[0][0] == 1
     finally:
         client.close()
+
 
 

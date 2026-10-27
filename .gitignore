@@ -55,6 +55,10 @@ node_modules/
 # Vercel
 .vercel/
 
+# IDE
+.vscode/
+.idea/
+
 # Temporary / Scratch & Artifacts
 scratch/*.json
 scratch/*.png

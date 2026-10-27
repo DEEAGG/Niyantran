@@ -222,6 +222,22 @@ def is_postgres() -> bool:
     return url.startswith("postgres://") or url.startswith("postgresql://")
 
 
+def normalize_turso_url(url: str) -> str:
+    """Normalizes Turso URLs to use https:// scheme.
+    
+    libsql-client converts libsql:// to wss:// (Hrana2 WebSockets). Turso's regional
+    and serverless endpoints return 400 Bad Request on WebSocket protocol negotiation,
+    and WebSockets do not persist in serverless runtimes. Converting libsql:// and
+    wss:// to https:// engages the official HTTP pipeline (POST /v1/execute).
+    """
+    clean = url.strip()
+    if clean.startswith("libsql://"):
+        return "https://" + clean[len("libsql://"):]
+    if clean.startswith("wss://") and ("turso.io" in clean or "aws" in clean):
+        return "https://" + clean[len("wss://"):]
+    return clean
+
+
 def is_turso() -> bool:
     """Returns True if TURSO_DATABASE_URL is set or DATABASE_URL is configured for Turso / libSQL."""
     turso_url = os.getenv("TURSO_DATABASE_URL", "").strip().lower()
@@ -230,10 +246,54 @@ def is_turso() -> bool:
 
 
 def get_turso_config() -> Tuple[str, Optional[str]]:
-    url = (os.getenv("TURSO_DATABASE_URL") or os.getenv("DATABASE_URL", "")).strip()
+    raw_url = (os.getenv("TURSO_DATABASE_URL") or os.getenv("DATABASE_URL", "")).strip()
+    url = normalize_turso_url(raw_url)
     raw_token = os.getenv("TURSO_AUTH_TOKEN")
     auth_token = raw_token.strip() if raw_token and raw_token.strip() else None
     return url, auth_token
+
+
+def _patch_libsql_http_client():
+    """Patches libsql_client.http.HttpClient to properly handle error responses.
+    
+    When Turso HTTP gateway returns 200 with an error object (e.g. {'message': '...', 'code': '...'}),
+    libsql_client 0.3.1 expects a 'result' key and raises an unhandled KeyError: 'result'.
+    This patch raises LibsqlError appropriately.
+    """
+    try:
+        import libsql_client.http
+        from libsql_client.client import LibsqlError
+
+        if getattr(libsql_client.http.HttpClient, "_patched_for_turso", False):
+            return
+
+        async def safe_execute(self, stmt, args=None):
+            request = {"stmt": libsql_client.http._stmt_to_proto(stmt, args)}
+            response = await self._send("POST", "v1/execute", request)
+            if isinstance(response, dict):
+                if "message" in response:
+                    raise LibsqlError(response["message"], response.get("code", "UNKNOWN"))
+                if "error" in response:
+                    raise LibsqlError(str(response["error"]), response.get("code", "UNKNOWN"))
+            proto_res = response["result"]
+            return libsql_client.http._result_set_from_proto(proto_res)
+
+        async def safe_batch(self, stmts):
+            request = {"batch": libsql_client.http._batch_to_proto(stmts)}
+            response = await self._send("POST", "v1/batch", request)
+            if isinstance(response, dict):
+                if "message" in response:
+                    raise LibsqlError(response["message"], response.get("code", "UNKNOWN"))
+                if "error" in response:
+                    raise LibsqlError(str(response["error"]), response.get("code", "UNKNOWN"))
+            proto_res = response["result"]
+            return libsql_client.http._batch_results_from_proto(proto_res, len(stmts))
+
+        libsql_client.http.HttpClient.execute = safe_execute
+        libsql_client.http.HttpClient.batch = safe_batch
+        libsql_client.http.HttpClient._patched_for_turso = True
+    except Exception:
+        pass
 
 
 class TursoCursorWrapper:
@@ -271,12 +331,18 @@ class TursoConnectionWrapper:
         self.row_factory = None
 
     def execute(self, sql: str, params=None):
-        if params is not None:
-            args = list(params) if isinstance(params, (list, tuple)) else params
-            res = self.client.execute(sql, args)
-        else:
-            res = self.client.execute(sql)
-        return TursoCursorWrapper(res)
+        try:
+            if params is not None:
+                args = list(params) if isinstance(params, (list, tuple)) else params
+                res = self.client.execute(sql, args)
+            else:
+                res = self.client.execute(sql)
+            return TursoCursorWrapper(res)
+        except Exception as exc:
+            msg = str(exc)
+            if "no such table" in msg or "syntax error" in msg:
+                raise sqlite3.OperationalError(msg) from exc
+            raise
 
     def executemany(self, sql: str, params_seq):
         last_rowid = None
@@ -409,8 +475,12 @@ class PostgresConnectionWrapper:
 
 @contextmanager
 def get_connection(db_path: Optional[Path] = None):
+    if db_path is None and os.getenv("NIYANTRAN_DB_PATH"):
+        db_path = Path(os.getenv("NIYANTRAN_DB_PATH"))
+
     if is_turso() and db_path is None:
         import libsql_client
+        _patch_libsql_http_client()
         url, auth_token = get_turso_config()
         client = libsql_client.create_client_sync(url=url, auth_token=auth_token)
         conn = TursoConnectionWrapper(client)

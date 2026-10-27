@@ -19,6 +19,17 @@ except ImportError:
 
 import libsql_client
 
+try:
+    from app.db import normalize_turso_url
+except ImportError:
+    def normalize_turso_url(u: str) -> str:
+        clean = u.strip()
+        if clean.startswith("libsql://"):
+            return "https://" + clean[len("libsql://"):]
+        if clean.startswith("wss://") and ("turso.io" in clean or "aws" in clean):
+            return "https://" + clean[len("wss://"):]
+        return clean
+
 
 def sanitize_url(url: str) -> str:
     """Mask any embedded password in URL authority for display."""
@@ -27,7 +38,7 @@ def sanitize_url(url: str) -> str:
 
 def get_credentials(cli_url: Optional[str] = None, cli_token: Optional[str] = None) -> Tuple[str, Optional[str]]:
     url = cli_url or os.getenv("TURSO_DATABASE_URL") or os.getenv("DATABASE_URL", "")
-    url = url.strip()
+    url = normalize_turso_url(url)
 
     raw_token = cli_token or os.getenv("TURSO_AUTH_TOKEN")
     token = raw_token.strip() if raw_token and raw_token.strip() else None
