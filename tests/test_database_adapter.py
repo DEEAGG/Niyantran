@@ -162,3 +162,40 @@ def test_turso_wrapper_crud_and_row_access(tmp_path):
     finally:
         conn.close()
 
+
+def test_turso_smoke_test_select_1_unit(tmp_path):
+    """Smoke test probe: executes strictly SELECT 1 without writes, schema changes, or migrations."""
+    import libsql_client
+
+    db_file = tmp_path / "turso_smoke.db"
+    raw_client = libsql_client.create_client_sync(f"file:{db_file}")
+    conn = TursoConnectionWrapper(raw_client)
+
+    try:
+        cur = conn.execute("SELECT 1 AS alive")
+        row = cur.fetchone()
+        assert row is not None
+        assert row[0] == 1
+        assert row["alive"] == 1
+    finally:
+        conn.close()
+
+
+def test_turso_smoke_test_live():
+    """Live smoke test probe: if TURSO_DATABASE_URL is set, verifies remote connection with SELECT 1."""
+    import libsql_client
+
+    url = os.getenv("TURSO_DATABASE_URL")
+    if not url:
+        pytest.skip("TURSO_DATABASE_URL is not set; skipping live remote connection smoke test")
+
+    auth_token = os.getenv("TURSO_AUTH_TOKEN")
+    client = libsql_client.create_client_sync(url=url.strip(), auth_token=auth_token.strip() if auth_token else None)
+    try:
+        res = client.execute("SELECT 1 AS alive")
+        assert len(res.rows) > 0
+        assert res.rows[0][0] == 1
+    finally:
+        client.close()
+
+

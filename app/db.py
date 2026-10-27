@@ -223,15 +223,16 @@ def is_postgres() -> bool:
 
 
 def is_turso() -> bool:
-    """Returns True if TURSO_DATABASE_URL is set or DATABASE_URL starts with libsql://, wss://, or ws://."""
+    """Returns True if TURSO_DATABASE_URL is set or DATABASE_URL is configured for Turso / libSQL."""
     turso_url = os.getenv("TURSO_DATABASE_URL", "").strip().lower()
     db_url = os.getenv("DATABASE_URL", "").strip().lower()
-    return bool(turso_url) or db_url.startswith(("libsql://", "wss://", "ws://"))
+    return bool(turso_url) or db_url.startswith(("libsql://", "wss://", "ws://")) or ("turso.io" in db_url)
 
 
 def get_turso_config() -> Tuple[str, Optional[str]]:
-    url = os.getenv("TURSO_DATABASE_URL") or os.getenv("DATABASE_URL", "")
-    auth_token = os.getenv("TURSO_AUTH_TOKEN")
+    url = (os.getenv("TURSO_DATABASE_URL") or os.getenv("DATABASE_URL", "")).strip()
+    raw_token = os.getenv("TURSO_AUTH_TOKEN")
+    auth_token = raw_token.strip() if raw_token and raw_token.strip() else None
     return url, auth_token
 
 
