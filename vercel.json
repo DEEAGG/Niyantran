@@ -5,20 +5,25 @@
   "cleanUrls": true,
   "functions": {
     "api/index.py": {
-      "excludeFiles": "frontend/**"
+      "excludeFiles": "frontend/node_modules/**"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "^/api(?:/(.*))?$",
-      "dest": "/api/index.py?__niyantran_path=/api/$1"
+      "source": "/api",
+      "destination": "/api/index.py?__niyantran_path=/api"
     },
     {
-      "handle": "filesystem"
+      "source": "/api/(.*)",
+      "destination": "/api/index.py?__niyantran_path=/api/$1"
     },
     {
-      "src": "^/(.*)$",
-      "dest": "/index.html"
+      "source": "/assets/(.*)",
+      "destination": "/api/index.py?__niyantran_path=/assets/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.py?__niyantran_path=/$1"
     }
   ]
 }
