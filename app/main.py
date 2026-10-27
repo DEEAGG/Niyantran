@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, status, Response, Request, Depends, Header
-from fastapi.responses import FileResponse\nfrom fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from PIL import Image, ImageDraw
