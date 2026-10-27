@@ -8,18 +8,51 @@ from contextlib import contextmanager
 from typing import Optional, Dict, Any, List
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
-DATA_DIR.mkdir(exist_ok=True)
-DOCUMENTS_DIR = DATA_DIR / "documents"
-DOCUMENTS_DIR.mkdir(exist_ok=True)
-REGULATORY_SOURCES_DIR = DATA_DIR / "regulatory_sources"
-REGULATORY_SOURCES_DIR.mkdir(exist_ok=True)
+
+# Check if data directory is explicitly overridden via environment
+_env_data_dir = os.getenv("NIYANTRAN_DATA_DIR")
+if _env_data_dir:
+    DATA_DIR = Path(_env_data_dir)
+else:
+    DATA_DIR = BASE_DIR / "data"
+
+try:
+    DATA_DIR.mkdir(exist_ok=True, parents=True)
+except (PermissionError, OSError):
+    DATA_DIR = Path("/tmp/niyantran_data")
+    DATA_DIR.mkdir(exist_ok=True, parents=True)
+
+DOCUMENTS_DIR = Path(os.getenv("NIYANTRAN_DOCUMENTS_DIR", DATA_DIR / "documents"))
+try:
+    DOCUMENTS_DIR.mkdir(exist_ok=True, parents=True)
+except (PermissionError, OSError):
+    DOCUMENTS_DIR = Path("/tmp/niyantran_data/documents")
+    DOCUMENTS_DIR.mkdir(exist_ok=True, parents=True)
+
+REGULATORY_SOURCES_DIR = Path(os.getenv("NIYANTRAN_REGULATORY_DIR", DATA_DIR / "regulatory_sources"))
+try:
+    REGULATORY_SOURCES_DIR.mkdir(exist_ok=True, parents=True)
+except (PermissionError, OSError):
+    REGULATORY_SOURCES_DIR = Path("/tmp/niyantran_data/regulatory_sources")
+    REGULATORY_SOURCES_DIR.mkdir(exist_ok=True, parents=True)
 
 def get_db_path() -> Path:
     env_override = os.getenv("NIYANTRAN_DB_PATH")
     if env_override:
         return Path(env_override)
-    return DATA_DIR / "niyantran.db"
+    
+    target = DATA_DIR / "niyantran.db"
+    # In serverless environments where root filesystem is read-only:
+    if not os.access(DATA_DIR, os.W_OK) and os.name != 'nt':
+        tmp_db = Path("/tmp/niyantran.db")
+        if not tmp_db.exists() and target.exists():
+            try:
+                import shutil
+                shutil.copyfile(target, tmp_db)
+            except Exception:
+                pass
+        return tmp_db
+    return target
 
 DB_PATH = get_db_path()
 

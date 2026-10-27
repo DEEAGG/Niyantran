@@ -1,101 +1,101 @@
-# NIYANTRAN — Production Deployment Guide
+# NIYANTRAN — Vercel Deployment Guide
 
 ## Architecture Overview
 
+NIYANTRAN is an intelligent regulatory compliance and document verification platform built with:
+- **Frontend**: React 18 + Vite 5 Single Page Application (SPA), styled with Tailwind CSS and Lucide icons.
+- **Backend**: FastAPI (Python 3.12/3.14) providing statutory compliance verification, cryptographic audit trails, document extraction, and RBAC authentication.
+
 ```
                       +----------------------------------------+
-                      |               Vercel Edge              |
-                      |   Frontend (React 18 + Vite 5 SPA)    |
+                      |              Vercel Edge               |
+                      |   Frontend (React 18 + Vite 5 SPA)     |
                       |     https://niyantran.vercel.app       |
                       +-------------------+--------------------+
                                           |
-                        API Requests / CORS / Reverse Proxy
+                                   Rewrites & Proxy
                                           |
                                           v
                       +----------------------------------------+
-                      |         Render / Railway Cloud         |
-                      |   Backend (FastAPI + Docker Container) |
-                      |    https://niyantran-api.onrender.com  |
+                      |         Vercel Serverless / Edge       |
+                      |      Backend (FastAPI on Python)       |
+                      |        Entry: api/index.py             |
                       |                                        |
-                      |  - Tesseract OCR (System Package)      |
-                      |  - PyMuPDF Native Rendering Engine     |
-                      |  - Persistent Disk (/app/data)         |
-                      |     * SQLite (niyantran.db)            |
-                      |     * Uploaded PDFs (/documents)       |
+                      |  - Native PDF Parsing (PyMuPDF / pypdf)|
+                      |  - Regulatory Clause Engine            |
+                      |  - SHA-256 Cryptographic Audit Ledger  |
+                      |  - Role-Based Access Control (RBAC)    |
                       +----------------------------------------+
 ```
 
 ---
 
-## 1. Deploy Frontend to Vercel
+## 1. Vercel Monorepo Deployment Steps
 
-1. Go to [vercel.com/new](https://vercel.com/new).
-2. Connect your GitHub account and select **`DEEAGG/niyantran`**.
-3. In the project configuration:
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `frontend` *(or leave `.` because the root `vercel.json` will route it)*
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Add the following **Environment Variables**:
-   | Variable | Value | Description |
+1. Log in to [vercel.com](https://vercel.com) and click **Add New Project**.
+2. Import the canonical GitHub repository: **`DEEAGG/Niyantran`**.
+3. In the project setup configuration:
+   - **Framework Preset**: `Vite` (or `Other`)
+   - **Root Directory**: `.` (leave at repository root so root `vercel.json` routes both frontend and backend)
+   - **Build Command**: `cd frontend && npm install && npm run build` (handled automatically by `vercel.json`)
+   - **Output Directory**: `frontend/dist` (configured in `vercel.json`)
+
+4. Configure the required **Environment Variables**:
+   | Variable | Recommended Production Value | Description |
    |---|---|---|
-   | `VITE_API_BASE_URL` | `https://<YOUR-RENDER-BACKEND-URL>/api` | Production FastAPI backend URL |
-   | `VITE_USE_MOCK_API` | `false` | Disables mock data, enables live backend |
+   | `VITE_API_BASE_URL` | `/api` | Relative API path (avoids CORS issues on same domain) |
+   | `VITE_USE_MOCK_API` | `false` | Enables live FastAPI backend integration |
    | `VITE_APP_ENV` | `production` | Production environment flag |
    | `VITE_APP_NAME` | `NIYANTRAN` | Platform Branding |
    | `VITE_APP_ENGINE` | `ReguTrace` | Regulatory Verification Engine |
+   | `JWT_SECRET_KEY` | *(Generate a 32+ char secret)* | Cryptographic JWT signing key |
+   | `CORS_ORIGINS` | `https://niyantran.vercel.app,https://*.vercel.app` | Allowed CORS origins |
+
 5. Click **Deploy**.
-6. When deployment finishes, copy your live frontend URL (e.g. `https://niyantran-xxx.vercel.app`).
 
 ---
 
-## 2. Deploy Backend to Render
+## 2. Serverless Runtime & Storage Architecture Notice
 
-1. Go to [dashboard.render.com](https://dashboard.render.com).
-2. Click **New +** -> **Web Service**.
-3. Select **`DEEAGG/niyantran`**.
-4. Configure service details:
-   - **Name**: `niyantran-backend`
-   - **Runtime**: `Docker` *(Render automatically picks up `Dockerfile`)*
-   - **Region**: Closest to your users (e.g., Singapore or Frankfurt)
-   - **Plan**: Standard or Starter
-5. Under **Disks** (optional, recommended for permanent persistence across restarts):
-   - **Name**: `niyantran-data`
-   - **Mount Path**: `/app/data`
-   - **Size**: `1 GB`
-6. Add the following **Environment Variables**:
-   | Variable | Value | Description |
-   |---|---|---|
-   | `NIYANTRAN_ENV` | `production` | Production environment |
-   | `CORS_ORIGINS` | `https://*.vercel.app,https://<YOUR-VERCEL-DOMAIN>` | Allowed CORS origins |
-   | `JWT_SECRET_KEY` | *(Generate a 32-character random string)* | Secure token signing |
-   | `PORT` | `8000` | Render standard port |
-7. Click **Create Web Service**.
-8. Render will build the Docker container (installing `tesseract-ocr`, `pymupdf`, etc.), run initial migrations and synthetic demo seeding, and launch on a public HTTPS URL (e.g. `https://niyantran-backend.onrender.com`).
+When hosting on Vercel Serverless Functions, review these architectural differences from persistent servers:
+
+### A. Ephemeral Storage vs. Persistent Database
+* **Local Development**: Uses local SQLite at `data/niyantran.db` with full persistence.
+* **Vercel Serverless Runtime**: Serverless function instances run in ephemeral microVMs where the root filesystem is read-only.
+* **Production Recommendation**:
+  * For state persistence across cold starts and concurrent invocations, connect a serverless external database:
+    * **Turso (libSQL)**: Zero-config serverless SQLite drop-in with free tier.
+    * **Neon Postgres / Supabase**: Serverless PostgreSQL with managed connection pooling.
+  * For uploaded document storage, configure an S3-compatible bucket (e.g., Cloudflare R2 with 10 GB free tier and zero egress fees, or AWS S3).
+
+### B. PDF Text Extraction vs. Scanned OCR
+* **Native Digital PDFs**: Processed with full spatial precision and speed using PyMuPDF and pypdf without external binary dependencies.
+* **Scanned Image OCR (Tesseract)**: Tesseract requires system-level C++ binaries. In serverless environments lacking the Tesseract binary, the application falls back safely to native text parsing.
+* For heavy scanned document OCR in serverless environments, connect a dedicated cloud OCR endpoint or worker.
 
 ---
 
 ## 3. Post-Deployment Verification Checklist
 
-Once both services are live:
+Once the Vercel deployment is active:
 
-1. **Backend Health Check**:
-   - Open `https://<BACKEND_URL>/api/health` in browser:
-     Expected response: `{"status": "healthy", "database": "connected"}`
-   - Open `https://<BACKEND_URL>/api/ocr/status`:
-     Expected response: `{"available": true, "version": "...", "pdf_ocr": true}`
+1. **API Health Check**:
+   - Navigate to `https://<YOUR-VERCEL-DOMAIN>/api/health`
+   - Expected response: `{"status": "healthy", "database": "connected"}`
 
-2. **Frontend Route Verification**:
-   - Open `https://<FRONTEND_URL>/login`
-   - Log in using an authorized account:
+2. **OCR Engine Status**:
+   - Navigate to `https://<YOUR-VERCEL-DOMAIN>/api/ocr/status`
+   - Expected response: `{"available": <bool>, "version": "...", "pdf_ocr": true}`
+
+3. **Frontend SPA Routing**:
+   - Navigate to `https://<YOUR-VERCEL-DOMAIN>/login`
+   - Test authorized roles:
      - Reviewer: `officer@aicte.gov.in` / `Officer@2026`
      - Institution: `adgips@institution.edu.in` / `Adgips@2026`
-     - Admin: `admin@niyantran.local` / `Admin@2026`
-   - Refresh the page on `/cases` or `/evidence` to verify SPA fallback rewrite (no 404).
+     - Administrator: `admin@niyantran.local` / `Admin@2026`
+   - Direct-refresh any route (e.g. `/cases`, `/evidence`) to verify that the SPA fallback rewrite serves `index.html` without 404 errors.
 
-3. **Core Features Verification**:
-   - Check that application list loads and displays status badges.
-   - Click an application to view details and evidence explorer.
-   - Test PDF document upload and field extraction.
-   - Run validation engine against statutory clauses.
-   - Generate and download compliance dossier report.
+4. **Compliance Workflows**:
+   - Verify application listings with institutional data isolation.
+   - Run statutory compliance checks against official regulatory clauses.
+   - Inspect evidence extraction and SHA-256 audit ledger verification.

@@ -922,10 +922,14 @@ async def extract_document(file: UploadFile = File(...)):
                     text = page.get_text().strip()
                     method = "PDF text extraction"
                     if len(text) < 20:
-                        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
-                        image = Image.open(io.BytesIO(pix.tobytes("png")))
-                        text = pytesseract.image_to_string(image).strip()
-                        method = "Tesseract OCR"
+                        try:
+                            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2), alpha=False)
+                            image = Image.open(io.BytesIO(pix.tobytes("png")))
+                            text = pytesseract.image_to_string(image).strip()
+                            method = "Tesseract OCR"
+                        except Exception:
+                            # OCR engine not installed or unavailable in serverless runtime
+                            pass
                     pages.append({"page": number, "method": method, "text": text})
             finally:
                 pdf.close()
@@ -938,10 +942,17 @@ async def extract_document(file: UploadFile = File(...)):
                 ),
             }
         image = Image.open(io.BytesIO(content))
+        try:
+            extracted_text = pytesseract.image_to_string(image).strip()
+        except Exception as ocr_err:
+            raise HTTPException(
+                status_code=503,
+                detail=f"OCR engine (Tesseract) is unavailable in current runtime environment: {str(ocr_err)}"
+            )
         return {
             "filename": file.filename,
             "method": "Tesseract OCR",
-            "text": pytesseract.image_to_string(image).strip(),
+            "text": extracted_text,
         }
     except HTTPException:
         raise
