@@ -138,11 +138,6 @@ export default function UploadDocuments() {
     }
     try {
       setUploading(true);
-      for (let p = 25; p <= 100; p += 25) {
-        setFilesToUpload((prev) => prev.map((f) => ({ ...f, progress: p })));
-        await new Promise((r) => setTimeout(r, 60));
-      }
-
       await documentService.uploadDocuments(
         selectedAppId,
         filesToUpload.map((f) => ({
@@ -174,9 +169,10 @@ export default function UploadDocuments() {
   const handleTriggerExtraction = async () => {
     try {
       setExtracting(true);
+      // triggerExtraction already returns persisted fields (and performs one fallback read
+      // only when the batch response contains no fields), so avoid a redundant serial API call.
       const res = await extractionService.triggerExtraction(selectedAppId);
-      const fieldsRes = await extractionService.getExtractedFields(selectedAppId).catch(() => ({ data: [] }));
-      const displayFields = (fieldsRes.data && fieldsRes.data.length > 0) ? fieldsRes.data : (res.data || []);
+      const displayFields = res.data || [];
       setExtractedFields(displayFields);
       addToast({
         title: 'Extraction Completed',
