@@ -297,14 +297,56 @@ def _patch_libsql_http_client():
         pass
 
 
+class DatabaseRow(dict):
+    """Provides dual key and integer-index access matching sqlite3.Row and dict(row) behavior."""
+    def __init__(self, mapping_or_iterable=None, keys=None, **kwargs):
+        if mapping_or_iterable is not None:
+            if isinstance(mapping_or_iterable, dict):
+                super().__init__(mapping_or_iterable, **kwargs)
+                self._keys = list(self.keys())
+            elif keys is not None:
+                super().__init__(zip(keys, mapping_or_iterable), **kwargs)
+                self._keys = list(keys)
+            elif hasattr(mapping_or_iterable, "asdict"):
+                d = mapping_or_iterable.asdict()
+                super().__init__(d, **kwargs)
+                self._keys = list(self.keys())
+            else:
+                super().__init__(mapping_or_iterable, **kwargs)
+                self._keys = list(self.keys())
+        else:
+            super().__init__(**kwargs)
+            self._keys = list(self.keys())
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return super().__getitem__(self._keys[item])
+        return super().__getitem__(item)
+
+    def keys(self):
+        return super().keys()
+
+    def asdict(self):
+        return dict(self)
+
+
+PostgresRow = DatabaseRow
+
+
 class TursoCursorWrapper:
     """Wraps a libsql-client ResultSet providing sqlite3 cursor-compatible fetch and lastrowid."""
     def __init__(self, result_set=None, last_insert_rowid=None):
-        self._rows = list(result_set.rows) if result_set is not None else []
+        self._columns = list(result_set.columns) if (result_set is not None and hasattr(result_set, "columns")) else []
+        if result_set is not None and hasattr(result_set, "rows"):
+            self._rows = [DatabaseRow(r.asdict() if hasattr(r, "asdict") else r, keys=self._columns) for r in result_set.rows]
+        elif result_set is not None:
+            self._rows = [DatabaseRow(r) if isinstance(r, dict) else r for r in result_set]
+        else:
+            self._rows = []
         self._index = 0
         if last_insert_rowid is not None:
             self.lastrowid = last_insert_rowid
-        elif result_set is not None:
+        elif result_set is not None and hasattr(result_set, "last_insert_rowid"):
             self.lastrowid = result_set.last_insert_rowid
         else:
             self.lastrowid = None
@@ -370,18 +412,6 @@ class TursoConnectionWrapper:
         self.client.close()
 
 
-class PostgresRow(dict):
-    """Provides dual key and integer-index access matching sqlite3.Row behavior."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._keys = list(self.keys())
-
-    def __getitem__(self, item):
-        if isinstance(item, int):
-            return super().__getitem__(self._keys[item])
-        return super().__getitem__(item)
-
-
 class PostgresCursorWrapper:
     """Wraps a psycopg cursor translating SQLite ? parameter syntax and PRAGMAs."""
     def __init__(self, raw_cursor):
@@ -432,14 +462,14 @@ class PostgresCursorWrapper:
         if row is None:
             return None
         colnames = [desc[0] for desc in self.raw_cursor.description]
-        return PostgresRow({colnames[i]: row[i] for i in range(len(colnames))})
+        return DatabaseRow(row, keys=colnames)
 
     def fetchall(self):
         if not self.raw_cursor.description:
             return []
         rows = self.raw_cursor.fetchall()
         colnames = [desc[0] for desc in self.raw_cursor.description]
-        return [PostgresRow({colnames[i]: r[i] for i in range(len(colnames))}) for r in rows]
+        return [DatabaseRow(r, keys=colnames) for r in rows]
 
     def __iter__(self):
         return iter(self.fetchall())
@@ -509,6 +539,18 @@ def get_connection(db_path: Optional[Path] = None):
         finally:
             conn.close()
     else:
+        # Check serverless/production safety
+        is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+        is_prod = os.getenv("NIYANTRAN_ENV", "").strip().lower() == "production"
+        allow_ephemeral = os.getenv("ALLOW_EPHEMERAL_DB", "false").strip().lower() in ("true", "1", "yes")
+
+        if (is_serverless or is_prod) and not allow_ephemeral and db_path is None:
+            raise RuntimeError(
+                "CRITICAL CONFIGURATION ERROR: Persistent database credentials are required in production/serverless mode. "
+                "Configure TURSO_DATABASE_URL and TURSO_AUTH_TOKEN (or DATABASE_URL for Postgres) in Vercel project environment variables. "
+                "Ephemeral SQLite in /tmp will cause data loss across cold starts."
+            )
+
         target = db_path if db_path is not None else get_db_path()
         conn = sqlite3.connect(target)
         conn.row_factory = sqlite3.Row

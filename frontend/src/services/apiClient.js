@@ -36,8 +36,14 @@ apiClient.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+    let detailMsg = error.response?.data?.detail;
+    if (Array.isArray(detailMsg)) {
+      detailMsg = detailMsg.map((e) => (typeof e === 'object' && e.msg ? e.msg : JSON.stringify(e))).join('; ');
+    } else if (detailMsg && typeof detailMsg === 'object') {
+      detailMsg = detailMsg.message || JSON.stringify(detailMsg);
+    }
     const customError = {
-      message: error.response?.data?.detail || error.message || 'API request failed',
+      message: detailMsg || error.message || 'API request failed',
       status: error.response?.status,
       data: error.response?.data,
     };

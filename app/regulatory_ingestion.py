@@ -10,6 +10,7 @@ from typing import Dict, Any, List, Optional, Tuple
 
 import pymupdf as fitz
 from app.db import REGULATORY_SOURCES_DIR, add_audit_entry
+from app.storage import save_file, get_file_path
 
 MAX_REGULATORY_FILE_SIZE = 50 * 1024 * 1024  # 50MB limit
 
@@ -217,11 +218,10 @@ def ingest_regulatory_pdf(
     source_id = custom_source_id or f"SRC-{uuid.uuid4().hex[:12].upper()}"
     now = datetime.now(timezone.utc).isoformat()
     
-    # 3. Preserve original uploaded file
+    # 3. Preserve original uploaded file via durable storage
     target_filename = f"{sha256}.pdf"
-    stored_path = REGULATORY_SOURCES_DIR / target_filename
-    with open(stored_path, "wb") as f:
-        f.write(file_bytes)
+    relative_stored_path = f"regulatory_sources/{target_filename}"
+    local_stored_path = save_file(relative_stored_path, file_bytes, mime_type="application/pdf")
 
     # 4. Open and process PDF with PyMuPDF
     processing_status = "processing"
@@ -229,7 +229,7 @@ def ingest_regulatory_pdf(
     clauses = []
     
     try:
-        doc = fitz.open(str(stored_path))
+        doc = fitz.open(stream=file_bytes, filetype="pdf")
         page_count = len(doc)
         
         # Check OCR requirement
@@ -244,9 +244,9 @@ def ingest_regulatory_pdf(
                 extraction_errors = "Document opened successfully, but no structured textual regulatory clauses could be recognized."
         doc.close()
     except Exception as e:
-        if stored_path.exists():
+        if local_stored_path.exists():
             try:
-                stored_path.unlink()
+                local_stored_path.unlink()
             except Exception:
                 pass
         raise ValueError(f"Corrupted or invalid PDF file: {str(e)}")
@@ -274,7 +274,7 @@ def ingest_regulatory_pdf(
             now,
             document_version or "v1.0",
             sha256,
-            str(stored_path),
+            relative_stored_path,
             len(file_bytes),
             page_count,
             processing_status,

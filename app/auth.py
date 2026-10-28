@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 NIYANTRAN_ENV = os.getenv("NIYANTRAN_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
 IS_PRODUCTION = NIYANTRAN_ENV == "production"
+IS_SERVERLESS = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
 
 # In production, ALLOW_DEV_HEADERS is strictly False; in development, defaults to True unless disabled
 if IS_PRODUCTION:
@@ -37,10 +38,11 @@ else:
 # Secret key resolution (no hardcoded secrets in source)
 _env_secret = os.getenv("JWT_SECRET_KEY")
 if not _env_secret or _env_secret.strip() == "change_this_to_a_secure_random_string_in_production":
-    if IS_PRODUCTION:
+    if IS_PRODUCTION or IS_SERVERLESS:
         raise RuntimeError(
-            "CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET_KEY environment variable is required in production mode. "
-            "Ephemeral or placeholder secrets must not be generated in production as they cause session desynchronization across serverless cold starts."
+            "CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET_KEY environment variable is required in production mode (and serverless deployments). "
+            "Configure JWT_SECRET_KEY in Vercel project environment variables. Ephemeral or placeholder secrets must not be generated in production "
+            "as they cause session desynchronization and token rejection across serverless cold starts."
         )
     else:
         # Development fallback ephemeral secret
