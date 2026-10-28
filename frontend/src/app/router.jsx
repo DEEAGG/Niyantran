@@ -20,7 +20,6 @@ import ReviewCenter from '../pages/ReviewCenter';
 import Reports from '../pages/Reports';
 import AuditHistory from '../pages/AuditHistory';
 import Settings from '../pages/Settings';
-import NotFound from '../pages/NotFound';
 import PassportPage from '../pages/PassportPage';
 import IntelligencePage from '../pages/IntelligencePage';
 import MonitoringPage from '../pages/MonitoringPage';
@@ -186,9 +185,14 @@ export const router = createBrowserRouter([
       },
       {
         path: '*',
-        element: <NotFound />,
+        element: <Navigate to="/dashboard" replace />,
       },
     ],
+  },
+  // Keep deep links and legacy/unknown paths inside the app instead of showing a dead-end 404.
+  {
+    path: '*',
+    element: <Navigate to="/dashboard" replace />,
   },
 ]);
 
