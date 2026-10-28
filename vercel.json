@@ -1,3 +1,19 @@
 {
-  "version": 2
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    {
+      "source": "/api",
+      "destination": "https://niyantran-three.vercel.app/api"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://niyantran-three.vercel.app/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
