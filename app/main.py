@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import io
 import json
@@ -1266,27 +1267,33 @@ def list_application_fields(application_id: str, current_user: Dict[str, Any] = 
 
 
 @app.post("/api/applications/{application_id}/extract")
-def extract_application_documents(application_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+async def extract_application_documents(application_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    # Fetch IDs once, then extract independent documents concurrently. Each worker
+    # opens its own DB connection; cap concurrency to avoid overloading serverless CPU/OCR.
     with get_connection() as conn:
         check_application_access(conn, application_id, current_user)
-
         docs = conn.execute(
             "SELECT id FROM documents WHERE application_id = ? ORDER BY uploaded_at ASC",
             (application_id,),
         ).fetchall()
 
-    results = []
-    for d in docs:
-        try:
-            res = extract_stored_document(d["id"], current_user=current_user)
-            results.append(res)
-        except Exception as exc:
-            results.append({
-                "document_id": d["id"],
-                "status": "failed",
-                "error": str(exc),
-                "fields": []
-            })
+    semaphore = asyncio.Semaphore(3)
+
+    async def process_one(document_id: str):
+        async with semaphore:
+            try:
+                return await asyncio.to_thread(
+                    extract_stored_document, document_id, current_user=current_user
+                )
+            except Exception as exc:
+                return {
+                    "document_id": document_id,
+                    "status": "failed",
+                    "error": str(exc),
+                    "fields": [],
+                }
+
+    results = await asyncio.gather(*(process_one(d["id"]) for d in docs))
     return {
         "application_id": application_id,
         "documents_processed": len(results),
