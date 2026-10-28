@@ -3,18 +3,18 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api$",
-      "dest": "https://niyantran-three.vercel.app/api"
+      "source": "/api",
+      "destination": "https://niyantran-three.vercel.app/api"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "https://niyantran-three.vercel.app/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://niyantran-three.vercel.app/api/:path*"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
