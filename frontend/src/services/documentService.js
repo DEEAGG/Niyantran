@@ -33,19 +33,35 @@ export const documentService = {
   },
 
   async uploadDocuments(applicationId, files) {
-    const uploaded = [];
-    for (const item of files) {
-      const fileBlob = item.file || item;
-      const category = item.category || 'Supporting Declaration';
-      if (fileBlob instanceof Blob || fileBlob instanceof File) {
+    const items = files.map((item) => ({ item }))
+      .filter(({ item }) => {
+        const fileBlob = item.file || item;
+        return fileBlob instanceof Blob || fileBlob instanceof File;
+      });
+    const uploaded = new Array(items.length);
+    let cursor = 0;
+
+    // Upload a small batch in parallel instead of waiting for each remote
+    // Supabase Storage round-trip before starting the next file.
+    const worker = async () => {
+      while (true) {
+        const slot = cursor++;
+        if (slot >= items.length) return;
+        const { item } = items[slot];
+        const fileBlob = item.file || item;
+        const category = item.category || 'Supporting Declaration';
         const res = await this.uploadDocument(applicationId, fileBlob, category);
-        uploaded.push(res.data);
+        uploaded[slot] = res.data;
       }
-    }
+    };
+
+    await Promise.all(
+      Array.from({ length: Math.min(3, items.length) }, () => worker())
+    );
 
     return {
-      data: uploaded,
-      message: `${uploaded.length} document(s) uploaded successfully.`,
+      data: uploaded.filter(Boolean),
+      message: `${uploaded.filter(Boolean).length} document(s) uploaded successfully.`,
     };
   },
 };
