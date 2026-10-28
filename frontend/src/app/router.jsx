@@ -33,10 +33,10 @@ const Login = lazy(() => import('../pages/Login'));
 const Register = lazy(() => import('../pages/Register'));
 
 function RouteLoading() {
+  // Keep lazy-loaded routes lightweight without showing the old "Loading workspace…"
+  // placeholder across the page during navigation or the first chunk download.
   return (
-    <div role="status" aria-live="polite" className="min-h-[35vh] flex items-center justify-center text-sm text-slate-500">
-      Loading workspace…
-    </div>
+    <div role="status" aria-label="Loading" className="min-h-[8px]" />
   );
 }
 
