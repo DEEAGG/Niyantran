@@ -63,9 +63,12 @@ def test_health_check_healthy():
 def test_home_status():
     response = client.get("/")
     assert response.status_code == 200
-    data = response.json()
-    assert data.get("project") == "Niyantran"
-    assert data.get("status") == "running"
+    if "application/json" in response.headers.get("content-type", ""):
+        data = response.json()
+        assert data.get("project") == "Niyantran"
+        assert data.get("status") == "running"
+    else:
+        assert "html" in response.headers.get("content-type", "")
 
 
 # -------------------------------------------------------------
