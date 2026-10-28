@@ -27,7 +27,13 @@ from pydantic import BaseModel, Field
 
 NIYANTRAN_ENV = os.getenv("NIYANTRAN_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
 IS_PRODUCTION = NIYANTRAN_ENV == "production"
-IS_SERVERLESS = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+IS_SERVERLESS = bool(
+    os.getenv("VERCEL")
+    or os.getenv("VERCEL_ENV")
+    or os.getenv("VERCEL_URL")
+    or os.getenv("VERCEL_REGION")
+    or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+)
 
 # In production, ALLOW_DEV_HEADERS is strictly False; in development, defaults to True unless disabled
 if IS_PRODUCTION:

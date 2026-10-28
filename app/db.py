@@ -540,7 +540,13 @@ def get_connection(db_path: Optional[Path] = None):
             conn.close()
     else:
         # Check serverless/production safety
-        is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+        is_serverless = bool(
+            os.getenv("VERCEL")
+            or os.getenv("VERCEL_ENV")
+            or os.getenv("VERCEL_URL")
+            or os.getenv("VERCEL_REGION")
+            or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+        )
         is_prod = os.getenv("NIYANTRAN_ENV", "").strip().lower() == "production"
         allow_ephemeral = os.getenv("ALLOW_EPHEMERAL_DB", "false").strip().lower() in ("true", "1", "yes")
 
