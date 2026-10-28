@@ -327,31 +327,38 @@ def test_direct_extract_scanned_pdf_ocr_unavailable(monkeypatch):
 
 
 def test_vercel_configuration_routing():
-    """Validates that vercel.json rewrites both /api and /api/* to api/index.py and SPA to index.html."""
+    """Validates that vercel.json and frontend/vercel.json route API requests to FastAPI and SPA routes to index.html."""
     import json
     from pathlib import Path
 
-    vercel_path = Path(__file__).resolve().parent.parent / "vercel.json"
-    assert vercel_path.exists(), "vercel.json must exist in project root"
+    root_dir = Path(__file__).resolve().parent.parent
 
-    with open(vercel_path, "r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    assert config.get("version") == 2
-    assert "buildCommand" in config
-    assert config.get("outputDirectory") == "frontend/dist"
-
-    rewrites = config.get("rewrites", [])
-    rewrite_map = {r["source"]: r["destination"] for r in rewrites}
-
-    assert rewrite_map.get("/api") == "/api/index.py", "/api must rewrite to /api/index.py"
-    assert rewrite_map.get("/api/(.*)") == "/api/index.py", "/api/(.*) must rewrite to /api/index.py"
-    assert rewrite_map.get("/(.*)") == "/index.html", "/(.*) must rewrite to /index.html"
+    # 1. Backend Vercel project configuration
+    backend_vercel = root_dir / "vercel.json"
+    assert backend_vercel.exists(), "vercel.json must exist in project root"
+    with open(backend_vercel, "r", encoding="utf-8") as f:
+        backend_config = json.load(f)
+    assert backend_config.get("version") == 2
 
     # Verify serverless entrypoint exists and exports app
-    api_entry = Path(__file__).resolve().parent.parent / "api" / "index.py"
+    api_entry = root_dir / "api" / "index.py"
     assert api_entry.exists(), "api/index.py must exist"
     from api.index import app as vercel_app
     assert vercel_app is not None
+
+    # 2. Frontend Vercel project configuration
+    frontend_vercel = root_dir / "frontend" / "vercel.json"
+    assert frontend_vercel.exists(), "frontend/vercel.json must exist"
+    with open(frontend_vercel, "r", encoding="utf-8") as f:
+        frontend_config = json.load(f)
+
+    assert frontend_config.get("outputDirectory") == "dist"
+    rewrites = frontend_config.get("rewrites", [])
+    rewrite_map = {r["source"]: r["destination"] for r in rewrites}
+
+    assert "/api" in rewrite_map, "/api rewrite must exist in frontend/vercel.json"
+    assert "/api/(.*)" in rewrite_map, "/api/(.*) rewrite must exist in frontend/vercel.json"
+    assert rewrite_map.get("/(.*)") == "/index.html", "/(.*) must rewrite to /index.html for SPA"
+
 
 
