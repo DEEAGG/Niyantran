@@ -35,6 +35,8 @@ import Badge from '../components/common/Badge';
 import Skeleton from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import Tabs from '../components/common/Tabs';
+import DossierReportView from '../components/regulatory/DossierReportView';
+import { handleReportAction } from '../utils/reportPdfHelper';
 
 // ─── Authenticity Inspector Tab ───────────────────────────────────────────────
 function AuthenticityTab({ app, documents }) {
@@ -254,14 +256,13 @@ function EvidencePassportTab({ app, documents, findings }) {
           <Badge variant={auditChain.valid ? 'success' : 'error'} size="md" dot>
             {auditChain.valid ? 'Cryptographic Chain Intact' : 'Chain Broken'}
           </Badge>
-          <a
-            href={`/api/applications/${app.id}/report`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs font-mono px-3 py-1.5 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-colors flex items-center gap-1.5"
+          <button
+            type="button"
+            onClick={() => handleReportAction({ applicationId: app.id, action: 'view', addToast })}
+            className="text-xs font-mono px-3 py-1.5 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" /> Print Dossier
-          </a>
+          </button>
         </div>
       </div>
 
@@ -551,7 +552,7 @@ export default function ApplicationDetails() {
             variant="outline"
             size="sm"
             icon={Printer}
-            onClick={() => window.open(`/api/applications/${app.id}/report`, '_blank')}
+            onClick={() => handleReportAction({ applicationId: app.id, action: 'view', addToast })}
           >
             Print Dossier
           </Button>
@@ -1041,35 +1042,14 @@ export default function ApplicationDetails() {
       {/* ───────────────────────────────────────────────────────────── */}
       {activeTab === 'report' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-primary font-mono">
-                Official Statutory Compliance Dossier
-              </h3>
-              <p className="text-xs text-text-muted">
-                Cryptographically bound evidence report ready for audit review and printing.
-              </p>
-            </div>
-            <a
-              href={`/api/applications/${app.id}/report`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors shadow-xs"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Open Printable Dossier</span>
-              <ExternalLink className="w-3 h-3 ml-1" />
-            </a>
-          </div>
-
-          {/* Dossier Preview Iframe */}
-          <div className="aspect-[16/10] w-full border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
-            <iframe
-              src={`/api/applications/${app.id}/report?token=${encodeURIComponent(localStorage.getItem("niyantran_token") || "")}`}
-              title="Statutory Dossier Preview"
-              className="w-full h-full border-0"
-            />
-          </div>
+          <DossierReportView
+            app={app}
+            documents={documents}
+            findings={findings}
+            extractedFields={extractedFields}
+            auditChain={auditChain}
+            onRefresh={loadData}
+          />
 
           {/* Evidence Passport Cryptographic Manifest */}
           <EvidencePassportTab app={app} documents={documents} findings={findings} />

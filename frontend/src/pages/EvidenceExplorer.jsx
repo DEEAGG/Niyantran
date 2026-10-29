@@ -48,10 +48,10 @@ export default function EvidenceExplorer() {
   const [mobileTab, setMobileTab] = useState('evidence'); // 'findings' | 'evidence' | 'explanation'
   const [reviewerNotes, setReviewerNotes] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
-  const [confirmModal, setConfirmModal] = useState({ open: false, action: null });
+  const [confirmModal, setConfirmModal] = useState({ open: false, action: null, finding: null });
   const [zoomLevel, setZoomLevel] = useState(100);
 
-  const loadData = async () => {
+  const loadData = async (retainedFindingId = null) => {
     try {
       setLoading(true);
       let targetId = activeAppId;
@@ -97,7 +97,17 @@ export default function EvidenceExplorer() {
 
       // Default to finding with discrepancies.
       const target = list.find((f) => f.rawStatus === 'fail' || f.severity === 'High') || list[0] || null;
-      setSelectedFinding(target);
+      setSelectedFinding((prev) => {
+        const idToKeep = retainedFindingId || prev?.id;
+        if (idToKeep) {
+          const found = list.find((f) => f.id === idToKeep);
+          if (found) {
+            setReviewerNotes(found.reviewerNotes || '');
+            return found;
+          }
+        }
+        return target;
+      });
       if (target) setReviewerNotes(target.reviewerNotes || '');
     } catch (err) {
       console.error(err);
@@ -146,27 +156,36 @@ export default function EvidenceExplorer() {
     ? '/api/documents/' + encodeURIComponent(selectedDocumentId) + '/page/' + (Number(selectedPage) || 1) + bboxQuery
     : '';
 
-  const handleReviewAction = async (action) => {
-    if (!selectedFinding) return;
+  const handleReviewAction = async (action, targetFinding = null) => {
+    const findingToActOn = targetFinding || confirmModal.finding || selectedFinding;
+    if (!findingToActOn) {
+      addToast({
+        title: 'No Finding Selected',
+        message: 'Please select a finding from the list before submitting an adjudication decision.',
+        type: 'warning',
+      });
+      return;
+    }
+    if (submittingAction) return;
     try {
       setSubmittingAction(true);
-      await reviewService.submitReview(selectedFinding.id, {
+      await reviewService.submitReview(findingToActOn.id, {
         action,
         reviewerNotes,
       });
 
       addToast({
         title: 'Review Decision Saved',
-        message: `Marked finding ${selectedFinding.id} as "${action}".`,
+        message: `Successfully recorded decision "${action}" for ${findingToActOn.code || findingToActOn.ruleId || findingToActOn.id}.`,
         type: 'success',
       });
 
-      setConfirmModal({ open: false, action: null });
-      loadData();
+      setConfirmModal({ open: false, action: null, finding: null });
+      await loadData(findingToActOn.id);
     } catch (err) {
       addToast({
         title: 'Action Failed',
-        message: err.message || 'Could not record review action',
+        message: err?.response?.data?.detail || err?.message || 'Could not record review action',
         type: 'error',
       });
     } finally {
@@ -553,7 +572,8 @@ export default function EvidenceExplorer() {
               size="sm"
               icon={HelpCircle}
               isLoading={submittingAction}
-              onClick={() => setConfirmModal({ open: true, action: 'Clarification Requested' })}
+              disabled={!selectedFinding || submittingAction}
+              onClick={() => setConfirmModal({ open: true, action: 'Clarification Requested', finding: selectedFinding })}
               className="w-full"
             >
               Request Clarification
@@ -565,7 +585,7 @@ export default function EvidenceExplorer() {
                 size="sm"
                 icon={Check}
                 disabled={submittingAction}
-                onClick={() => setConfirmModal({ open: true, action: 'Accepted' })}
+                onClick={() => setConfirmModal({ open: true, action: 'Accepted', finding: selectedFinding })}
               >
                 Accept Finding
               </Button>
@@ -574,7 +594,7 @@ export default function EvidenceExplorer() {
                 size="sm"
                 icon={X}
                 disabled={submittingAction}
-                onClick={() => setConfirmModal({ open: true, action: 'False Positive' })}
+                onClick={() => setConfirmModal({ open: true, action: 'False Positive', finding: selectedFinding })}
               >
                 False Positive
               </Button>
@@ -587,11 +607,11 @@ export default function EvidenceExplorer() {
       {confirmModal.open && (
         <ConfirmModal
           isOpen={confirmModal.open}
-          onClose={() => setConfirmModal({ open: false, action: null })}
-          onConfirm={() => handleReviewAction(confirmModal.action)}
+          onClose={() => !submittingAction && setConfirmModal({ open: false, action: null, finding: null })}
+          onConfirm={() => handleReviewAction(confirmModal.action, confirmModal.finding || selectedFinding)}
           title={`Confirm Adjudication: "${confirmModal.action}"`}
-          message={`Are you sure you want to mark finding ${selectedFinding?.id} as "${confirmModal.action}"? This will be recorded in the immutable audit trail.`}
-          confirmText="Confirm Decision"
+          message={`Are you sure you want to mark finding ${(confirmModal.finding || selectedFinding)?.code || (confirmModal.finding || selectedFinding)?.id} as "${confirmModal.action}"? This will record an immutable decision entry in the cryptographic audit trail.`}
+          confirmText={submittingAction ? "Recording Decision..." : "Confirm Decision"}
           confirmVariant={confirmModal.action === 'False Positive' ? 'dark' : 'primary'}
           isLoading={submittingAction}
         />

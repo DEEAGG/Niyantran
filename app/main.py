@@ -45,6 +45,7 @@ from app.regulatory_ingestion import (
 from app.extractor import extract_document_fields, normalize_field
 from app.rules_engine import evaluate_ruleset, seed_default_rules_if_empty
 from app.report import render_html_report
+from app.pdf_generator import generate_dossier_pdf
 from app.replay import execute_replay_for_application
 from app.authenticity import evaluate_document_authenticity
 import shutil
@@ -1547,6 +1548,11 @@ def format_finding_row(row: Any) -> Dict[str, Any]:
         "subject": evidence.get("subject"),
         "created_at": row["created_at"],
         "decision": decision_info,
+        "decision_id": decision_info["id"] if decision_info else None,
+        "decision_type": decision_info["decision"] if decision_info else None,
+        "decision_reason": decision_info["reason"] if decision_info else None,
+        "decision_actor": decision_info["actor"] if decision_info else None,
+        "decision_created_at": decision_info["created_at"] if decision_info else None,
     }
 
 
@@ -2364,7 +2370,7 @@ def get_finding_evidence(finding_id: str, current_user: Dict[str, Any] = Depends
 
 
 @app.post("/api/findings/{finding_id}/decision")
-def record_finding_decision(finding_id: str, payload: FindingDecisionCreate, _reviewer=Depends(verify_reviewer_permission)):
+def record_finding_decision(finding_id: str, payload: FindingDecisionCreate, current_user: Dict[str, Any] = Depends(get_current_user)):
     raw_dec = (payload.decision or payload.action or "").strip().lower()
     if "accept" in raw_dec or "resolve" in raw_dec:
         clean_dec = "resolved"
@@ -2378,16 +2384,16 @@ def record_finding_decision(finding_id: str, payload: FindingDecisionCreate, _re
     if clean_dec not in ("resolved", "rejected", "escalated"):
         raise HTTPException(status_code=422, detail="decision must be one of: 'resolved', 'rejected', 'escalated'")
 
-    clean_reason = payload.reason or payload.reviewerNotes or payload.notes
+    clean_reason = payload.reason or payload.reviewerNotes or payload.notes or "Decision recorded"
 
     with get_connection() as conn:
-        finding = conn.execute("SELECT * FROM findings WHERE id = ?", (finding_id,)).fetchone()
+        finding = check_finding_access(conn, finding_id, current_user)
         if not finding:
             raise HTTPException(status_code=404, detail="Finding not found")
 
         dec_id = f"DEC-{uuid.uuid4().hex[:12].upper()}"
         now = datetime.now(timezone.utc).isoformat()
-        actor_name = payload.actor or "local-reviewer"
+        actor_name = payload.actor or current_user.get("full_name") or current_user.get("email") or current_user.get("id") or "reviewer"
 
         conn.execute(
             """
@@ -2404,6 +2410,7 @@ def record_finding_decision(finding_id: str, payload: FindingDecisionCreate, _re
             entity_id=dec_id,
             event_data={
                 "finding_id": finding_id,
+                "application_id": finding["application_id"] if hasattr(finding, "keys") and "application_id" in finding.keys() else None,
                 "decision": clean_dec,
                 "reason": clean_reason,
             },
@@ -2422,8 +2429,8 @@ def record_finding_decision(finding_id: str, payload: FindingDecisionCreate, _re
 
 
 @app.post("/api/findings/{finding_id}/reviews")
-def record_finding_review(finding_id: str, payload: FindingDecisionCreate, _reviewer=Depends(verify_reviewer_permission)):
-    return record_finding_decision(finding_id, payload, _reviewer)
+def record_finding_review(finding_id: str, payload: FindingDecisionCreate, current_user: Dict[str, Any] = Depends(get_current_user)):
+    return record_finding_decision(finding_id, payload, current_user)
 
 
 # ==========================================
@@ -2842,8 +2849,31 @@ def get_application_report(application_id: str, request: Request, format: Option
                 }
             }
 
+        if format in ("pdf", "download") or "application/pdf" in request.headers.get("accept", "").lower() or request.url.path.endswith(".pdf"):
+            pdf_bytes = generate_dossier_pdf(context)
+            disposition = "attachment" if (format == "download" or request.query_params.get("download") == "true") else "inline"
+            safe_filename = f"Niyantran_Dossier_{application_id}.pdf"
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'{disposition}; filename="{safe_filename}"',
+                    "Content-Length": str(len(pdf_bytes)),
+                    "Cache-Control": "private, no-store",
+                },
+            )
+
         html = render_html_report(context)
         return Response(content=html, media_type="text/html")
+
+
+@app.get("/api/applications/{application_id}/dossier.pdf")
+def get_application_dossier_pdf(
+    application_id: str,
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    return get_application_report(application_id=application_id, request=request, format="pdf", current_user=current_user)
 
 
 # --- Validation Replay Endpoints ---

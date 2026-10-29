@@ -23,9 +23,12 @@ import { FoldedDocumentDoodle, DecorativeStamp, SparkleDoodle } from '../compone
 
 import EmptyState from '../components/common/EmptyState';
 import { applicationService } from '../services/applicationService';
+import { useToast } from '../context/ToastContext';
+import { handleReportAction } from '../utils/reportPdfHelper';
 
 export default function PassportPage() {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const appIdParam = searchParams.get('app');
 
@@ -168,15 +171,14 @@ export default function PassportPage() {
             ))}
           </select>
 
-          <a
-            href={`/api/applications/${selectedAppId}/report`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-semibold text-text-primary hover:bg-surface-secondary transition-colors"
+          <button
+            type="button"
+            onClick={() => handleReportAction({ applicationId: selectedAppId, action: 'view', addToast })}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-surface text-xs font-semibold text-text-primary hover:bg-surface-secondary transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Official Dossier</span>
-          </a>
+          </button>
         </div>
       </div>
 

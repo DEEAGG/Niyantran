@@ -7,11 +7,23 @@ export function normalizeFinding(f) {
   const severity = rawSev === 'critical' ? 'Critical' : rawSev === 'high' ? 'High' : rawSev === 'medium' ? 'Medium' : 'Low';
 
   let displayStatus = 'Pending Review';
-  if (f.decision_type) {
-    const dt = f.decision_type.toLowerCase();
-    if (dt === 'resolved') displayStatus = 'Resolved';
-    else if (dt === 'rejected') displayStatus = 'Dismissed';
-    else if (dt === 'escalated') displayStatus = 'Clarification Requested';
+  let reviewerDecision = null;
+  const rawDec = f.decision_type || f.decision?.decision || f.reviewerDecision || '';
+  const dt = rawDec.toLowerCase();
+  if (dt) {
+    if (dt === 'resolved' || dt === 'accepted') {
+      displayStatus = 'Resolved';
+      reviewerDecision = 'Accepted';
+    } else if (dt === 'rejected' || dt === 'dismissed' || dt === 'false positive') {
+      displayStatus = 'Dismissed';
+      reviewerDecision = 'False Positive';
+    } else if (dt === 'escalated' || dt.includes('clarif')) {
+      displayStatus = 'Clarification Requested';
+      reviewerDecision = 'Clarification Requested';
+    } else {
+      displayStatus = rawDec;
+      reviewerDecision = rawDec;
+    }
   } else if (rawStatus === 'pass') {
     displayStatus = 'Passed';
   }
@@ -45,10 +57,10 @@ export function normalizeFinding(f) {
     explanation: f.message || f.explanation || 'Regulatory condition not satisfied.',
     recommendedAction: f.recommendation || f.recommended_action || f.recommendedAction || 'Inspect physical records or submit clarification.',
     evidenceSources,
-    reviewerDecision: f.decision_type || f.reviewerDecision || null,
-    reviewerNotes: f.decision_reason || f.reviewerNotes || '',
-    reviewedAt: f.decision_created_at || f.reviewedAt || null,
-    reviewedBy: f.decision_actor || f.reviewedBy || null,
+    reviewerDecision,
+    reviewerNotes: f.decision_reason || f.decision?.reason || f.reviewerNotes || '',
+    reviewedAt: f.decision_created_at || f.decision?.created_at || f.reviewedAt || null,
+    reviewedBy: f.decision_actor || f.decision?.actor || f.reviewedBy || null,
     createdAt: f.created_at || new Date().toISOString(),
   };
 }

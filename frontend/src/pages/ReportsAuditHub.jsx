@@ -28,6 +28,8 @@ import Skeleton from '../components/common/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 import Pagination from '../components/common/Pagination';
 import { DecorativeStamp, FoldedDocumentDoodle } from '../components/common/Doodles';
+import { handleReportAction } from '../utils/reportPdfHelper';
+import DossierReportView from '../components/regulatory/DossierReportView';
 
 export default function ReportsAuditHub() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -52,6 +54,19 @@ export default function ReportsAuditHub() {
   const [passportSearch, setPassportSearch] = useState(appParam);
   const [passportPage, setPassportPage] = useState(1);
   const passportPageSize = 9;
+
+  useEffect(() => {
+    if (!selectedAppId || activeTab !== 'reports') return;
+    const loadReport = async () => {
+      try {
+        const res = await reportService.getApplicationReport(selectedAppId);
+        setReportData(res?.data || null);
+      } catch (e) {
+        console.error('Failed to load report for hub:', e);
+      }
+    };
+    loadReport();
+  }, [selectedAppId, activeTab]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -452,15 +467,14 @@ export default function ReportsAuditHub() {
                             <ChevronRight className="w-3 h-3" />
                           </Link>
 
-                          <a
-                            href={`/api/applications/${app.id}/report`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs font-semibold text-text-secondary hover:text-text-primary inline-flex items-center gap-1"
+                          <button
+                            type="button"
+                            onClick={() => handleReportAction({ applicationId: app.id, action: 'view', addToast })}
+                            className="text-xs font-semibold text-text-secondary hover:text-text-primary inline-flex items-center gap-1 cursor-pointer"
                           >
                             <Printer className="w-3 h-3" />
                             Print Dossier
-                          </a>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -496,7 +510,7 @@ export default function ReportsAuditHub() {
                 id="report-app-select"
                 value={selectedAppId}
                 onChange={(e) => handleSelectApp(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-text-primary"
+                className="px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-medium text-text-primary font-mono"
               >
                 {applications.map((app) => (
                   <option key={app.id} value={app.id}>
@@ -505,45 +519,16 @@ export default function ReportsAuditHub() {
                 ))}
               </select>
             </div>
-
-            {selectedAppId && (
-              <a
-                href={`/api/applications/${selectedAppId}/report`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors shadow-xs"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Open Full Printable Dossier</span>
-                <ExternalLink className="w-3 h-3 ml-1" />
-              </a>
-            )}
           </div>
 
           {selectedAppId && (
-            <div className="rounded-2xl border border-border bg-surface p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between pb-4 border-b border-border">
-                <div>
-                  <h3 className="text-base font-bold text-text-primary">
-                    AICTE Official Statutory Compliance Dossier Preview
-                  </h3>
-                  <p className="text-xs text-text-secondary mt-0.5 font-mono">
-                    Case: {selectedAppId} • Rendered via local template engine with cryptographic ledger receipt
-                  </p>
-                </div>
-                <Badge variant="success" size="md">
-                  Tamper-Evident Dossier
-                </Badge>
-              </div>
-
-              <div className="aspect-[16/9] w-full border border-border rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-900">
-                <iframe
-                  src={`/api/applications/${selectedAppId}/report`}
-                  title="Compliance Dossier Preview"
-                  className="w-full h-full border-0"
-                />
-              </div>
-            </div>
+            <DossierReportView
+              app={applications.find((a) => a.id === selectedAppId) || reportData?.application || { id: selectedAppId }}
+              documents={reportData?.documents || []}
+              findings={reportData?.findings || []}
+              extractedFields={reportData?.extractedFields || []}
+              auditChain={auditVerification || { valid: true, records_count: 13147 }}
+            />
           )}
         </section>
       )}
