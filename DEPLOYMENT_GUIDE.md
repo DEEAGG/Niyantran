@@ -89,10 +89,9 @@ Once the Vercel deployment is active:
 
 3. **Frontend SPA Routing**:
    - Navigate to `https://<YOUR-VERCEL-DOMAIN>/login`
-   - Test authorized roles:
-     - Reviewer: `officer@aicte.gov.in` / `Officer@2026`
-     - Institution: `adgips@institution.edu.in` / `Adgips@2026`
-     - Administrator: `admin@niyantran.local` / `Admin@2026`
+   - Test authorized access:
+     - Register an institutional user at `/register` or sign in with authorized institutional credentials at `/login`.
+     - Administrative and reviewer roles authenticate via provisioned accounts or institutional SSO.
    - Direct-refresh any route (e.g. `/cases`, `/evidence`) to verify that the SPA fallback rewrite serves `index.html` without 404 errors.
 
 4. **Compliance Workflows**:

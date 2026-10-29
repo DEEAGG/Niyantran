@@ -32,7 +32,7 @@ export default function CoreFeaturesPage() {
     applications: 0,
     documents: 0,
     rules: 0,
-    auditRecords: 9373,
+    auditRecords: 0,
     findings: 0
   });
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function CoreFeaturesPage() {
       dashboardService.getDashboardSummary().catch(() => ({ data: {} })),
       applicationService.getApplications().catch(() => ({ data: [] })),
       ruleService.getRules().catch(() => ({ data: [] })),
-      auditService.verifyAuditChain().catch(() => ({ total_records: 9373 })),
+      auditService.verifyAuditChain().catch(() => ({ total_records: 0 })),
     ]).then(([dashRes, appsRes, rulesRes, auditRes]) => {
       const apps = Array.isArray(appsRes?.data) ? appsRes.data : (Array.isArray(appsRes) ? appsRes : []);
       const totalDocs = apps.reduce((acc, a) => acc + (a.documentCount || (a.documents ? a.documents.length : 0)), 0);
@@ -50,10 +50,10 @@ export default function CoreFeaturesPage() {
 
       setStats({
         applications: apps.length || dashRes?.data?.kpis?.totalApplications || 0,
-        documents: totalDocs || 1138,
-        rules: rules.length || 14,
-        auditRecords: auditRes?.total_records || 9373,
-        findings: dashRes?.data?.kpis?.totalFindingViolations || 12
+        documents: totalDocs,
+        rules: rules.length,
+        auditRecords: auditRes?.total_records || 0,
+        findings: dashRes?.data?.kpis?.totalFindingViolations || 0
       });
       setLoading(false);
     });
@@ -93,7 +93,7 @@ export default function CoreFeaturesPage() {
       route: '/extraction',
       actionText: 'Inspect Extracted Data',
       tag: 'Step 2 • Reading',
-      metric: 'LayoutLM + Tesseract OCR',
+      metric: 'PyMuPDF + Tesseract OCR',
       secondaryRoute: '/verification?tab=extraction',
       secondaryText: 'Structured Entities'
     },

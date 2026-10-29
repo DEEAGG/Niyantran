@@ -12,6 +12,13 @@ Features:
 
 import hashlib
 import os
+if "_DOTENV_LOADED" not in os.environ:
+    os.environ["_DOTENV_LOADED"] = "1"
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except Exception:
+        pass
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
@@ -35,8 +42,8 @@ IS_SERVERLESS = bool(
     or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
 )
 
-# In production, ALLOW_DEV_HEADERS is strictly False; in development, defaults to True unless disabled
-if IS_PRODUCTION:
+# In production and serverless environments, ALLOW_DEV_HEADERS is strictly False
+if IS_PRODUCTION or IS_SERVERLESS:
     ALLOW_DEV_HEADERS = False
 else:
     ALLOW_DEV_HEADERS = os.getenv("ALLOW_DEV_HEADERS", "true").strip().lower() in ("true", "1", "yes")
@@ -159,7 +166,7 @@ def get_user_by_id_or_email(identifier: str) -> Optional[Dict[str, Any]]:
     try:
         with get_connection() as conn:
             row = conn.execute(
-                "SELECT id, email, full_name, password_hash, role, institution_name, institution_id, created_at, updated_at FROM users WHERE id = ? OR LOWER(email) = LOWER(?)",
+                "SELECT id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at FROM users WHERE id = ? OR LOWER(email) = LOWER(?)",
                 (identifier, identifier),
             ).fetchone()
             if row:
@@ -311,6 +318,7 @@ def get_current_user(
     x_actor_role: Optional[str] = Header(default=None, alias="X-Actor-Role"),
     x_actor_email: Optional[str] = Header(default=None, alias="X-Actor-Email"),
     authorization: Optional[str] = Header(default=None, alias="Authorization"),
+    token_query: Optional[str] = Query(default=None, alias="token"),
 ) -> Dict[str, Any]:
     """
     Standard institutional authentication dependency.
@@ -334,6 +342,8 @@ def get_current_user(
             token = parts[1]
         elif len(parts) == 1:
             token = parts[0]
+    elif token_query:
+        token = token_query.strip()
 
     # Explicit check for known mock / test unauthorized tokens
     if token and token.lower() in ("unauthorized", "guest", "invalid", "forbidden"):
@@ -344,6 +354,26 @@ def get_current_user(
 
     # If Bearer token is provided, decode and verify it
     if token:
+        # Check token revocation
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        from app.db import get_connection
+        try:
+            with get_connection() as conn:
+                revoked = conn.execute(
+                    "SELECT 1 FROM revoked_tokens WHERE token_hash = ?",
+                    (token_hash,),
+                ).fetchone()
+                if revoked:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Authentication token has been revoked or invalidated. Please sign in again.",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
         payload = decode_access_token(token)
         user_role = payload.get("role", "reviewer").lower()
         if user_role in ("guest", "unauthorized", "anonymous", "forbidden"):
@@ -358,30 +388,47 @@ def get_current_user(
         if not db_user and email:
             db_user = get_user_by_id_or_email(email)
 
-        full_name = (db_user and db_user.get("full_name")) or payload.get("full_name") or email or "User"
-        inst_name = (db_user and db_user.get("institution_name")) or payload.get("institution_name")
-        inst_id = (db_user and db_user.get("institution_id")) or payload.get("institution_id")
-        effective_role = (db_user and db_user.get("role")) or user_role
+        # Requirement 6: A valid JWT alone must not grant access if its account no longer exists.
+        if not db_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User account no longer exists or has been removed. Please sign in or register.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if db_user.get("is_active", 1) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User account is deactivated. Please contact administrator.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        effective_user_id = db_user["id"]
+        effective_email = db_user["email"]
+        full_name = db_user.get("full_name") or payload.get("full_name") or effective_email
+        inst_name = db_user.get("institution_name") or payload.get("institution_name")
+        inst_id = db_user.get("institution_id") or payload.get("institution_id")
+        effective_role = db_user.get("role") or user_role
 
         return {
-            "user_id": user_id,
-            "email": email,
+            "user_id": effective_user_id,
+            "email": effective_email,
             "full_name": full_name,
             "role": effective_role,
             "permissions": ROLE_PERMISSIONS.get(effective_role, []),
             "institution_name": inst_name,
             "institution_id": inst_id,
-            "initials": calculate_initials(full_name, email),
+            "initials": calculate_initials(full_name, effective_email),
             "auth_method": "bearer_jwt",
         }
 
-    # Production Mode: strict rejection of missing tokens (NO header spoofing permitted)
-    if not ALLOW_DEV_HEADERS or IS_PRODUCTION:
+    # Production / Serverless Mode: strict rejection of missing tokens (NO header spoofing permitted)
+    if not ALLOW_DEV_HEADERS or IS_PRODUCTION or IS_SERVERLESS:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=(
                 "Institutional OAuth2/OIDC authentication required. "
-                "Development header spoofing is disabled in production."
+                "Development header spoofing is disabled in production and serverless environments."
             ),
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -491,7 +538,7 @@ def register_user(payload: RegisterRequest):
     if not full_name:
         raise HTTPException(status_code=400, detail="Full name is required.")
 
-    from app.db import get_connection
+    from app.db import get_connection, add_audit_entry
     with get_connection() as conn:
         existing = conn.execute("SELECT id FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
         if existing:
@@ -504,14 +551,34 @@ def register_user(payload: RegisterRequest):
         user_role = "institution_user"
         pw_hash = hash_password(payload.password)
 
-        conn.execute(
-            """
-            INSERT INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (user_id, email, full_name, pw_hash, user_role, inst_name, inst_id, now, now),
-        )
-        conn.commit()
+        try:
+            conn.execute(
+                """
+                INSERT INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (user_id, email, full_name, pw_hash, user_role, inst_name, inst_id, now, now),
+            )
+            add_audit_entry(
+                conn=conn,
+                event_type="USER_REGISTERED",
+                entity_type="user",
+                entity_id=user_id,
+                event_data={
+                    "email": email,
+                    "full_name": full_name,
+                    "institution_name": inst_name,
+                    "institution_id": inst_id,
+                    "role": user_role,
+                },
+                actor=email,
+            )
+            conn.commit()
+        except Exception as exc:
+            err_msg = str(exc).lower()
+            if "unique" in err_msg or "integrityerror" in err_msg:
+                raise HTTPException(status_code=400, detail="An account with this email address already exists.")
+            raise
 
     token = create_access_token(
         user_id=user_id,
@@ -537,20 +604,77 @@ def register_user(payload: RegisterRequest):
     )
 
 
+@auth_router.post("/logout")
+def logout_user(
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+    token_query: Optional[str] = Query(default=None, alias="token"),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Revokes the current bearer token and invalidates the session.
+    """
+    token = None
+    if authorization:
+        parts = authorization.strip().split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1]
+        elif len(parts) == 1:
+            token = parts[0]
+    elif token_query:
+        token = token_query.strip()
+
+    if token:
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        payload = decode_access_token(token)
+        exp_ts = payload.get("exp", 0)
+        exp_iso = (
+            datetime.fromtimestamp(exp_ts, tz=timezone.utc).isoformat()
+            if exp_ts
+            else datetime.now(timezone.utc).isoformat()
+        )
+        now_iso = datetime.now(timezone.utc).isoformat()
+        from app.db import get_connection, add_audit_entry
+        with get_connection() as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO revoked_tokens (token_hash, user_id, revoked_at, expires_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                (token_hash, current_user.get("user_id", ""), now_iso, exp_iso),
+            )
+            add_audit_entry(
+                conn=conn,
+                event_type="USER_LOGGED_OUT",
+                entity_type="user",
+                entity_id=current_user.get("user_id"),
+                event_data={"email": current_user.get("email")},
+                actor=current_user.get("email", "unknown"),
+            )
+            conn.commit()
+
+    return {"status": "success", "message": "Successfully logged out. Session token invalidated."}
+
 @auth_router.post("/login", response_model=TokenResponse)
 def login_user(payload: LoginRequest):
     """
     Standard email and password authentication endpoint with database verification.
     """
     email = payload.email.strip().lower()
-    from app.db import get_connection
+    from app.db import get_connection, add_audit_entry
     with get_connection() as conn:
-        user = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+        row = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
 
-    if not user or not verify_password(payload.password, user["password_hash"]):
+    if not row or not verify_password(payload.password, row["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
+        )
+
+    user = dict(row)
+    if user.get("is_active", 1) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account is deactivated. Please contact administrator.",
         )
 
     user_id = user["id"]
@@ -653,7 +777,7 @@ def update_profile(
 def login_for_access_token(payload: InstitutionalLoginRequest):
     """
     Issues a signed JWT access token for institutional reviewers and admins.
-    Validates institutional role and returns granted permissions.
+    Validates institutional role, ensures persistent database record, and returns granted permissions.
     """
     role = (payload.role or "reviewer").lower().strip()
     if role not in ROLE_PERMISSIONS:
@@ -662,16 +786,39 @@ def login_for_access_token(payload: InstitutionalLoginRequest):
             detail=f"Invalid institutional role. Supported: {list(ROLE_PERMISSIONS.keys())}",
         )
 
-    user_id = f"USR-{secrets.token_hex(4).upper()}"
-    email = payload.username if "@" in payload.username else f"{payload.username}@aicte-india.org"
-    full_name = payload.full_name or ("Dr. A. Sharma" if role == "reviewer" else "System Administrator" if role == "admin" else "Institution Officer")
+    email = (payload.username if "@" in payload.username else f"{payload.username}@aicte-india.org").strip().lower()
+    from app.db import get_connection
+    with get_connection() as conn:
+        db_user = conn.execute("SELECT * FROM users WHERE LOWER(email) = ?", (email,)).fetchone()
+        now = datetime.now(timezone.utc).isoformat()
+        if not db_user:
+            user_id = f"USR-{secrets.token_hex(4).upper()}"
+            inst_name = "AICTE Regulatory Directorate" if role == "reviewer" else (payload.full_name or "Institutional User")
+            inst_id = payload.institution_id or ("AICTE-RO-HQ" if role == "reviewer" else f"INST-{secrets.token_hex(4).upper()}")
+            full_name = payload.full_name or ("Dr. A. Sharma" if role == "reviewer" else "System Administrator" if role == "admin" else "Institution Officer")
+            pw_hash = hash_password(payload.password or secrets.token_hex(16))
+            conn.execute(
+                """
+                INSERT INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (user_id, email, full_name, pw_hash, role, inst_name, inst_id, now, now),
+            )
+            conn.commit()
+        else:
+            user_id = db_user["id"]
+            full_name = db_user["full_name"]
+            role = db_user["role"]
+            inst_name = db_user["institution_name"]
+            inst_id = db_user["institution_id"]
+
     token = create_access_token(
         user_id=user_id,
         email=email,
         role=role,
         full_name=full_name,
-        institution_name="AICTE Regulatory Directorate" if role == "reviewer" else "ADGIPS",
-        institution_id=payload.institution_id or "AICTE-RO-HQ",
+        institution_name=inst_name,
+        institution_id=inst_id,
     )
 
     return TokenResponse(

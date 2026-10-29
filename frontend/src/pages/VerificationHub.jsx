@@ -31,6 +31,7 @@ import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Skeleton from '../components/common/Skeleton';
 import EmptyState from '../components/common/EmptyState';
+import AuthenticatedImage, { openAuthenticatedDocument } from '../components/common/AuthenticatedImage';
 import ErrorState from '../components/common/ErrorState';
 import { EvidenceConnectorDoodle, MagnifierDoodle } from '../components/common/Doodles';
 
@@ -638,15 +639,20 @@ export default function VerificationHub() {
                     <span className="text-[10px] font-mono text-text-muted">Page 1</span>
                   </div>
                   <div className="aspect-[3/4] bg-neutral-100 dark:bg-neutral-900 relative flex items-center justify-center p-2">
-                    <img
+                    <AuthenticatedImage
                       src={`/api/documents/${doc.id}/page/1`}
                       alt={doc.original_filename}
                       className="w-full h-full object-contain rounded shadow-xs"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.parentNode.innerHTML = '<div class="text-xs text-text-muted text-center p-4">Spatial preview rendered locally via PyMuPDF</div>';
-                      }}
                     />
+                  </div>
+                  <div className="p-2 border-t border-border bg-surface flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => openAuthenticatedDocument(`/api/documents/${doc.id}/page/1`)}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:text-accent-hover cursor-pointer"
+                    >
+                      <Maximize2 className="w-3 h-3" /> Inspect Page
+                    </button>
                   </div>
                 </div>
               ))}

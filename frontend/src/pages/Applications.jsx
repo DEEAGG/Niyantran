@@ -340,7 +340,7 @@ export default function Applications() {
                       {getDisplayName(app)}
                     </h3>
                     <p className="text-xs text-text-secondary mt-0.5">
-                      {app.applicationType || 'Technical Approval'} &bull; {app.intakeCapacity || 60} seats
+                      {app.applicationType || 'Technical Approval'} &bull; {app.intakeCapacity ? `${app.intakeCapacity} seats` : "Standard intake"}
                     </p>
                   </div>
 
@@ -441,7 +441,7 @@ export default function Applications() {
                       {app.id}
                     </td>
                     <td className="py-3.5 px-4 font-mono text-text-secondary">
-                      {app.intakeCapacity || 60} seats
+                      {app.intakeCapacity ? `${app.intakeCapacity} seats` : "Standard intake"}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="font-mono text-text-secondary">

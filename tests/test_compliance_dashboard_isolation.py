@@ -5,6 +5,34 @@ from app.db import get_connection
 
 client = TestClient(app)
 
+from app.auth import hash_password
+from datetime import datetime, timezone
+
+@pytest.fixture(autouse=True)
+def setup_test_compliance_users():
+    with get_connection() as conn:
+        now = datetime.now(timezone.utc).isoformat()
+        u1 = conn.execute("SELECT id FROM users WHERE email = 'adgips@institution.edu.in'").fetchone()
+        if not u1:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at)
+                VALUES ('USR-ADGIPS', 'adgips@institution.edu.in', 'ADGIPS Officer', ?, 'institution_user', 'ADGIPS', 'INST-ADGIPS', 1, ?, ?)
+                """,
+                (hash_password("Adgips@2026"), now, now),
+            )
+        u2 = conn.execute("SELECT id FROM users WHERE email = 'officer@aicte.gov.in'").fetchone()
+        if not u2:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at)
+                VALUES ('USR-OFFICER', 'officer@aicte.gov.in', 'Dr. A. Sharma', ?, 'reviewer', 'AICTE Regulatory Directorate', 'AICTE-RO-HQ', 1, ?, ?)
+                """,
+                (hash_password("Officer@2026"), now, now),
+            )
+        conn.commit()
+
+
 def test_adgips_genuine_compliance_not_100_percent():
     # Login as ADGIPS
     res = client.post("/api/auth/login", json={"email": "adgips@institution.edu.in", "password": "Adgips@2026"})

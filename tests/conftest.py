@@ -16,6 +16,9 @@ if _prod_db.exists():
 os.environ["NIYANTRAN_DB_PATH"] = str(_test_db_path)
 os.environ["NIYANTRAN_ENV"] = "testing"
 
+from app.db import init_db
+init_db(_test_db_path)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def isolated_test_database():

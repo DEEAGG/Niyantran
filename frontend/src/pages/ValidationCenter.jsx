@@ -197,7 +197,7 @@ export default function ValidationCenter() {
             </div>
             <div>
               <span className="text-[10px] text-text-muted uppercase block">Capacity</span>
-              <span className="font-bold text-accent">{selectedApp.intakeCapacity || 60} Seats</span>
+              <span className="font-bold text-accent">{selectedApp.intakeCapacity ? `${selectedApp.intakeCapacity} Seats` : "Standard intake"}</span>
             </div>
             <div>
               <span className="text-[10px] text-text-muted uppercase block">Compliance</span>

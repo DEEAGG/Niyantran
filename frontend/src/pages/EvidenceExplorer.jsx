@@ -299,7 +299,7 @@ export default function EvidenceExplorer() {
 
                   <div className="flex justify-between py-1 border-b border-border/30">
                     <span className="text-text-muted">SANCTIONED INTAKE:</span>
-                    <span className="text-text-primary">{app?.intakeCapacity || 90} SEATS</span>
+                    <span className="text-text-primary">{app?.intakeCapacity ? `${app.intakeCapacity} SEATS` : "STANDARD INTAKE"}</span>
                   </div>
                 </div>
 

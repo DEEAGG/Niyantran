@@ -204,7 +204,7 @@ export default function RuleDetails() {
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed bg-surface-elevated/40 p-4 rounded-lg border border-border/60">
                 This rule acts as a deterministic verification gate. When documents are ingested via NIYANTRAN, 
-                multimodal OCR & LayoutLM extract the statutory entities, map them to standard schema fields, 
+                PyMuPDF text extraction & Tesseract OCR pattern-based extractor resolve the statutory entities, map them to standard schema fields, 
                 and execute this deterministic check against the active version threshold. Non-compliance results in 
                 an evidentiary finding flagged for officer adjudication.
               </p>

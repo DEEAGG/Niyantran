@@ -45,7 +45,7 @@ export default function MonitoringPage() {
       const [summaryRes, logsRes, verifyRes] = await Promise.all([
         dashboardService.getDashboardSummary(),
         auditService.getAuditLogs({ pageSize: 10 }),
-        apiClient.get('/audit/verify').catch((err) => ({ verified: false, total_records: 9373, error: err.message }))
+        apiClient.get('/audit/verify').catch((err) => ({ verified: false, total_records: 0, error: err.message }))
       ]);
 
       setData(summaryRes?.data || summaryRes);
@@ -70,7 +70,7 @@ export default function MonitoringPage() {
       setAuditVerification(res);
       addToast({
         title: 'Verification Complete',
-        message: `Tamper-evident chain is 100% intact across all ${res.total_records || res.total_entries || 9373} records.`,
+        message: `Tamper-evident chain is 100% intact across all ${res.total_records ?? res.total_entries ?? 0} records.`,
         type: 'success'
       });
     } catch (err) {
@@ -248,7 +248,7 @@ export default function MonitoringPage() {
                 <span>100% Operational</span>
               </div>
               <p className="text-[11px] text-text-secondary leading-snug pt-1">
-                Database active. Cryptographic chain intact across {auditVerification?.total_records || 9373} records.
+                Database active. Cryptographic chain intact across {auditVerification?.total_records ?? 0} records.
               </p>
             </div>
             <div className="pt-4 border-t border-border/60 mt-2">
@@ -348,7 +348,7 @@ export default function MonitoringPage() {
               <div className="font-mono text-[11px] text-accent font-bold truncate">
                 {auditVerification?.latest_hash || 'b36c55fb9fc722a921dc3127e9ed0ba9623262f36950788b605edcb8eedca0b0'}
               </div>
-              <div className="text-[10px] text-text-muted">Total Blocks: {auditVerification?.total_records || 9373}</div>
+              <div className="text-[10px] text-text-muted">Total Blocks: {auditVerification?.total_records ?? 0}</div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">

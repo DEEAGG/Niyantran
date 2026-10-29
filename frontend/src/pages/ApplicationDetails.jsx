@@ -197,14 +197,13 @@ function AuthenticityTab({ app, documents }) {
                     <><Eye className="w-3.5 h-3.5 text-text-muted" /><span className="text-text-muted">Pending officer review</span></>
                   )}
                 </div>
-                <a
-                  href={`/api/documents/${doc.id}/page/1`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1"
+                <button
+                  type="button"
+                  onClick={() => openAuthenticatedDocument(`/api/documents/${doc.id}/page/1`)}
+                  className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0"
                 >
                   <ExternalLink className="w-3 h-3" /> View Page 1
-                </a>
+                </button>
               </div>
             </div>
           );
@@ -341,23 +340,19 @@ function EvidencePassportTab({ app, documents, findings }) {
                   <span>Pg 1</span>
                 </div>
                 <div className="aspect-[4/5] bg-surface-elevated relative flex items-center justify-center overflow-hidden group">
-                  <img
+                  <AuthenticatedImage
                     src={`/api/documents/${doc.id}/page/1`}
                     alt={doc.name}
                     className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
                   />
                   <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <a
-                      href={`/api/documents/${doc.id}/page/1`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded bg-accent text-accent-foreground text-xs font-semibold flex items-center gap-1.5 shadow-lg"
+                    <button
+                      type="button"
+                      onClick={() => openAuthenticatedDocument(`/api/documents/${doc.id}/page/1`)}
+                      className="px-3 py-1.5 rounded bg-accent text-accent-foreground text-xs font-semibold flex items-center gap-1.5 shadow-lg cursor-pointer"
                     >
                       <Maximize2 className="w-3.5 h-3.5" /> Full Page
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -649,7 +644,7 @@ export default function ApplicationDetails() {
             <div>
               <span className="text-[10px] font-mono uppercase text-text-muted">Approved Intake Capacity</span>
               <div className="font-mono text-sm font-bold text-accent mt-0.5">
-                {app.intakeCapacity || 60} Seats
+                {app.intakeCapacity ? `${app.intakeCapacity} Seats` : "Standard Intake"}
               </div>
               <div className="text-[11px] text-text-secondary mt-0.5">Session: {app.academicYear || '2025-2026'}</div>
             </div>
@@ -1070,7 +1065,7 @@ export default function ApplicationDetails() {
           {/* Dossier Preview Iframe */}
           <div className="aspect-[16/10] w-full border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
             <iframe
-              src={`/api/applications/${app.id}/report`}
+              src={`/api/applications/${app.id}/report?token=${encodeURIComponent(localStorage.getItem("niyantran_token") || "")}`}
               title="Statutory Dossier Preview"
               className="w-full h-full border-0"
             />

@@ -157,7 +157,7 @@ export default function ExtractionResults() {
             <div className="flex items-center gap-2 mb-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-accent/15 text-accent border border-accent/25 flex items-center gap-1.5 font-semibold">
                 <FileSpreadsheet className="w-3.5 h-3.5" />
-                OCR & LayoutLM Entity Extractor
+                PyMuPDF & Tesseract Pattern Extractor
               </span>
               <span className="text-xs text-text-muted font-mono">Multimodal Extraction Engine</span>
             </div>

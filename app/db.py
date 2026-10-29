@@ -1,4 +1,9 @@
 import os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 import sqlite3
 import hashlib
 import json
@@ -62,8 +67,14 @@ CREATE TABLE IF NOT EXISTS users (
  id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, full_name TEXT NOT NULL,
  password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'institution_user',
  institution_name TEXT, institution_id TEXT,
+ is_active INTEGER NOT NULL DEFAULT 1,
  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+ token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL,
+ revoked_at TEXT NOT NULL, expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_revoked_tokens_user ON revoked_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE TABLE IF NOT EXISTS applications (
  id TEXT PRIMARY KEY, application_type TEXT NOT NULL, applicant_name TEXT,
@@ -581,63 +592,58 @@ def migrate_schema(conn):
         conn.execute("ALTER TABLE applications ADD COLUMN user_id TEXT")
     if "institution_id" not in cols:
         conn.execute("ALTER TABLE applications ADD COLUMN institution_id TEXT")
+
+    if is_postgres():
+        user_cols = [r[0] for r in conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'users'").fetchall()]
+    else:
+        user_cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "is_active" not in user_cols:
+        conn.execute("ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1")
+
     conn.commit()
 
-def seed_default_users(conn: sqlite3.Connection):
-    """Seed initial default authorized accounts if users table is empty."""
+def seed_default_users(conn):
+    """Demo seeding allowed only in local development when explicitly enabled."""
+    is_prod = os.getenv("NIYANTRAN_ENV", "").strip().lower() == "production"
+    is_serverless = bool(
+        os.getenv("VERCEL")
+        or os.getenv("VERCEL_ENV")
+        or os.getenv("VERCEL_URL")
+        or os.getenv("VERCEL_REGION")
+        or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+    )
+    enable_demo = os.getenv("ENABLE_DEMO_SEEDING", "false").strip().lower() in ("true", "1", "yes")
+
+    if is_prod or is_serverless or not enable_demo:
+        return
+
     from app.auth import hash_password
     count = conn.execute("SELECT COUNT(*) as cnt FROM users").fetchone()["cnt"]
     now = datetime.now(timezone.utc).isoformat()
     if count == 0:
+        dev_pw = os.getenv("DEV_DEMO_PASSWORD", "LocalDev#Pass2026")
         default_users = [
             (
-                "USR-ADGIPS",
-                "adgips@institution.edu.in",
-                "ADGIPS Officer",
-                hash_password("Adgips@2026"),
-                "institution_user",
-                "ADGIPS",
-                "INST-ADGIPS",
-                now,
-                now,
-            ),
-            (
-                "USR-OFFICER",
-                "officer@aicte.gov.in",
-                "Dr. A. Sharma",
-                hash_password("Officer@2026"),
+                "USR-DEV-OFFICER",
+                "officer.dev@niyantran.local",
+                "Local Reviewer Officer",
+                hash_password(dev_pw),
                 "reviewer",
                 "AICTE Regulatory Directorate",
-                "AICTE-RO-HQ",
-                now,
-                now,
-            ),
-            (
-                "USR-ADMIN",
-                "admin@niyantran.local",
-                "System Administrator",
-                hash_password("Admin@2026"),
-                "admin",
-                "NIYANTRAN HQ",
-                "AICTE-HQ",
+                "AICTE-RO-DEV",
+                1,
                 now,
                 now,
             ),
         ]
         conn.executemany(
             """
-            INSERT INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             default_users,
         )
         conn.commit()
-
-    # Always ensure existing ADGIPS application is linked to ADGIPS user
-    conn.execute(
-        "UPDATE applications SET user_id = 'USR-ADGIPS', institution_id = 'INST-ADGIPS' WHERE (institution_name LIKE '%ADGIPS%' OR applicant_name LIKE '%ADGIPS%') AND (user_id IS NULL OR user_id = '')"
-    )
-    conn.commit()
 
 def init_db(db_path: Optional[Path] = None):
     if is_turso() and db_path is None:

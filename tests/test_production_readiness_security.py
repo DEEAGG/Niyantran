@@ -85,6 +85,17 @@ def test_production_header_spoofing_prevention():
         assert spoof_res.status_code == 401
         assert "Development header spoofing is disabled in production" in spoof_res.json()["detail"]
 
+        # Ensure genuine officer account is in database
+        from app.db import get_connection
+        with get_connection() as conn:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO users (id, email, full_name, password_hash, role, institution_name, institution_id, is_active, created_at, updated_at)
+                VALUES ('USR-PROD-01', 'genuine.officer@aicte.gov.in', 'Dr. Genuine Officer', 'mockhash', 'reviewer', 'AICTE Regulatory Directorate', 'AICTE-RO-HQ', 1, '2026-10-29T00:00:00Z', '2026-10-29T00:00:00Z')
+                """
+            )
+            conn.commit()
+
         # Valid signed JWT token must succeed in production mode
         valid_token = create_access_token("USR-PROD-01", "genuine.officer@aicte.gov.in", "reviewer")
         prod_res = client.get(

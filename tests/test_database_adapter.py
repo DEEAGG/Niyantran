@@ -223,7 +223,8 @@ def test_sqlite_to_turso_migration_topological_sort():
     conn = sqlite3.connect(f"file:{get_db_path().resolve()}?mode=ro", uri=True)
     try:
         order, deps, cols = get_sqlite_tables_and_deps(conn)
-        assert len(order) == 20
+        assert len(order) >= 20
+        assert "revoked_tokens" in order
         # Assert parent tables precede dependent children
         assert order.index("applications") < order.index("documents")
         assert order.index("documents") < order.index("extraction_runs")

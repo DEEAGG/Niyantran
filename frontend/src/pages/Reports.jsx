@@ -221,7 +221,7 @@ export default function Reports() {
                 </div>
                 <div>
                   <span className="text-text-muted block text-[11px] font-mono">Sanctioned Intake</span>
-                  <strong className="text-text-primary font-mono">{reportData.application.intakeCapacity || 60} seats</strong>
+                  <strong className="text-text-primary font-mono">{reportData.application.intakeCapacity ? `${reportData.application.intakeCapacity} seats` : "Standard intake"}</strong>
                 </div>
                 <div>
                   <span className="text-text-muted block text-[11px] font-mono">Mandatory Docs Verified</span>

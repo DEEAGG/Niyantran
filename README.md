@@ -121,11 +121,11 @@ API requests to `/api` are automatically proxied to `http://127.0.0.1:8000`.
 
 ## Default User Accounts (Development & Evaluation)
 
-| Role | Email | Password | Scope |
-|---|---|---|---|
-| **Reviewer** | `officer@aicte.gov.in` | `Officer@2026` | Full scrutiny & regulatory verification |
-| **Institution** | `adgips@institution.edu.in` | `Adgips@2026` | Institutional submission & document upload |
-| **Administrator** | `admin@niyantran.local` | `Admin@2026` | System configuration & clause ingestion |
+| Role | Access Method | Scope |
+|---|---|---|
+| **Institution** | Register via `/register` or login via `/login` | Institutional submission & document upload |
+| **Reviewer** | Institutional OIDC SSO / provisioned reviewer account | Full scrutiny & regulatory verification |
+| **Administrator** | Securely provisioned administrative credentials | System configuration & clause ingestion |
 
 ---
 

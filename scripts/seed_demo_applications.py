@@ -9,6 +9,12 @@ import fitz
 
 from app.db import get_connection, init_db, add_audit_entry, DOCUMENTS_DIR
 from app.extractor import extract_document_fields
+from app.storage import save_file, get_file_path
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 from app.rules_engine import evaluate_ruleset, seed_default_rules_if_empty
 
 def create_synthetic_pdf(title: str, text_lines: list) -> bytes:
@@ -27,7 +33,25 @@ def create_synthetic_pdf(title: str, text_lines: list) -> bytes:
     doc.close()
     return data
 
-def seed():
+def seed(force: bool = False):
+    is_prod = os.getenv("NIYANTRAN_ENV", "").strip().lower() == "production"
+    is_serverless = bool(
+        os.getenv("VERCEL")
+        or os.getenv("VERCEL_ENV")
+        or os.getenv("VERCEL_URL")
+        or os.getenv("VERCEL_REGION")
+        or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+    )
+    enable_demo = os.getenv("ENABLE_DEMO_SEEDING", "false").strip().lower() in ("true", "1", "yes")
+
+    if (is_prod or is_serverless) and not force:
+        print("[SECURITY] Seeding synthetic demo data is strictly disabled in production / serverless mode.")
+        return
+
+    if not enable_demo and not force:
+        print("[INFO] Demo seeding skipped. Set ENABLE_DEMO_SEEDING=true or pass --force to seed synthetic demo applications in local development.")
+        return
+
     init_db()
     DOCUMENTS_DIR.mkdir(parents=True, exist_ok=True)
     
@@ -147,10 +171,10 @@ def seed():
             if not existing:
                 conn.execute(
                     """
-                    INSERT INTO applications (id, application_type, applicant_name, institution_name, status, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO applications (id, application_type, applicant_name, institution_name, status, user_id, institution_id, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (a["id"], a["type"], a["name"], a["name"], a["status"], now, now)
+                    (a["id"], a["type"], a["name"], a["name"], a["status"], "USR-DEMO-SYNTHETIC", "INST-DEMO-SYNTHETIC", now, now)
                 )
                 
             for doc_type, filename, lines in a["docs"]:
@@ -163,8 +187,8 @@ def seed():
                     pdf_bytes = create_synthetic_pdf(f"{a['name']} — {doc_type}", lines)
                     sha256 = hashlib.sha256(pdf_bytes).hexdigest()
                     doc_id = f"DOC-{uuid.uuid4().hex[:12].upper()}"
-                    dest_file = DOCUMENTS_DIR / f"{doc_id}_{filename}"
-                    dest_file.write_bytes(pdf_bytes)
+                    relative_path = f"documents/{doc_id}_{filename}"
+                    dest_file = save_file(relative_path, pdf_bytes, mime_type="application/pdf")
                     
                     conn.execute(
                         """
@@ -174,7 +198,7 @@ def seed():
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
-                            doc_id, a["id"], doc_type, filename, str(dest_file.name),
+                            doc_id, a["id"], doc_type, filename, relative_path,
                             "application/pdf", sha256, len(pdf_bytes), 1, now, 1, "extracted"
                         )
                     )

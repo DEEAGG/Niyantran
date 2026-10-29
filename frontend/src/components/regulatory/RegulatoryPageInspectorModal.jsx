@@ -39,7 +39,7 @@ export default function RegulatoryPageInspectorModal({
   if (!isOpen || !clause) return null;
 
   const sourceId = clause.source_id || source?.id;
-  const totalPages = source?.total_pages || 6;
+  const totalPages = source?.total_pages || source?.page_count || 1;
   const imageUrl = regulatoryService.getPageImageUrl(sourceId, currentPage);
 
   const handlePrevPage = () => {

@@ -460,7 +460,7 @@ export default function UploadDocuments() {
                 Extracted Structured Entities
               </h3>
               <p className="text-xs text-text-muted">
-                OCR and LayoutLM parsing output with confidence metrics and human-confirmation triggers.
+                PyMuPDF and Tesseract OCR pattern-based extraction output with confidence metrics and human-confirmation triggers.
               </p>
             </div>
             <span className="text-xs font-mono text-accent">{extractedFields.length} entities extracted</span>

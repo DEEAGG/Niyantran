@@ -1,5 +1,10 @@
 import asyncio
 import hashlib
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
 import io
 import json
 import os
@@ -111,7 +116,7 @@ async def lifespan(app: FastAPI):
     
     # In production or serverless environments, skip synthetic demo data seeding to prevent cold-start latency
     is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
-    should_seed_demo = not IS_PRODUCTION and not is_serverless and not os.getenv("SKIP_DEMO_SEEDING")
+    should_seed_demo = not IS_PRODUCTION and not is_serverless and os.getenv("ENABLE_DEMO_SEEDING", "false").strip().lower() in ("true", "1", "yes")
 
     with get_connection() as conn:
         seed_initial_regulatory_sources_if_empty(conn)
@@ -219,10 +224,10 @@ def get_dashboard_summary(current_user: Dict[str, Any] = Depends(get_current_use
             apps = conn.execute(
                 """
                 SELECT * FROM applications 
-                WHERE (user_id = ? OR (institution_id = ? AND ? IS NOT NULL) OR (LOWER(institution_name) = LOWER(?) AND ? != ''))
+                WHERE (user_id = ? OR (institution_id = ? AND ? IS NOT NULL AND ? != ''))
                 ORDER BY created_at DESC
                 """,
-                (user_id, inst_id, inst_id, inst_name, inst_name),
+                (user_id, inst_id, inst_id, inst_id),
             ).fetchall()
 
         total_apps = len(apps)
@@ -681,9 +686,9 @@ def list_applications(status: Optional[str] = Query(default=None), current_user:
             # Institution user: ONLY see applications owned by user or their institution
             query = """
                 SELECT * FROM applications 
-                WHERE (user_id = ? OR (institution_id = ? AND ? IS NOT NULL) OR (LOWER(institution_name) = LOWER(?) AND ? != ''))
+                WHERE (user_id = ? OR (institution_id = ? AND ? IS NOT NULL AND ? != ''))
             """
-            params = [user_id, inst_id, inst_id, inst_name, inst_name]
+            params = [user_id, inst_id, inst_id, inst_id]
             if status:
                 query += " AND status = ?"
                 params.append(status)
@@ -919,11 +924,47 @@ def verify_audit():
 
 
 @app.get("/api/audit/log")
-def get_audit_log(limit: int = Query(default=100, ge=1, le=1000)):
+def get_audit_log(
+    application_id: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=1000),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    role = (current_user.get("role") or "").lower()
+    user_id = current_user.get("user_id")
+    inst_id = current_user.get("institution_id")
+    email = current_user.get("email")
+
     with get_connection() as conn:
-        rows = conn.execute(
-            "SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,)
-        ).fetchall()
+        if application_id:
+            check_application_access(conn, application_id, current_user)
+            rows = conn.execute(
+                "SELECT * FROM audit_log WHERE entity_id = ? ORDER BY id DESC LIMIT ?",
+                (application_id, limit),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+        if role in ("reviewer", "admin", "auditor"):
+            rows = conn.execute(
+                "SELECT * FROM audit_log ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+        else:
+            # Institution user: only see application-specific audit data for owned applications or user actions
+            owned_apps = conn.execute(
+                "SELECT id FROM applications WHERE user_id = ? OR (institution_id = ? AND ? IS NOT NULL AND ? != '')",
+                (user_id, inst_id, inst_id, inst_id),
+            ).fetchall()
+            app_ids = [a["id"] for a in owned_apps]
+            if not app_ids:
+                rows = conn.execute(
+                    "SELECT * FROM audit_log WHERE actor = ? OR entity_id = ? ORDER BY id DESC LIMIT ?",
+                    (email, user_id, limit),
+                ).fetchall()
+            else:
+                placeholders = ",".join("?" for _ in app_ids)
+                rows = conn.execute(
+                    f"SELECT * FROM audit_log WHERE entity_id IN ({placeholders}) OR actor = ? OR entity_id = ? ORDER BY id DESC LIMIT ?",
+                    (*app_ids, email, user_id, limit),
+                ).fetchall()
     return [dict(r) for r in rows]
 
 
@@ -2228,8 +2269,8 @@ def list_all_findings(
             query += " AND vr.application_id = ?"
             params.append(application_id)
         elif role not in ("reviewer", "admin", "auditor"):
-            query += " AND (a.user_id = ? OR (a.institution_id = ? AND ? IS NOT NULL) OR (LOWER(a.institution_name) = LOWER(?) AND ? != ''))"
-            params.extend([user_id, inst_id, inst_id, inst_name, inst_name])
+            query += " AND (a.user_id = ? OR (a.institution_id = ? AND ? IS NOT NULL AND ? != ''))"
+            params.extend([user_id, inst_id, inst_id, inst_id])
 
         if status and status != "All":
             query += " AND f.status = ?"
@@ -2248,8 +2289,9 @@ def list_all_findings(
 
 
 @app.get("/api/findings/{finding_id}/evidence")
-def get_finding_evidence(finding_id: str):
+def get_finding_evidence(finding_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
     with get_connection() as conn:
+        check_finding_access(conn, finding_id, current_user)
         finding = conn.execute(
             """
             SELECT f.*, vr.application_id, r.rule_key, r.title, r.rule_type, r.description AS rule_desc, r.source_status,
