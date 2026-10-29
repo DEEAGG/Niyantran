@@ -368,7 +368,7 @@ def test_vercel_configuration_routing():
     rewrite_map = {r["source"]: r["destination"] for r in rewrites}
 
     assert "/api" in rewrite_map, "/api rewrite must exist in frontend/vercel.json"
-    assert "/api/(.*)" in rewrite_map, "/api/(.*) rewrite must exist in frontend/vercel.json"
+    assert "/api/(.*)" in rewrite_map or "/api/:path*" in rewrite_map, "API wildcard rewrite must exist in frontend/vercel.json"
     assert rewrite_map.get("/(.*)") == "/index.html", "/(.*) must rewrite to /index.html for SPA"
 
 
