@@ -18,6 +18,9 @@ import {
   Maximize2
 } from 'lucide-react';
 import { validationService } from '../services/validationService';
+import { extractionService } from '../services/extractionService';
+import { documentService } from '../services/documentService';
+import AuthenticatedImage from '../components/common/AuthenticatedImage';
 import { reviewService } from '../services/reviewService';
 import { applicationService } from '../services/applicationService';
 import { useToast } from '../context/ToastContext';
@@ -36,6 +39,11 @@ export default function EvidenceExplorer() {
   const [loading, setLoading] = useState(true);
   const [app, setApp] = useState(null);
   const [findings, setFindings] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [extractedFields, setExtractedFields] = useState([]);
+  const [selectedDocumentId, setSelectedDocumentId] = useState('');
+  const [selectedFieldId, setSelectedFieldId] = useState('');
+  const [selectedPage, setSelectedPage] = useState(1);
   const [selectedFinding, setSelectedFinding] = useState(null);
   const [mobileTab, setMobileTab] = useState('evidence'); // 'findings' | 'evidence' | 'explanation'
   const [reviewerNotes, setReviewerNotes] = useState('');
@@ -58,19 +66,39 @@ export default function EvidenceExplorer() {
           return;
         }
       }
-      const appRes = await applicationService.getApplicationById(targetId);
+      const [appRes, findingsRes, docsRes, fieldsRes] = await Promise.all([
+        applicationService.getApplicationById(targetId),
+        validationService.getFindings(targetId),
+        documentService.getDocuments(targetId),
+        extractionService.getExtractedFields(targetId),
+      ]);
       setApp(appRes.data);
 
-      const findingsRes = await validationService.getFindings(targetId);
       const list = findingsRes.data || [];
+      const loadedDocs = docsRes.data || appRes.data?.documents || [];
+      const loadedFields = fieldsRes.data || [];
       setFindings(list);
+      setDocuments(loadedDocs);
+      setExtractedFields(loadedFields);
 
-      // Default to finding with discrepancies
+      // Prefer a real extracted field with source coordinates for the initial preview.
+      const defaultField = loadedFields.find((field) =>
+        field.documentId && field.coordinates?.x0 != null && field.coordinates?.y0 != null
+      ) || loadedFields.find((field) => field.documentId) || null;
+
+      setSelectedDocumentId((previous) => loadedDocs.some((doc) => doc.id === previous)
+        ? previous
+        : (defaultField?.documentId || loadedDocs[0]?.id || ''));
+      setSelectedFieldId((previous) => loadedFields.some((field) => field.id === previous)
+        ? previous
+        : (defaultField?.id || ''));
+      const retainedField = loadedFields.find((field) => field.id === selectedFieldId);
+      setSelectedPage(retainedField?.pageNumber || defaultField?.pageNumber || 1);
+
+      // Default to finding with discrepancies.
       const target = list.find((f) => f.rawStatus === 'fail' || f.severity === 'High') || list[0] || null;
       setSelectedFinding(target);
-      if (target) {
-        setReviewerNotes(target.reviewerNotes || '');
-      }
+      if (target) setReviewerNotes(target.reviewerNotes || '');
     } catch (err) {
       console.error(err);
     } finally {
@@ -87,6 +115,36 @@ export default function EvidenceExplorer() {
     setReviewerNotes(finding.reviewerNotes || '');
     setMobileTab('evidence');
   };
+
+  const handleSelectField = (field) => {
+    setSelectedFieldId(field.id);
+    if (field.documentId) setSelectedDocumentId(field.documentId);
+    setSelectedPage(Number(field.pageNumber || 1));
+    setMobileTab('evidence');
+  };
+
+  const selectedDocument = documents.find((doc) => doc.id === selectedDocumentId) || null;
+  const selectedField = extractedFields.find((field) => field.id === selectedFieldId) || null;
+  const pageCount = Math.max(1, Math.min(500, Number(selectedDocument?.page_count || selectedDocument?.pages || 1)));
+  const fieldMatchesDisplayedPage = !!selectedField
+    && selectedField.documentId === selectedDocumentId
+    && Number(selectedField.pageNumber || 1) === Number(selectedPage);
+  const selectedBBox = fieldMatchesDisplayedPage ? selectedField.coordinates : null;
+  const bboxIsValid = !!selectedBBox
+    && ['x0', 'y0', 'x1', 'y1'].every((key) => Number.isFinite(Number(selectedBBox[key])))
+    && Number(selectedBBox.x1) > Number(selectedBBox.x0)
+    && Number(selectedBBox.y1) > Number(selectedBBox.y0);
+  const bboxQuery = bboxIsValid
+    ? '?bbox=' + encodeURIComponent(JSON.stringify({
+        x0: Number(selectedBBox.x0),
+        y0: Number(selectedBBox.y0),
+        x1: Number(selectedBBox.x1),
+        y1: Number(selectedBBox.y1),
+      }))
+    : '';
+  const pageImageUrl = selectedDocumentId
+    ? '/api/documents/' + encodeURIComponent(selectedDocumentId) + '/page/' + (Number(selectedPage) || 1) + bboxQuery
+    : '';
 
   const handleReviewAction = async (action) => {
     if (!selectedFinding) return;
@@ -224,6 +282,44 @@ export default function EvidenceExplorer() {
                 </div>
               );
             })}
+            <div className="mt-4 pt-3 border-t border-border/70">
+              <div className="px-2 mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
+                  Extracted Fields
+                </span>
+                <span className="text-[10px] font-mono text-text-muted">{extractedFields.length}</span>
+              </div>
+              {extractedFields.length === 0 ? (
+                <p className="px-2 py-3 text-[11px] text-text-muted">
+                  No extracted fields yet. Run document extraction first to enable source highlighting.
+                </p>
+              ) : extractedFields.map((field) => {
+                const isSelected = selectedFieldId === field.id;
+                const hasBox = !!field.coordinates
+                  && ['x0', 'y0', 'x1', 'y1'].every((key) => Number.isFinite(Number(field.coordinates[key])));
+                return (
+                  <button
+                    key={field.id}
+                    type="button"
+                    onClick={() => handleSelectField(field)}
+                    className={"w-full text-left p-2.5 rounded-lg mb-1.5 border transition-colors " +
+                      (isSelected ? 'bg-accent/10 border-accent/40' : 'border-transparent hover:bg-surface-elevated/50')}
+                    aria-pressed={isSelected}
+                  >
+                    <span className="flex items-start justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-text-primary">{field.fieldName}</span>
+                      <span className={"text-[9px] font-mono shrink-0 " + (hasBox ? 'text-emerald-500' : 'text-text-muted')}>
+                        {hasBox ? 'BOX' : 'NO BOX'}
+                      </span>
+                    </span>
+                    <span className="block mt-1 text-[10px] text-text-secondary break-words">{field.extractedValue}</span>
+                    <span className="block mt-1 text-[9px] text-text-muted font-mono truncate">
+                      {field.sourceDocument} · Pg {field.pageNumber}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -234,112 +330,94 @@ export default function EvidenceExplorer() {
           }`}
         >
           {/* Viewer Toolbar */}
-          <div className="p-3 border-b border-border bg-background/50 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-accent" />
-              <span className="font-semibold text-text-primary font-mono text-xs">
-                {selectedFinding?.evidenceSources?.[0]?.documentName || 'Document_Viewer.pdf'}
+          <div className="p-3 border-b border-border bg-background/50 flex items-center justify-between text-xs gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="w-4 h-4 text-accent shrink-0" />
+              <span className="font-semibold text-text-primary font-mono text-xs truncate">
+                {selectedDocument?.name || selectedDocument?.original_filename || 'Select a document'}
               </span>
             </div>
-
-            <div className="flex items-center gap-1.5 text-text-muted">
-              <button
-                onClick={() => setZoomLevel((z) => Math.max(75, z - 15))}
-                className="p-1 rounded hover:text-text-primary hover:bg-surface-elevated"
-                title="Zoom Out"
-              >
+            <div className="flex items-center gap-1.5 text-text-muted shrink-0">
+              <button type="button" onClick={() => setZoomLevel((z) => Math.max(75, z - 15))}
+                className="p-1 rounded hover:text-text-primary hover:bg-surface-elevated" title="Zoom Out" aria-label="Zoom out">
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
               <span className="font-mono text-[11px] px-1">{zoomLevel}%</span>
-              <button
-                onClick={() => setZoomLevel((z) => Math.min(150, z + 15))}
-                className="p-1 rounded hover:text-text-primary hover:bg-surface-elevated"
-                title="Zoom In"
-              >
+              <button type="button" onClick={() => setZoomLevel((z) => Math.min(150, z + 15))}
+                className="p-1 rounded hover:text-text-primary hover:bg-surface-elevated" title="Zoom In" aria-label="Zoom in">
                 <ZoomIn className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Interactive Document Canvas with Highlighted Bounding Box */}
-          <div className="flex-1 bg-background p-4 overflow-auto flex flex-col items-center justify-center relative select-none">
-            {selectedFinding ? (
-              <div
-                style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
-                className="w-full max-w-lg bg-surface-elevated border border-border rounded-xl p-6 shadow-2xl relative transition-transform duration-100 font-mono text-xs text-text-secondary space-y-4"
+          <div className="p-3 border-b border-border grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface">
+            <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+              Document
+              <select
+                value={selectedDocumentId}
+                onChange={(event) => {
+                  const nextId = event.target.value;
+                  const nextField = extractedFields.find((field) => field.documentId === nextId && field.coordinates);
+                  setSelectedDocumentId(nextId);
+                  setSelectedFieldId(nextField?.id || '');
+                  setSelectedPage(Number(nextField?.pageNumber || 1));
+                }}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-2.5 py-2 text-xs text-text-primary"
               >
-                <div className="flex items-center justify-between border-b border-border/60 pb-3 text-[11px] text-text-muted">
-                  <span>AICTE TECHNICAL EDUCATION STATUTORY FORM</span>
-                  <span>PAGE 1 OF 14</span>
-                </div>
-
-                <div className="space-y-3 pt-2 text-[11px]">
-                  <div className="flex justify-between py-1 border-b border-border/30">
-                    <span className="text-text-muted">APPLICANT INSTITUTION:</span>
-                    <span className="text-text-primary font-bold">{app?.institutionName}</span>
-                  </div>
-
-                  {/* HIGHLIGHTED BOUNDING BOX FOR FORM INST-1042 */}
-                  <div className="relative p-2.5 rounded-lg border-2 border-rose-500/80 bg-rose-950/20 shadow-glow-primary">
-                    <div className="absolute -top-2.5 right-2 px-1.5 py-0.2 bg-rose-600 text-white text-[9px] font-bold rounded uppercase">
-                      Detected Discrepancy Box (x: 140, y: 195)
-                    </div>
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-text-secondary font-semibold">INSTITUTION CODE:</span>
-                      <span className="font-bold text-rose-400 text-sm font-mono tracking-wider">
-                        INST-1042
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between py-1 border-b border-border/30">
-                    <span className="text-text-muted">ACADEMIC SESSION:</span>
-                    <span className="text-text-primary">2026-2027</span>
-                  </div>
-
-                  <div className="flex justify-between py-1 border-b border-border/30">
-                    <span className="text-text-muted">SANCTIONED INTAKE:</span>
-                    <span className="text-text-primary">{app?.intakeCapacity ? `${app.intakeCapacity} SEATS` : "STANDARD INTAKE"}</span>
-                  </div>
-                </div>
-
-                <div className="text-[10px] text-text-muted pt-4 border-t border-border/40 text-center font-sans">
-                  ReguTrace Spatial OCR Coordinate Locator &bull; Resolution: 300 DPI
-                </div>
-              </div>
-            ) : (
-              <div className="text-text-muted text-xs">Select a finding from the left panel</div>
-            )}
+                {documents.map((doc) => (
+                  <option key={doc.id} value={doc.id}>{doc.name || doc.original_filename || doc.id}</option>
+                ))}
+              </select>
+            </label>
+            <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+              Page
+              <select
+                value={selectedPage}
+                onChange={(event) => {
+                  const nextPage = Number(event.target.value) || 1;
+                  const nextField = extractedFields.find((field) =>
+                    field.documentId === selectedDocumentId
+                    && Number(field.pageNumber || 1) === nextPage
+                    && field.coordinates
+                  );
+                  setSelectedPage(nextPage);
+                  setSelectedFieldId(nextField?.id || '');
+                }}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-2.5 py-2 text-xs text-text-primary"
+              >
+                {Array.from({ length: pageCount }, (_, index) => index + 1).map((pageNumber) => (
+                  <option key={pageNumber} value={pageNumber}>Page {pageNumber}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
-          {/* Cross-Document Corroboration Comparison Cards */}
-          {selectedFinding && selectedFinding.evidenceSources?.length > 1 && (
-            <div className="p-3 bg-surface-elevated/40 border-t border-border grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-surface p-2.5 rounded-xl border border-border">
-                <span className="text-[10px] font-mono text-text-muted uppercase block">
-                  Source 1: {selectedFinding.evidenceSources[0].documentType}
-                </span>
-                  <div className="text-xs font-bold font-mono text-sm mt-0.5" style={{ color: 'var(--status-error)' }}>
-                    {selectedFinding.evidenceSources[0].extractedValue}
-                  </div>
-                <div className="text-[10px] text-text-muted mt-0.5 truncate">
-                  {selectedFinding.evidenceSources[0].documentName} (Pg {selectedFinding.evidenceSources[0].pageNumber})
-                </div>
+          {/* Real document page. The authenticated API draws the selected field's source bbox. */}
+          <div className="flex-1 bg-background p-4 overflow-auto flex flex-col items-center justify-start relative">
+            {!selectedDocumentId ? (
+              <div className="text-text-muted text-xs py-12">Create an application and upload a document to begin inspection.</div>
+            ) : (
+              <div
+                style={{ transform: 'scale(' + (zoomLevel / 100) + ')', transformOrigin: 'top center' }}
+                className="w-full min-h-[380px] flex items-start justify-center"
+              >
+                <AuthenticatedImage
+                  src={pageImageUrl}
+                  alt={(selectedDocument?.name || 'Document') + ' page ' + selectedPage + (bboxIsValid ? ' with highlighted ' + selectedField?.fieldName : '')}
+                  className="max-w-full max-h-[640px] object-contain rounded border border-border bg-white shadow-sm"
+                />
               </div>
-
-              <div className="bg-surface p-2.5 rounded-xl border border-border">
-                <span className="text-[10px] font-mono text-text-muted uppercase block">
-                  Source 2: {selectedFinding.evidenceSources[1].documentType}
-                </span>
-                <div className="font-bold font-mono text-sm mt-0.5" style={{ color: 'var(--status-warning)' }}>
-                  {selectedFinding.evidenceSources[1].extractedValue}
-                </div>
-                <div className="text-[10px] text-text-muted mt-0.5 truncate">
-                  {selectedFinding.evidenceSources[1].documentName} (Pg {selectedFinding.evidenceSources[1].pageNumber})
-                </div>
-              </div>
+            )}
+            <div className="w-full mt-3 p-3 rounded-lg border border-border bg-surface text-[11px] text-text-secondary">
+              {bboxIsValid ? (
+                <span><strong className="text-accent">{selectedField?.fieldName}</strong> is highlighted on the actual stored document page. Select another extracted field to inspect its source location.</span>
+              ) : selectedField ? (
+                <span><strong className="text-text-primary">{selectedField.fieldName}</strong> has no usable source bounding box. The page is shown without a highlight; re-run extraction for this document if a source location is needed.</span>
+              ) : (
+                <span>Select an extracted field from the left panel. Fields with a <strong className="text-emerald-500">BOX</strong> label have coordinates available for highlighting.</span>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* PANEL 3: Explanation & Adjudication Inspector (3 Cols) */}
@@ -373,71 +451,52 @@ export default function EvidenceExplorer() {
               <span className="text-[10px] text-accent block">Applied Rule Reference</span>
               <div className="font-bold text-text-primary">{selectedFinding?.ruleId}</div>
               <div className="text-[11px] text-text-muted">{selectedFinding?.ruleName}</div>
-              <div className="text-[10px] text-text-secondary pt-1">Threshold: Exact Cross-Doc String Match</div>
+              <div className="text-[10px] text-text-secondary pt-1">Review the rule details and source evidence before making a decision.</div>
             </div>
 
-            {/* Evidence Extraction Details */}
-            {selectedFinding?.evidenceSources && selectedFinding.evidenceSources.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-[10px] font-mono uppercase text-text-muted block">
-                  Extraction Details
-                </span>
-                <div className="p-2 rounded-lg bg-[var(--status-warning)]/5 border border-[var(--status-warning)]/20">
-                  <p className="text-[10px] text-text-muted italic">
-                    Evidence previews show simulated OCR coordinates. Not actual OCR output.
+            {/* Real extracted-field provenance */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-mono uppercase text-text-muted block">
+                Selected Field Provenance
+              </span>
+              {selectedField ? (
+                <div className="p-3 rounded-lg bg-surface-elevated/50 border border-border text-[11px] space-y-2">
+                  <div>
+                    <div className="text-[10px] text-text-muted uppercase">Field</div>
+                    <div className="font-semibold text-text-primary">{selectedField.fieldName}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-text-muted uppercase">Extracted value</div>
+                    <div className="font-mono text-accent break-words">{selectedField.extractedValue}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
+                    <span className="text-text-muted">Source document</span>
+                    <span className="text-text-secondary break-words">{selectedField.sourceDocument}</span>
+                    <span className="text-text-muted">Page</span>
+                    <span className="text-text-secondary">Page {selectedField.pageNumber}</span>
+                    <span className="text-text-muted">Extraction method</span>
+                    <span className="text-text-secondary break-words">{selectedField.extractionMethod}</span>
+                    <span className="text-text-muted">Confidence</span>
+                    <span className="text-text-secondary">{typeof selectedField.confidence === 'number' ? Math.round(selectedField.confidence * 100) + '%' : 'Not reported'}</span>
+                    <span className="text-text-muted">Coordinates</span>
+                    <span className="text-text-secondary font-mono break-words">
+                      {selectedField.coordinates
+                        ? 'x0:' + selectedField.coordinates.x0 + ', y0:' + selectedField.coordinates.y0 + ', x1:' + selectedField.coordinates.x1 + ', y1:' + selectedField.coordinates.y1
+                        : 'Not available'}
+                    </span>
+                    <span className="text-text-muted">Verification status</span>
+                    <span className="text-text-secondary">{selectedField.status || 'Needs Review'}</span>
+                  </div>
+                  <p className="text-[10px] text-text-muted border-t border-border pt-2">
+                    Highlights use the stored extraction coordinates over the authenticated source page. Low-confidence or unlocated fields should be checked manually.
                   </p>
                 </div>
-                {selectedFinding.evidenceSources.map((src, idx) => (
-                  <div key={idx} className="p-2.5 rounded-lg bg-surface-elevated/50 border border-border text-[11px] space-y-1.5">
-                    <div className="font-mono font-semibold text-accent text-[10px]">Source {idx + 1}: {src.documentType}</div>
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] text-text-muted">
-                      <span>Document:</span>
-                      <span className="text-text-secondary font-mono truncate">{src.documentName}</span>
-                      <span>Page:</span>
-                      <span className="text-text-secondary font-mono">{src.pageNumber}</span>
-                      {src.coordinates && (
-                        <>
-                          <span>Bounding Box:</span>
-                          <span className="text-text-secondary font-mono text-[9px]">
-                            x:{src.coordinates.x} y:{src.coordinates.y} w:{src.coordinates.width} h:{src.coordinates.height}
-                            <span className="text-text-muted ml-1">(Simulated Coordinates)</span>
-                          </span>
-                        </>
-                      )}
-                      <span>Extracted Value:</span>
-                      <span className="font-bold text-accent">{src.extractedValue}</span>
-                    </div>
-                  </div>
-                ))}
-                <div className="p-2.5 rounded-lg bg-surface-elevated/50 border border-border text-[11px] space-y-1 font-mono">
-                  <div className="text-[10px] font-semibold text-text-muted uppercase">Statutory & Evidence Provenance</div>
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-text-muted">Rule Key:</span>
-                    <span className="text-accent font-bold">{selectedFinding.rule_key || selectedFinding.ruleId}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-text-muted">Regulatory Source:</span>
-                    <span className="text-text-secondary truncate max-w-[180px]">{selectedFinding.official_source_name || 'AICTE Regulatory Norms'}</span>
-                  </div>
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-text-muted">Clause Reference:</span>
-                    <span className="text-text-primary font-semibold">{selectedFinding.clause_reference || 'Statutory Requirement'}</span>
-                  </div>
-                  {selectedFinding.page_reference && (
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-text-muted">Source Page:</span>
-                      <span className="text-accent">Page {selectedFinding.page_reference}</span>
-                    </div>
-                  )}
-                  {selectedFinding.evidence?.fingerprint && (
-                    <div className="flex justify-between text-[10px]">
-                      <span className="text-text-muted">Fingerprint:</span>
-                      <span className="text-text-muted truncate max-w-[150px]">{selectedFinding.evidence.fingerprint}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-xs text-text-muted p-3 rounded-lg bg-surface-elevated/40 border border-border">
+                  Select an extracted field to view its source document, page, extraction metadata, and available coordinates.
+                </p>
+              )}
+            </div>
 
             {/* Reviewer Confirmation State */}
             <div className="space-y-1 p-2.5 rounded-lg bg-surface-elevated/30 border border-border">
