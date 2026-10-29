@@ -21,18 +21,28 @@ export function normalizeExtractedField(f) {
     }
   }
 
+  let bbox = f.bbox || f.bounding_box || f.coordinates || null;
+  if (!bbox && f.bbox_json) {
+    try {
+      bbox = typeof f.bbox_json === 'string' ? JSON.parse(f.bbox_json) : f.bbox_json;
+    } catch {
+      bbox = null;
+    }
+  }
   return {
     ...f,
     id: f.id,
+    documentId: f.document_id || f.documentId || null,
     fieldName: f.fieldName || (f.field_name ? f.field_name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Extracted Field'),
     extractedValue: val || 'Not found',
     sourceDocument: f.original_filename || f.document_name || f.sourceDocument || 'Document.pdf',
-    pageNumber: f.page_number || f.pageNumber || 1,
-    extractionMethod: f.extraction_method || f.extractionMethod || 'Tesseract OCR + Layout Extraction',
+    pageNumber: Number(f.page_number || f.pageNumber || 1),
+    extractionMethod: f.extraction_method || f.extractionMethod || 'Pattern extraction',
     confidence: typeof f.confidence === 'number' ? f.confidence : (f.is_confirmed ? 1.0 : null),
     status: status,
     isConfirmed: Boolean(f.is_confirmed || f.confirmed || f.isConfirmed),
-    coordinates: f.bounding_box || f.coordinates || null,
+    bbox,
+    coordinates: bbox,
   };
 }
 
