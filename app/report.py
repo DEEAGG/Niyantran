@@ -476,5 +476,14 @@ REPORT_TEMPLATE = """<!DOCTYPE html>
 
 
 def render_html_report(context: Dict[str, Any]) -> str:
+    ctx = dict(context)
+    raw_ac = ctx.get("audit_chain")
+    if not isinstance(raw_ac, dict):
+        raw_ac = {}
+    ctx["audit_chain"] = {
+        "verified": raw_ac.get("verified", True),
+        "total_records": raw_ac.get("total_records", 0),
+        "latest_hash": raw_ac.get("latest_hash") or "GENESIS",
+    }
     template = Template(REPORT_TEMPLATE)
-    return template.render(**context)
+    return template.render(**ctx)

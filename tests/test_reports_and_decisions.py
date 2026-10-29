@@ -263,3 +263,42 @@ def test_confirm_decision_workflow_and_persistence():
         headers={"Authorization": f"Bearer {tenant_c['token']}"},
     )
     assert cross_res.status_code == 403
+
+
+def test_report_with_missing_or_none_audit_chain():
+    """
+    Regression test verifying that when audit_chain is missing, None, or empty,
+    both HTML and PDF report generation render successfully without runtime error.
+    """
+    from app.report import render_html_report
+
+    setup = create_test_user_and_app("Gamma Tech Institute")
+    app_id = setup["app_id"]
+    token = setup["token"]
+
+    # 1. API endpoint returns valid context including audit_chain
+    res = client.get(
+        f"/api/applications/{app_id}/report?format=json",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    report_json = res.json()["data"]
+    context = report_json["context"]
+
+    # 2. Test PDF generator with audit_chain explicitly None
+    context_no_ac = dict(context)
+    context_no_ac["audit_chain"] = None
+    pdf_bytes = generate_dossier_pdf(context_no_ac)
+    assert pdf_bytes.startswith(b"%PDF-")
+    assert len(pdf_bytes) > 1000
+
+    # 3. Test HTML report renderer with audit_chain explicitly None
+    html = render_html_report(context_no_ac)
+    assert "NIYANTRAN" in html
+    assert "Official Regulatory Verification Notice" in html
+
+    # 4. Test PDF generator with empty dict audit_chain
+    context_empty_ac = dict(context)
+    context_empty_ac["audit_chain"] = {}
+    pdf_bytes_empty = generate_dossier_pdf(context_empty_ac)
+    assert pdf_bytes_empty.startswith(b"%PDF-")

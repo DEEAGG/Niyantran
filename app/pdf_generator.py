@@ -156,7 +156,9 @@ def generate_dossier_pdf(context: Dict[str, Any]) -> bytes:
     fields = context.get("fields", [])
     findings = context.get("findings", [])
     summary = context.get("summary", {})
-    audit_chain = context.get("audit_chain", {})
+    audit_chain = context.get("audit_chain")
+    if not isinstance(audit_chain, dict):
+        audit_chain = {}
     generated_at = context.get("generated_at") or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     app_id = app.get("id") or "APP-UNKNOWN"

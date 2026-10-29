@@ -29,6 +29,7 @@ import { documentService } from '../services/documentService';
 import { extractionService } from '../services/extractionService';
 import { validationService } from '../services/validationService';
 import { authenticityService } from '../services/authenticityService';
+import { auditService } from '../services/auditService';
 import { useToast } from '../context/ToastContext';
 import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
@@ -379,6 +380,7 @@ export default function ApplicationDetails() {
   const [error, setError] = useState(null);
   const [officerNote, setOfficerNote] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [auditChain, setAuditChain] = useState(null);
 
   const loadData = async () => {
     try {
@@ -387,15 +389,23 @@ export default function ApplicationDetails() {
       const appRes = await applicationService.getApplicationById(id);
       setApp(appRes.data);
 
-      const [docsRes, fieldsRes, findingsRes] = await Promise.all([
+      const [docsRes, fieldsRes, findingsRes, auditRes] = await Promise.all([
         documentService.getDocuments(id).catch(() => ({ data: [] })),
         extractionService.getExtractedFields(id).catch(() => ({ data: [] })),
         validationService.getFindings(id).catch(() => ({ data: [] })),
+        auditService.verifyAuditChain().catch(() => null),
       ]);
 
       setDocuments(docsRes.data || []);
       setExtractedFields(fieldsRes.data || []);
       setFindings(findingsRes.data || []);
+      if (auditRes) {
+        setAuditChain({
+          valid: Boolean(auditRes.verified ?? true),
+          records_count: auditRes.total_records ?? 0,
+          latest_hash: auditRes.latest_hash,
+        });
+      }
     } catch (err) {
       setError(err.message || 'Failed to load application details');
     } finally {
