@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { dashboardService } from '../services/dashboardService';
 import HeroWave from '../components/ui/dynamic-wave-canvas-background';
-import AnimatedGradient, { NIYANTRAN_BRAND_GRADIENT } from '../components/ui/animated-gradient';
 import { EditorialScrollHeading } from '../components/ui/text-scroll-animation';
 import DocumentUploadDropzone from '../components/common/DocumentUploadDropzone';
 import RegulatoryIntelligenceBento from '../components/common/RegulatoryIntelligenceBento';
@@ -52,16 +51,9 @@ export default function Dashboard() {
       {/* ========================================================= */}
       {/* 1. EDITORIAL HERO & UPLOAD FIRST VIEWPORT                 */}
       {/* ========================================================= */}
-      <section className="relative -mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-12 pb-14 overflow-hidden border-b border-border">
-        {/* Primary WebGL2 Shader Animated Gradient */}
-        <AnimatedGradient
-          config={NIYANTRAN_BRAND_GRADIENT}
-          className="w-full h-full opacity-85"
-          noise={{ opacity: 0.1, scale: 1 }}
-        />
-
+      <section className="relative pt-6 pb-10 sm:pt-8 sm:pb-12">
         {/* Subtle Ambient Wave Background Canvas */}
-        <HeroWave className="opacity-25" />
+        <HeroWave className="opacity-30 pointer-events-none" />
 
         {/* NIYANTRAN Decorative Doodle Cluster (Documents, Magnifier, Regulatory Seals) */}
         <DoodleHeroCluster />

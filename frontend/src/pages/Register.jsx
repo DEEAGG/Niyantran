@@ -63,13 +63,32 @@ export default function Register() {
     <div className="min-h-screen relative bg-[#F7F6F2] flex items-center justify-center p-4 selection:bg-[#E43D12] selection:text-white">
       {/* Background Animated Gradient Layer */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden" 
+         
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none w-screen h-screen min-h-[100dvh]" 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100dvh',
+          minHeight: '100vh',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
         aria-hidden="true"
       >
         <AnimatedGradient
           config={NIYANTRAN_BRAND_GRADIENT}
-          className="w-full h-full opacity-45"
+          className="w-full h-full opacity-55"
           noise={{ opacity: 0.08, scale: 1 }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+          }}
         />
       </div>
 

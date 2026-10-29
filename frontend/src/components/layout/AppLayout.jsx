@@ -9,17 +9,75 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen relative bg-[#F7F6F2] text-text-primary flex flex-col font-sans selection:bg-accent selection:text-background transition-colors duration-200 overflow-x-hidden">
-      {/* Global Ambient WebGL2 Shader Animated Gradient Layer */}
+      {/* True Full-Viewport Floating Gradient Background */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden" 
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none w-screen h-screen min-h-[100dvh]" 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100dvh',
+          minHeight: '100vh',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}
         aria-hidden="true"
         data-testid="global-animated-gradient"
       >
+        {/* Primary WebGL2 Shader Animated Gradient */}
         <AnimatedGradient
           config={NIYANTRAN_BRAND_GRADIENT}
-          className="w-full h-full opacity-40"
-          noise={{ opacity: 0.08, scale: 1 }}
+          className="w-full h-full opacity-70"
+          noise={{ opacity: 0.07, scale: 1 }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+          }}
         />
+
+        {/* Responsive Floating Gradient Blobs (Viewport-relative organic motion across all screens) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          {/* Blob 1: Soft Vermilion, top-left drift */}
+          <div 
+            className="absolute rounded-full blur-[80px] sm:blur-[110px] pointer-events-none animate-float-blob-1 opacity-70"
+            style={{
+              top: '-8vh',
+              left: '6vw',
+              width: 'min(50vw, 750px)',
+              height: 'min(50vw, 750px)',
+              background: 'radial-gradient(circle, rgba(228, 61, 18, 0.22) 0%, rgba(228, 61, 18, 0.06) 50%, transparent 72%)',
+            }}
+          />
+
+          {/* Blob 2: Golden Yellow, bottom-right drift */}
+          <div 
+            className="absolute rounded-full blur-[75px] sm:blur-[100px] pointer-events-none animate-float-blob-2 opacity-65"
+            style={{
+              bottom: '-6vh',
+              right: '6vw',
+              width: 'min(46vw, 680px)',
+              height: 'min(46vw, 680px)',
+              background: 'radial-gradient(circle, rgba(239, 177, 18, 0.20) 0%, rgba(239, 177, 18, 0.05) 50%, transparent 72%)',
+            }}
+          />
+
+          {/* Blob 3: Rose Pink, center-right drift */}
+          <div 
+            className="absolute rounded-full blur-[80px] sm:blur-[105px] pointer-events-none animate-float-blob-3 opacity-60"
+            style={{
+              top: '28vh',
+              right: '24vw',
+              width: 'min(40vw, 560px)',
+              height: 'min(40vw, 560px)',
+              background: 'radial-gradient(circle, rgba(214, 83, 109, 0.16) 0%, rgba(214, 83, 109, 0.04) 50%, transparent 72%)',
+            }}
+          />
+        </div>
       </div>
 
       {/* Main UI Container (Stacked cleanly above the WebGL background) */}

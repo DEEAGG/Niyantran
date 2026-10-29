@@ -46,16 +46,9 @@ const HeroWave = ({ className = '' }) => {
 
     const drawStaticFallback = () => {
       ctx.clearRect(0, 0, width, height);
-      // Soft ambient gradient
-      const grad = ctx.createLinearGradient(0, 0, width, height);
-      grad.addColorStop(0, '#F7F6F2');
-      grad.addColorStop(0.5, 'rgba(253, 241, 238, 0.45)');
-      grad.addColorStop(1, '#F7F6F2');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
 
       // Subtle decorative curves in vermilion & pink
-      ctx.strokeStyle = 'rgba(228, 61, 18, 0.06)';
+      ctx.strokeStyle = 'rgba(228, 61, 18, 0.07)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, height * 0.45);
@@ -97,14 +90,6 @@ const HeroWave = ({ className = '' }) => {
 
       const elapsed = (now - startTime);
       ctx.clearRect(0, 0, width, height);
-
-      // Warm ivory background gradient with soft top highlight
-      const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-      bgGrad.addColorStop(0, '#F7F6F2');
-      bgGrad.addColorStop(0.5, 'rgba(247, 246, 242, 0.96)');
-      bgGrad.addColorStop(1, '#F7F6F2');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, width, height);
 
       // Draw subtle wave harmonic bands
       for (let w = 0; w < waves.length; w++) {

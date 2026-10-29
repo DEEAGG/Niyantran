@@ -132,3 +132,66 @@
   background-color: var(--accent-hover);
   box-shadow: 0 4px 12px var(--accent-glow);
 }
+
+/* ========================================================= */
+/* Responsive Floating Gradient Blobs Keyframes & Utilities   */
+/* ========================================================= */
+@keyframes float-blob-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(4vw, -4vh) scale(1.06);
+  }
+  66% {
+    transform: translate(-3vw, 3vh) scale(0.95);
+  }
+}
+
+@keyframes float-blob-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-4vw, 5vh) scale(0.94);
+  }
+  66% {
+    transform: translate(3vw, -3vh) scale(1.05);
+  }
+}
+
+@keyframes float-blob-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(5vw, 3vh) scale(1.04);
+  }
+  66% {
+    transform: translate(-4vw, -4vh) scale(0.96);
+  }
+}
+
+.animate-float-blob-1 {
+  animation: float-blob-1 26s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-float-blob-2 {
+  animation: float-blob-2 32s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-float-blob-3 {
+  animation: float-blob-3 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-blob-1,
+  .animate-float-blob-2,
+  .animate-float-blob-3 {
+    animation: none !important;
+  }
+}
+

@@ -413,6 +413,7 @@ export default function AnimatedGradient({
     resize();
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(container);
+    window.addEventListener("resize", resize);
 
     startTimeRef.current = performance.now();
 
@@ -487,6 +488,7 @@ export default function AnimatedGradient({
         cancelAnimationFrame(frameIdRef.current);
       }
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("resize", resize);
       resizeObserver.disconnect();
       if (gl) {
         gl.deleteProgram(program);
