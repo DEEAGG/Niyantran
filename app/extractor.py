@@ -437,6 +437,18 @@ def extract_from_pdf_page(page, page_num: int) -> Tuple[List[Dict[str, Any]], st
         img = Image.open(io.BytesIO(pix.tobytes("png")))
         try:
             fields, method = extract_from_image(img, page_num=page_num)
+            # PDF pages are rasterized at 2x before OCR. Convert returned boxes
+            # from raster-pixel space back to PDF page-point coordinates for drawing.
+            for field in fields:
+                bbox = field.get("bbox")
+                if bbox:
+                    converted = {
+                        key: round(float(bbox[key]) / 2.0, 2)
+                        for key in ("x0", "y0", "x1", "y1", "width", "height")
+                        if bbox.get(key) is not None
+                    }
+                    field["bbox"] = converted
+                    field["bbox_json"] = json.dumps(converted)
             return fields, method, None
         except Exception as ocr_err:
             return [], "ocr_unavailable", f"Page {page_num}: OCR engine unavailable ({ocr_err})"
