@@ -108,8 +108,27 @@ export default function AuthenticatedImage({
 
 /**
  * Utility helper to open an authenticated document or PDF page in a new window/tab.
+ * Always uses in-memory blob URLs with standard Bearer authorization headers
+ * to prevent leaking reusable session JWTs in query strings, browser history, or server logs.
  */
 export async function openAuthenticatedDocument(url) {
+  let popupWin = null;
+  try {
+    popupWin = window.open('', '_blank', 'noopener,noreferrer');
+    if (popupWin && !popupWin.closed) {
+      popupWin.document.title = 'Loading document preview...';
+      popupWin.document.body.innerHTML = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0f172a; color: #ffffff;">
+          <div style="width: 32px; height: 32px; border: 3px solid rgba(228,61,18,0.25); border-top-color: #E43D12; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;"></div>
+          <p style="margin: 0; font-size: 13px; color: #94a3b8;">Loading authenticated preview...</p>
+          <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+        </div>
+      `;
+    }
+  } catch (_) {
+    popupWin = null;
+  }
+
   try {
     const token = localStorage.getItem('niyantran_token');
     const headers = {};
@@ -120,12 +139,16 @@ export async function openAuthenticatedDocument(url) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     const objectUrl = URL.createObjectURL(blob);
-    window.open(objectUrl, '_blank', 'noopener,noreferrer');
+    if (popupWin && !popupWin.closed) {
+      popupWin.location.href = objectUrl;
+    } else {
+      window.open(objectUrl, '_blank', 'noopener,noreferrer');
+    }
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 120000);
   } catch (err) {
-    console.warn('Direct authenticated fetch failed, attempting query token:', err);
-    const token = localStorage.getItem('niyantran_token');
-    const separator = url.includes('?') ? '&' : '?';
-    const targetUrl = token ? `${url}${separator}token=${encodeURIComponent(token)}` : url;
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    if (popupWin && !popupWin.closed) {
+      popupWin.close();
+    }
+    console.error('Failed to open authenticated document preview:', err);
   }
 }
