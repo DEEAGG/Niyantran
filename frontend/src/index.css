@@ -96,7 +96,7 @@
   }
 }
 
-/* Strategic Orange Highlighting */
+/* Strategic Orange Highlighting - Same font size and line height as surrounding text */
 .orange-highlight {
   color: #C5300B;
   background-color: #FDF1EE;
@@ -104,19 +104,23 @@
   border-radius: 0.375rem;
   border: 1px solid rgba(228, 61, 18, 0.25);
   font-weight: 600;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
 .orange-text {
   color: #E43D12;
   font-weight: 600;
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
 /* Restrained Scroll-Triggered Reveal Animation System */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(16px);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -125,10 +129,10 @@
   transform: translateY(0);
 }
 
-.reveal-stagger-1 { transition-delay: 0.07s; }
-.reveal-stagger-2 { transition-delay: 0.14s; }
-.reveal-stagger-3 { transition-delay: 0.21s; }
-.reveal-stagger-4 { transition-delay: 0.28s; }
+.reveal-stagger-1 { transition-delay: 0.08s; }
+.reveal-stagger-2 { transition-delay: 0.16s; }
+.reveal-stagger-3 { transition-delay: 0.24s; }
+.reveal-stagger-4 { transition-delay: 0.32s; }
 
 @media (prefers-reduced-motion: reduce) {
   .reveal-on-scroll {

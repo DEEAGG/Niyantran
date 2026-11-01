@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   UploadCloud,
@@ -26,9 +26,11 @@ import { ruleService } from '../services/ruleService';
 import { auditService } from '../services/auditService';
 import { MagnifierDoodle } from '../components/common/Doodles';
 import ScrollReveal from '../components/common/ScrollReveal';
+import { EditorialScrollHeading } from '../components/ui/text-scroll-animation';
 
 export default function CoreFeaturesPage() {
   const navigate = useNavigate();
+  const bannerRef = useRef(null);
   const [stats, setStats] = useState({
     applications: 0,
     documents: 0,
@@ -181,7 +183,7 @@ export default function CoreFeaturesPage() {
   return (
     <div className="space-y-8 pb-16 animate-fadeIn">
       {/* Hero Banner */}
-      <ScrollReveal stagger={1} className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs relative overflow-hidden">
+      <div ref={bannerRef} className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -192,9 +194,12 @@ export default function CoreFeaturesPage() {
               <span className="text-xs text-text-secondary font-semibold">Eight Core Capabilities</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary">
-              Regulatory <span className="text-accent">Intelligence</span> &amp; Verification Workflow
-            </h1>
+            <EditorialScrollHeading
+              text="Regulatory Intelligence & Verification Workflow"
+              highlightWord="Intelligence"
+              containerRef={bannerRef}
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary justify-start text-left"
+            />
 
             <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed font-medium">
               Autonomous verification platform checking institutional filings against applicable <span className="text-accent font-semibold">AICTE statutory norms</span> with end-to-end evidence provenance.
@@ -244,7 +249,7 @@ export default function CoreFeaturesPage() {
             ))}
           </div>
         </div>
-      </ScrollReveal>
+      </div>
 
       {/* 8 Core Feature Cards Grid */}
       <section className="space-y-4">

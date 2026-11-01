@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -25,6 +25,7 @@ import ScrollReveal from '../components/common/ScrollReveal';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const heroRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -52,7 +53,7 @@ export default function Dashboard() {
       {/* ========================================================= */}
       {/* 1. EDITORIAL HERO & UPLOAD FIRST VIEWPORT                 */}
       {/* ========================================================= */}
-      <section className="relative pt-6 pb-10 sm:pt-8 sm:pb-12">
+      <section ref={heroRef} className="relative pt-6 pb-10 sm:pt-8 sm:pb-12">
         {/* Subtle Ambient Wave Background Canvas */}
         <HeroWave className="opacity-30 pointer-events-none" />
 
@@ -64,14 +65,15 @@ export default function Dashboard() {
           {/* Subtle Tag with Vermilion Node Indicator */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-border text-xs sm:text-sm font-semibold text-text-secondary shadow-xs backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-[#E43D12] animate-pulse" />
-            <span className="text-text-primary">Autonomous <span className="text-accent">Regulatory Verification</span> &amp; Evidence Tracing</span>
+            <span className="text-text-primary">Autonomous <span className="text-accent font-semibold">Regulatory Verification</span> &amp; Evidence Tracing</span>
           </div>
 
-          {/* Editorial Animated Headline */}
+          {/* Editorial Animated Headline with CharacterV1 Scroll-Linked Convergence */}
           <div className="pt-2 flex justify-center">
             <EditorialScrollHeading
               text="Turn Documents into Clear Decisions"
               highlightWord="Documents"
+              containerRef={heroRef}
               className="justify-center text-center max-w-3xl font-extrabold"
             />
           </div>

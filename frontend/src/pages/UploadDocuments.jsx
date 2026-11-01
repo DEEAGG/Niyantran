@@ -296,7 +296,7 @@ export default function UploadDocuments() {
 
         {selectedApp && (
           <div className="text-xs sm:text-sm font-semibold text-text-secondary">
-            Uploaded: <span className="font-bold text-accent text-sm sm:text-base">{uploadedCount} of 5</span> Statutory Categories
+            Uploaded: <span className="font-semibold text-accent">{uploadedCount} of 5</span> Statutory Categories
           </div>
         )}
       </ScrollReveal>

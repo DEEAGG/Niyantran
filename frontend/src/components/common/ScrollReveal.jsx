@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * ScrollReveal - High-performance scroll-triggered reveal component.
- * Inspired by Google's modern editorial websites:
- * - Immediate reveal if already visible in viewport on mount (no blank flash)
- * - Restrained upward glide (14px) and smooth fade-in
- * - Fires once when scrolled into view
- * - Fully respects prefers-reduced-motion
- * - Zero layout shift or scroll-jacking
+ * ScrollReveal - Smooth scroll-triggered reveal component.
+ * - Starts with opacity: 0 and translateY(16px).
+ * - Triggers when scrolled into the visible viewport.
+ * - Staggers child cards with reveal-stagger-* classes.
+ * - Unobserves once revealed for maximum performance.
+ * - Completely respects prefers-reduced-motion.
  */
 export default function ScrollReveal({
   children,
   className = '',
   stagger = 0, // 0, 1, 2, 3, 4
-  threshold = 0.05,
+  threshold = 0.1,
+  rootMargin = '0px 0px -30px 0px',
   as: Component = 'div',
   ...props
 }) {
@@ -21,7 +21,7 @@ export default function ScrollReveal({
   const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    // 1. Check prefers-reduced-motion
+    // 1. Respect prefers-reduced-motion
     if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setRevealed(true);
       return;
@@ -30,28 +30,17 @@ export default function ScrollReveal({
     const element = ref.current;
     if (!element) return;
 
-    // 2. Immediate viewport check on mount:
-    // If element is already within the visible viewport, reveal immediately
-    if (typeof window !== 'undefined') {
-      const rect = element.getBoundingClientRect();
-      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-      if (rect.top <= windowHeight * 0.95 && rect.bottom >= 0) {
-        setRevealed(true);
-        return;
-      }
-    }
-
-    // 3. Fallback if IntersectionObserver is not supported
+    // 2. Fallback if IntersectionObserver is not supported
     if (!('IntersectionObserver' in window)) {
       setRevealed(true);
       return;
     }
 
-    // 4. Observe scroll entry with slight bottom offset
+    // 3. Observe scroll entry
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+          if (entry.isIntersecting) {
             setRevealed(true);
             observer.unobserve(entry.target);
           }
@@ -59,7 +48,7 @@ export default function ScrollReveal({
       },
       {
         threshold,
-        rootMargin: '0px 0px -20px 0px',
+        rootMargin,
       }
     );
 
@@ -68,7 +57,7 @@ export default function ScrollReveal({
     return () => {
       if (element) observer.unobserve(element);
     };
-  }, [threshold]);
+  }, [threshold, rootMargin]);
 
   const staggerClass = stagger ? `reveal-stagger-${stagger}` : '';
 
@@ -86,7 +75,7 @@ export default function ScrollReveal({
 /**
  * Hook to attach scroll reveal to any ref
  */
-export function useScrollReveal(threshold = 0.05) {
+export function useScrollReveal(threshold = 0.1, rootMargin = '0px 0px -30px 0px') {
   const ref = useRef(null);
   const [revealed, setRevealed] = useState(false);
 
@@ -99,15 +88,6 @@ export function useScrollReveal(threshold = 0.05) {
     const element = ref.current;
     if (!element) return;
 
-    if (typeof window !== 'undefined') {
-      const rect = element.getBoundingClientRect();
-      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-      if (rect.top <= windowHeight * 0.95 && rect.bottom >= 0) {
-        setRevealed(true);
-        return;
-      }
-    }
-
     if (!('IntersectionObserver' in window)) {
       setRevealed(true);
       return;
@@ -116,7 +96,7 @@ export function useScrollReveal(threshold = 0.05) {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting || entry.intersectionRatio > 0) {
+          if (entry.isIntersecting) {
             setRevealed(true);
             observer.unobserve(entry.target);
           }
@@ -124,7 +104,7 @@ export function useScrollReveal(threshold = 0.05) {
       },
       {
         threshold,
-        rootMargin: '0px 0px -20px 0px',
+        rootMargin,
       }
     );
 
@@ -132,7 +112,7 @@ export function useScrollReveal(threshold = 0.05) {
     return () => {
       if (element) observer.unobserve(element);
     };
-  }, [threshold]);
+  }, [threshold, rootMargin]);
 
   return { ref, revealed, className: `reveal-on-scroll ${revealed ? 'is-revealed' : ''}` };
 }
