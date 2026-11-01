@@ -72,13 +72,15 @@ export const EditorialScrollHeading = ({
     );
   }
 
+  const isLeftAligned = className.includes('text-left') || className.includes('justify-start');
+
   return (
     <h1
       ref={localRef}
       aria-label={text}
       style={{ perspective: 1000 }}
       className={cn(
-        "text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-text-primary leading-[1.08] flex flex-wrap justify-center gap-x-[0.3em] gap-y-[0.1em] overflow-visible select-none",
+        "text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-text-primary leading-[1.22] flex flex-wrap justify-center gap-x-[0.3em] gap-y-[0.25em] overflow-visible select-none",
         className
       )}
     >
@@ -87,7 +89,7 @@ export const EditorialScrollHeading = ({
           <span
             key={wordIndex}
             className={cn(
-              "inline-flex whitespace-nowrap overflow-visible",
+              "inline-flex whitespace-nowrap overflow-visible py-0.5",
               item.isHighlighted ? "text-[#E43D12]" : "text-text-primary"
             )}
           >
@@ -100,6 +102,7 @@ export const EditorialScrollHeading = ({
                   centerIndex={centerIndex}
                   scrollYProgress={scrollYProgress}
                   isHighlighted={isHighlighted}
+                  isLeftAligned={isLeftAligned}
                 />
               );
             })}
@@ -116,6 +119,7 @@ const CharacterV1Span = ({
   centerIndex,
   scrollYProgress,
   isHighlighted = false,
+  isLeftAligned = false,
 }) => {
   // Distance from horizontal center of the headline
   const distanceFromCenter = globalIndex - centerIndex;
@@ -124,14 +128,25 @@ const CharacterV1Span = ({
   // - Initial state (scrollYProgress = 0, on load / top of page): perfectly normal (0 displacement, 0 rotation, opacity 1)
   // - On scroll down (scrollYProgress -> 0.5): characters disperse outwards (left moves left, right moves right)
   // - On scroll up: smoothly returns back to 0 (normal, readable state)
-  const maxDispersedX = Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 6.5, 80);
-  const maxDispersedRotateX = Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 1.8, 24);
-  const maxDispersedY = Math.min(Math.abs(distanceFromCenter) * 1.0, 14);
+  // Left-aligned multiline headings use restrained left displacement to prevent left-padding clipping and multiline overlap
+  const maxDispersedX = isLeftAligned
+    ? (distanceFromCenter < 0
+        ? Math.max(distanceFromCenter * 2.2, -22)
+        : Math.min(distanceFromCenter * 3.2, 46))
+    : Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 5.8, 65);
+
+  const maxDispersedRotateX = isLeftAligned
+    ? Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 0.9, 14)
+    : Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 1.5, 20);
+
+  const maxDispersedY = isLeftAligned
+    ? Math.min(Math.abs(distanceFromCenter) * 0.28, 4.5)
+    : Math.min(Math.abs(distanceFromCenter) * 0.7, 10);
 
   const x = useTransform(scrollYProgress, [0, 0.5], [0, maxDispersedX]);
   const rotateX = useTransform(scrollYProgress, [0, 0.5], [0, maxDispersedRotateX]);
   const y = useTransform(scrollYProgress, [0, 0.5], [0, maxDispersedY]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.7]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.75]);
 
   return (
     <motion.span

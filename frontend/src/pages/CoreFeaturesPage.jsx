@@ -185,7 +185,7 @@ export default function CoreFeaturesPage() {
       {/* Hero Banner */}
       <div ref={bannerRef} className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
+          <div className="space-y-3.5 max-w-3xl">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#E43D12]/10 text-[#E43D12] border border-[#E43D12]/20 uppercase">
                 Regulatory Intelligence
@@ -198,10 +198,10 @@ export default function CoreFeaturesPage() {
               text="Regulatory Intelligence & Verification Workflow"
               highlightWord="Intelligence"
               containerRef={bannerRef}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary justify-start text-left"
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary justify-start text-left leading-[1.3] sm:leading-[1.28] gap-x-[0.32em] gap-y-2.5 sm:gap-y-3 py-1"
             />
 
-            <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed font-medium pt-0.5">
               Autonomous verification platform checking institutional filings against applicable <span className="text-accent font-semibold">AICTE statutory norms</span> with end-to-end evidence provenance.
             </p>
           </div>

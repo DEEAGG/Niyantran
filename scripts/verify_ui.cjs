@@ -54,18 +54,18 @@ async function run() {
     await send('Runtime.enable');
     await send('DOM.enable');
 
-    console.log('3. Setting token and navigating to Dashboard...');
+    console.log('3. Setting token and navigating to /intelligence ...');
     await send('Runtime.evaluate', {
-      expression: `localStorage.setItem('niyantran_token', ${JSON.stringify(AUTH_TOKEN)}); window.location.href = '/';`
+      expression: `localStorage.setItem('niyantran_token', ${JSON.stringify(AUTH_TOKEN)}); window.location.href = '/intelligence';`
     });
 
-    // Wait for Dashboard to mount
-    console.log('4. Waiting for Dashboard headline to mount...');
+    // Wait for Regulatory Intelligence heading to mount
+    console.log('4. Waiting for "Regulatory Intelligence & Verification Workflow" heading to mount...');
     let mounted = false;
     for (let i = 0; i < 25; i++) {
       await new Promise(r => setTimeout(r, 400));
       const evalRes = await send('Runtime.evaluate', {
-        expression: 'Boolean(document.querySelector("h1[aria-label=\'Turn Documents into Clear Decisions\']"))',
+        expression: 'Boolean(document.querySelector("h1[aria-label=\'Regulatory Intelligence & Verification Workflow\']"))',
         returnByValue: true
       });
       if (evalRes.result?.result?.value === true) {
@@ -75,82 +75,120 @@ async function run() {
     }
 
     if (!mounted) {
-      throw new Error('Dashboard headline failed to mount');
+      throw new Error('Regulatory Intelligence heading failed to mount');
     }
-    console.log('   Dashboard mounted successfully!');
+    console.log('   Heading mounted successfully!');
 
-    // 1. Initial State Check (Normal State)
-    console.log('\n--- TEST 1: INITIAL PAGE LOAD (NORMAL STATE) ---');
-    const scroll0Transforms = await send('Runtime.evaluate', {
+    // 1. Initial State Check (Normal State & Typography Spacing)
+    console.log('\n--- TEST 1: INITIAL PAGE LOAD (NORMAL STATE & LINE-HEIGHT) ---');
+    const headingMetrics = await send('Runtime.evaluate', {
       expression: `(() => {
-        const h1 = document.querySelector('h1');
+        const h1 = document.querySelector('h1[aria-label="Regulatory Intelligence & Verification Workflow"]');
+        const style = window.getComputedStyle(h1);
         const chars = Array.from(h1.querySelectorAll('span span[aria-hidden="true"]'));
-        return chars.map((el) => ({
-          char: el.textContent,
-          isOrange: el.classList.contains('text-[#E43D12]'),
-          styleTransform: el.style.transform || 'none'
-        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'u', 's', 'i', 'C', 's'].includes(c.char));
+        const normalChar = chars.find(el => !el.classList.contains('text-[#E43D12]'));
+        const orangeChar = chars.find(el => el.classList.contains('text-[#E43D12]'));
+
+        // Measure line boxes
+        const wordSpans = Array.from(h1.querySelectorAll('h1 > span'));
+        const wordTops = wordSpans.map(s => s.getBoundingClientRect().top);
+        const uniqueLines = Array.from(new Set(wordTops.map(t => Math.round(t))));
+
+        return {
+          totalChars: chars.length,
+          fontSize: style.fontSize,
+          lineHeight: style.lineHeight,
+          fontFamily: style.fontFamily,
+          normalCharLetter: normalChar?.textContent,
+          normalCharFontSize: normalChar ? window.getComputedStyle(normalChar).fontSize : null,
+          orangeCharLetter: orangeChar?.textContent,
+          orangeCharFontSize: orangeChar ? window.getComputedStyle(orangeChar).fontSize : null,
+          fontSizeIdentical: normalChar && orangeChar ? window.getComputedStyle(normalChar).fontSize === window.getComputedStyle(orangeChar).fontSize : true,
+          distinctWrappedLines: uniqueLines.length,
+          initialTransforms: chars.slice(0, 8).map(c => ({ char: c.textContent, transform: c.style.transform || 'none' }))
+        };
       })()`,
       returnByValue: true
     });
-    console.log('   Characters at scrollY = 0:');
-    console.log(JSON.stringify(scroll0Transforms.result.result.value, null, 2));
+    console.log('   Heading Metrics:');
+    console.log(JSON.stringify(headingMetrics.result.result.value, null, 2));
 
     const shot1 = await send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'niyantran_initial_normal.png'), Buffer.from(shot1.result.data, 'base64'));
-    console.log('   Screenshot saved: niyantran_initial_normal.png');
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_intelligence_initial.png'), Buffer.from(shot1.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_intelligence_initial.png');
 
-    // 2. Scroll Down Check (Dispersion State)
-    console.log('\n--- TEST 2: SCROLL DOWN (DISPERSION STATE) ---');
+    // 2. Scroll Down Check (Character Dispersion without overlap)
+    console.log('\n--- TEST 2: SCROLL DOWN (DISPERSION WITHOUT MULTILINE OVERLAP) ---');
     await send('Runtime.evaluate', {
-      expression: 'window.scrollTo({ top: 350, behavior: "instant" }); window.dispatchEvent(new Event("scroll"));'
+      expression: 'window.scrollTo({ top: 250, behavior: "instant" }); window.dispatchEvent(new Event("scroll"));'
     });
     await new Promise(r => setTimeout(r, 600));
 
-    const scroll350Transforms = await send('Runtime.evaluate', {
+    const dispersedMetrics = await send('Runtime.evaluate', {
       expression: `(() => {
-        const h1 = document.querySelector('h1');
+        const h1 = document.querySelector('h1[aria-label="Regulatory Intelligence & Verification Workflow"]');
         const chars = Array.from(h1.querySelectorAll('span span[aria-hidden="true"]'));
-        return chars.map((el) => ({
-          char: el.textContent,
-          isOrange: el.classList.contains('text-[#E43D12]'),
-          styleTransform: el.style.transform
-        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'u', 's', 'i', 'C', 's'].includes(c.char));
+        
+        // Sample characters from start (left), middle, and end (right)
+        const leftChars = chars.slice(0, 5).map(c => ({ char: c.textContent, transform: c.style.transform }));
+        const middleChars = chars.slice(20, 24).map(c => ({ char: c.textContent, transform: c.style.transform }));
+        const rightChars = chars.slice(-5).map(c => ({ char: c.textContent, transform: c.style.transform }));
+
+        // Check vertical overlap between lines
+        const wordSpans = Array.from(h1.querySelectorAll('h1 > span'));
+        const rects = wordSpans.map(s => s.getBoundingClientRect());
+        const line1Rects = rects.filter(r => Math.abs(r.top - rects[0].top) < 10);
+        const line2Rects = rects.filter(r => r.top > rects[0].top + 10);
+
+        let verticalGap = null;
+        if (line1Rects.length > 0 && line2Rects.length > 0) {
+          const maxLine1Bottom = Math.max(...line1Rects.map(r => r.bottom));
+          const minLine2Top = Math.min(...line2Rects.map(r => r.top));
+          verticalGap = minLine2Top - maxLine1Bottom;
+        }
+
+        return {
+          leftChars,
+          middleChars,
+          rightChars,
+          verticalGapBetweenLines: verticalGap,
+          hasPositiveLineSeparation: verticalGap === null || verticalGap > 0
+        };
       })()`,
       returnByValue: true
     });
-    console.log('   Characters at scrollY = 350 (Dispersed):');
-    console.log(JSON.stringify(scroll350Transforms.result.result.value, null, 2));
+    console.log('   Dispersed Metrics at scrollY = 250:');
+    console.log(JSON.stringify(dispersedMetrics.result.result.value, null, 2));
 
     const shot2 = await send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'niyantran_scrolled_dispersed.png'), Buffer.from(shot2.result.data, 'base64'));
-    console.log('   Screenshot saved: niyantran_scrolled_dispersed.png');
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_intelligence_dispersed.png'), Buffer.from(shot2.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_intelligence_dispersed.png');
 
-    // 3. Scroll Up Check (Return to Normal State)
-    console.log('\n--- TEST 3: SCROLL UP (RETURN TO NORMAL) ---');
+    // 3. Scroll Up Check (Exact Restoration)
+    console.log('\n--- TEST 3: SCROLL UP (EXACT RESTORATION TO NORMAL) ---');
     await send('Runtime.evaluate', {
       expression: 'window.scrollTo({ top: 0, behavior: "instant" }); window.dispatchEvent(new Event("scroll"));'
     });
     await new Promise(r => setTimeout(r, 600));
 
-    const scrollBackTransforms = await send('Runtime.evaluate', {
+    const restoredMetrics = await send('Runtime.evaluate', {
       expression: `(() => {
-        const h1 = document.querySelector('h1');
+        const h1 = document.querySelector('h1[aria-label="Regulatory Intelligence & Verification Workflow"]');
         const chars = Array.from(h1.querySelectorAll('span span[aria-hidden="true"]'));
-        return chars.map((el) => ({
-          char: el.textContent,
-          isOrange: el.classList.contains('text-[#E43D12]'),
-          styleTransform: el.style.transform || 'none'
-        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'u', 's', 'i', 'C', 's'].includes(c.char));
+        const allNone = chars.every(c => !c.style.transform || c.style.transform === 'none');
+        return {
+          allCharactersRestored: allNone,
+          sampleTransforms: chars.slice(0, 6).map(c => ({ char: c.textContent, transform: c.style.transform || 'none' }))
+        };
       })()`,
       returnByValue: true
     });
-    console.log('   Characters after scrolling back to scrollY = 0:');
-    console.log(JSON.stringify(scrollBackTransforms.result.result.value, null, 2));
+    console.log('   Restored State at scrollY = 0:');
+    console.log(JSON.stringify(restoredMetrics.result.result.value, null, 2));
 
     const shot3 = await send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'niyantran_returned_normal.png'), Buffer.from(shot3.result.data, 'base64'));
-    console.log('   Screenshot saved: niyantran_returned_normal.png');
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_intelligence_returned.png'), Buffer.from(shot3.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_intelligence_returned.png');
 
     // 4. Mobile Viewport Check (390px Width)
     console.log('\n--- TEST 4: MOBILE VIEWPORT TEST (390px) ---');
@@ -162,23 +200,25 @@ async function run() {
     });
     await new Promise(r => setTimeout(r, 600));
 
-    const overflowCheck = await send('Runtime.evaluate', {
+    const mobileMetrics = await send('Runtime.evaluate', {
       expression: `(() => {
+        const h1 = document.querySelector('h1[aria-label="Regulatory Intelligence & Verification Workflow"]');
+        const rect = h1 ? h1.getBoundingClientRect() : null;
         return {
           windowWidth: window.innerWidth,
-          bodyScrollWidth: document.body.scrollWidth,
           htmlScrollWidth: document.documentElement.scrollWidth,
+          headingWidth: rect ? rect.width : null,
           hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth
         };
       })()`,
       returnByValue: true
     });
-    console.log('   Mobile Overflow Evaluation:');
-    console.log(JSON.stringify(overflowCheck.result.result.value, null, 2));
+    console.log('   Mobile Viewport Metrics:');
+    console.log(JSON.stringify(mobileMetrics.result.result.value, null, 2));
 
     const shot4 = await send('Page.captureScreenshot', { format: 'png' });
-    fs.writeFileSync(path.join(artifactDir, 'niyantran_mobile_normal.png'), Buffer.from(shot4.result.data, 'base64'));
-    console.log('   Screenshot saved: niyantran_mobile_normal.png');
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_intelligence_mobile.png'), Buffer.from(shot4.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_intelligence_mobile.png');
 
     ws.close();
   } finally {
