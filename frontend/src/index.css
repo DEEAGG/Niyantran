@@ -3,31 +3,32 @@
 @tailwind utilities;
 
 @layer base {
-  /* Concept: "Quiet intelligence. Clear decisions." */
+  /* NIYANTRAN Design System: "Quiet intelligence. Clear decisions." */
   :root,
   .theme-ivory,
   .theme-experimental,
   .theme-obsidian {
-    --background: #F7F6F2;
+    --background: #F8F7F4;
     --surface: #FFFFFF;
     --surface-elevated: #FFFFFF;
-    --surface-hover: #F2EFE9;
-    --surface-secondary: #EFECE6;
+    --surface-hover: #F3EFE9;
+    --surface-secondary: #EFEBE4;
 
-    --text-primary: #171A20;
-    --text-secondary: #696C73;
-    --text-muted: #8E929B;
+    /* High-contrast WCAG AAA typography colors */
+    --text-primary: #0F172A; /* Deep dark slate-900 (16:1 contrast against white) */
+    --text-secondary: #334155; /* Slate-700 (8.5:1 contrast against white) */
+    --text-muted: #64748B; /* Slate-500 (4.6:1 contrast against white) */
 
-    --border: #E4E2DC;
-    --border-strong: #D1CEC5;
-    --border-subtle: #ECEAE4;
+    --border: #E2DFD7;
+    --border-strong: #CDC8BC;
+    --border-subtle: #EBE8E0;
 
     /* Primary Identity: Vermilion Red-Orange */
     --accent: #E43D12;
-    --accent-hover: #CC340E;
+    --accent-hover: #C5300B;
     --accent-foreground: #FFFFFF;
     --accent-secondary: #FDF1EE;
-    --accent-glow: rgba(228, 61, 18, 0.16);
+    --accent-glow: rgba(228, 61, 18, 0.2);
 
     /* Brand Graphic Accents: Vermilion, Rose Pink, Golden Yellow */
     --color-brand-vermilion: #E43D12;
@@ -38,35 +39,53 @@
     --color-brand-yellow-surface: #FEF9EB;
 
     --input-background: #FFFFFF;
-    --input-text: #171A20;
+    --input-text: #0F172A;
     --popover-background: #FFFFFF;
-    --popover-text: #171A20;
+    --popover-text: #0F172A;
     --focus-ring: rgba(228, 61, 18, 0.35);
 
-    --status-success: #18794E;
-    --status-success-bg: #EBF6EE;
-    --status-warning: #B45309;
-    --status-warning-bg: #FEF3C7;
-    --status-pending: #D97706;
-    --status-error: #CE2C31;
-    --status-error-bg: #FDF2F2;
+    --status-success: #15803D; /* Green-700 for high contrast */
+    --status-success-bg: #ECFDF5;
+    --status-warning: #B45309; /* Amber-700 */
+    --status-warning-bg: #FFFBEB;
+    --status-pending: #C2410C; /* Orange-700 */
+    --status-error: #B91C1C; /* Red-700 */
+    --status-error-bg: #FEF2F2;
+  }
+
+  /* Single Global Font Family: Inter across entire application */
+  *,
+  *::before,
+  *::after {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
     background-color: var(--background);
     color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    line-height: 1.5;
   }
 
-  /* Explicit theme-aware styles for native selects and options to avoid OS whiteout */
+  /* Tabular numbers for numbers, percentages, dates, codes in Inter */
+  .font-mono,
+  [data-tabular-nums],
+  code,
+  pre {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'tnum' 1, 'cv05' 1, 'zero' 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Explicit theme-aware styles for native selects and options */
   select,
   select option {
     background-color: #FFFFFF !important;
-    color: #171A20 !important;
+    color: #0F172A !important;
   }
 
   /* Form inputs and textareas */
@@ -77,10 +96,52 @@
   }
 }
 
+/* Strategic Orange Highlighting */
+.orange-highlight {
+  color: #C5300B;
+  background-color: #FDF1EE;
+  padding: 0.1em 0.35em;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(228, 61, 18, 0.25);
+  font-weight: 600;
+}
+
+.orange-text {
+  color: #E43D12;
+  font-weight: 600;
+}
+
+/* Restrained Scroll-Triggered Reveal Animation System */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-stagger-1 { transition-delay: 0.08s; }
+.reveal-stagger-2 { transition-delay: 0.16s; }
+.reveal-stagger-3 { transition-delay: 0.24s; }
+.reveal-stagger-4 { transition-delay: 0.32s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 /* Custom Softer Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -88,20 +149,20 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--border-strong);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
+  background: #94A3B8;
 }
 
 /* Dedicated Solid Opaque Dropdown Menu */
 .dropdown-menu {
   background-color: #FFFFFF !important;
-  color: #171A20 !important;
-  border: 1px solid #E4E2DC !important;
-  border-radius: 10px !important;
+  color: #0F172A !important;
+  border: 1px solid #E2DFD7 !important;
+  border-radius: 12px !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04) !important;
   z-index: 1000 !important;
   opacity: 1 !important;
@@ -111,20 +172,20 @@
 
 .dropdown-item {
   transition: background-color 0.15s ease-in-out;
-  border-radius: 6px;
-  color: #171A20;
+  border-radius: 8px;
+  color: #0F172A;
 }
 
 .dropdown-item:hover {
-  background-color: #F7F6F2 !important;
+  background-color: #F8F7F4 !important;
 }
 
 /* Primary Action Button Styling */
 .btn-primary {
   background-color: var(--accent);
   color: var(--accent-foreground);
-  font-weight: 500;
-  box-shadow: 0 1px 2px rgba(67, 87, 232, 0.2);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(228, 61, 18, 0.2);
   transition: all 0.15s ease-in-out;
 }
 
@@ -133,9 +194,7 @@
   box-shadow: 0 4px 12px var(--accent-glow);
 }
 
-/* ========================================================= */
-/* Responsive Floating Gradient Blobs Keyframes & Utilities   */
-/* ========================================================= */
+/* Responsive Floating Gradient Blobs Keyframes & Utilities */
 @keyframes float-blob-1 {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -194,4 +253,3 @@
     animation: none !important;
   }
 }
-

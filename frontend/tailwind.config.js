@@ -51,8 +51,13 @@ export default {
         brand: {
           DEFAULT: '#E43D12',
           vermilion: '#E43D12',
-          'vermilion-hover': '#CC340E',
+          'vermilion-hover': '#C5300B',
           'vermilion-surface': '#FDF1EE',
+          navy: '#0B1329',
+          'navy-dark': '#070C1B',
+          'navy-light': '#162244',
+          'navy-border': '#1E2D56',
+          blue: '#E43D12',
           pink: '#D6536D',
           'pink-hover': '#C0435D',
           'pink-surface': '#FCF1F3',
@@ -60,7 +65,6 @@ export default {
           'yellow-hover': '#D99F0C',
           'yellow-surface': '#FEF9EB',
         },
-        // Backward-compatibility aliases
         app: {
           bg: 'var(--background)',
           surface: 'var(--surface)',
@@ -72,14 +76,15 @@ export default {
         }
       },
       fontFamily: {
+        // Strict Single Font System: Inter across the entire platform
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+        mono: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
-        'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px 0 rgba(0, 0, 0, 0.4)',
-        'surface': '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.35)',
-        'elevated': '0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.5)',
-        'glow-primary': '0 0 15px -3px rgba(121, 169, 209, 0.35)',
+        'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        'surface': '0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04)',
+        'elevated': '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)',
+        'glow-primary': '0 0 15px -3px rgba(228, 61, 18, 0.25)',
       }
     },
   },

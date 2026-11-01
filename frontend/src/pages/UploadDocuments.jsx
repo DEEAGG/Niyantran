@@ -23,6 +23,7 @@ import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import Modal from '../components/common/Modal';
 import Stepper from '../components/common/Stepper';
+import ScrollReveal from '../components/common/ScrollReveal';
 
 const CATEGORIES = [
   'Application Form',
@@ -165,6 +166,25 @@ export default function UploadDocuments() {
     }
   };
 
+  const handleDeleteDocument = async (docId) => {
+    if (!selectedAppId || !docId) return;
+    try {
+      await documentService.deleteDocument(selectedAppId, docId);
+      addToast({
+        title: 'Document Removed',
+        message: 'Statutory document removed. Counter updated.',
+        type: 'info',
+      });
+      loadDocuments();
+    } catch (err) {
+      addToast({
+        title: 'Delete Failed',
+        message: err.message || 'Failed to remove document',
+        type: 'error',
+      });
+    }
+  };
+
   // Extraction trigger
   const handleTriggerExtraction = async () => {
     try {
@@ -207,6 +227,9 @@ export default function UploadDocuments() {
   };
 
   const selectedApp = applications.find((a) => a.id === selectedAppId);
+  const uploadedCount = CATEGORIES.filter((cat) =>
+    existingDocs.some((d) => (d.category === cat || d.document_type === cat))
+  ).length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
@@ -271,8 +294,8 @@ export default function UploadDocuments() {
         </div>
 
         {selectedApp && (
-          <div className="text-xs font-mono text-text-muted">
-            Uploaded: <span className="font-bold text-accent">{existingDocs.length}/5</span> Statutory Categories
+          <div className="text-xs font-semibold text-text-secondary">
+            Uploaded: <span className="font-bold text-accent">{uploadedCount} of 5</span> Statutory Categories
           </div>
         )}
       </div>
@@ -285,7 +308,7 @@ export default function UploadDocuments() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="bg-surface rounded-2xl border-2 border-dashed border-border hover:border-accent p-8 text-center cursor-pointer transition-all hover:bg-surface-elevated/20 group"
+            className="bg-surface rounded-2xl border-2 border-dashed border-border hover:border-accent p-8 sm:p-10 text-center cursor-pointer transition-all hover:bg-surface-elevated/20 group"
           >
             <input
               type="file"
@@ -295,22 +318,22 @@ export default function UploadDocuments() {
               onChange={handleFileDrop}
               className="hidden"
             />
-            <div className="w-12 h-12 rounded-xl bg-surface-elevated border border-border flex items-center justify-center text-accent mx-auto mb-3 group-hover:scale-105 transition-transform">
-              <UploadCloud className="w-6 h-6 stroke-[1.8]" />
+            <div className="w-14 h-14 rounded-2xl bg-[#FDF1EE] border border-accent/20 flex items-center justify-center text-accent mx-auto mb-3.5 group-hover:scale-105 transition-transform shadow-xs">
+              <UploadCloud className="w-7 h-7 stroke-[1.8]" />
             </div>
-            <h3 className="text-sm font-semibold text-text-primary">
+            <h3 className="text-base font-bold text-text-primary">
               Drop statutory PDF files here or <span className="text-accent underline">browse</span>
             </h3>
-            <p className="text-xs text-text-muted max-w-sm mx-auto mt-1">
+            <p className="text-xs sm:text-sm text-text-secondary max-w-sm mx-auto mt-1 leading-relaxed">
               Supports multiple PDF uploads up to 25MB per document. Files are encrypted and processed by ReguTrace OCR.
             </p>
           </div>
 
           {/* Pending Upload Queue */}
           {filesToUpload.length > 0 && (
-            <div className="bg-surface rounded-2xl border border-border p-4 shadow-surface space-y-3">
-              <div className="flex items-center justify-between border-b border-border pb-2">
-                <span className="text-xs font-semibold uppercase text-text-primary font-mono">
+            <div className="bg-surface rounded-2xl border border-border p-4 sm:p-5 shadow-surface space-y-3">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <span className="text-xs font-bold uppercase text-text-primary tracking-wider">
                   Upload Queue ({filesToUpload.length})
                 </span>
                 <Button
@@ -327,13 +350,13 @@ export default function UploadDocuments() {
                 {filesToUpload.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-lg bg-surface-elevated border border-border flex items-center justify-between gap-3 text-xs"
+                    className="p-3.5 rounded-xl bg-surface-elevated border border-border flex items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-center gap-2.5 truncate flex-1">
                       <FileText className="w-4 h-4 text-accent shrink-0" />
                       <div className="truncate">
-                        <div className="font-semibold text-text-primary truncate">{item.name}</div>
-                        <div className="text-[10px] text-text-muted font-mono">{item.size}</div>
+                        <div className="font-semibold text-text-primary truncate text-xs sm:text-sm">{item.name}</div>
+                        <div className="text-xs text-text-muted mt-0.5">{item.size}</div>
                       </div>
                     </div>
 
@@ -346,7 +369,7 @@ export default function UploadDocuments() {
                           backgroundColor: 'var(--surface)',
                           color: 'var(--text-primary)',
                         }}
-                        className="w-full text-text-primary px-2 py-1 rounded border border-border text-[11px] focus:outline-none focus:border-accent"
+                        className="w-full text-text-primary px-2.5 py-1.5 rounded-lg border border-border text-xs focus:outline-none focus:border-accent"
                       >
                         {CATEGORIES.map((cat) => (
                           <option
@@ -362,7 +385,7 @@ export default function UploadDocuments() {
 
                     <button
                       onClick={() => removeFile(idx)}
-                      className="text-text-muted hover:text-rose-400 p-1"
+                      className="text-text-muted hover:text-rose-600 p-1 rounded hover:bg-surface transition-colors"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -374,46 +397,46 @@ export default function UploadDocuments() {
         </div>
 
         {/* Right: Statutory Category Checklist (5 Cols) */}
-        <div className="lg:col-span-5 bg-surface rounded-2xl border border-border p-5 shadow-surface space-y-3">
-          <div className="flex items-center justify-between border-b border-border pb-3">
+        <div className="lg:col-span-5 bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-surface space-y-4">
+          <div className="flex items-center justify-between border-b border-border pb-3.5">
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-primary font-mono">
+              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
                 Mandatory Statutory Checklist
               </h3>
-              <p className="text-[11px] text-text-muted">Required by AICTE technical approval norms</p>
+              <p className="text-xs text-text-secondary mt-0.5">Required by AICTE technical approval norms</p>
             </div>
-            <span className="text-xs font-mono text-accent font-bold">
-              {existingDocs.length}/5
+            <span className="text-xs sm:text-sm text-accent font-bold">
+              {uploadedCount} of 5
             </span>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {CATEGORIES.map((cat, idx) => {
-              const uploaded = existingDocs.find((d) => d.category === cat);
+              const uploaded = existingDocs.find((d) => d.category === cat || d.document_type === cat);
 
               return (
                 <div
                   key={idx}
-                  className={`p-3 rounded-lg border text-xs flex items-center justify-between ${
+                  className={`p-3.5 rounded-xl border text-xs flex items-center justify-between transition-colors ${
                     uploaded
-                      ? 'bg-emerald-950/20 border-emerald-800/30'
+                      ? 'bg-emerald-950/15 border-emerald-800/30'
                       : 'bg-surface-elevated/40 border-border'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     {uploaded ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                     ) : (
-                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
                     )}
                     <div>
-                      <div className="font-semibold text-text-primary">{cat}</div>
+                      <div className="font-semibold text-text-primary text-xs sm:text-sm">{cat}</div>
                       {uploaded ? (
-                        <div className="text-[10px] text-text-muted font-mono">
-                          {uploaded.name} ({uploaded.size})
+                        <div className="text-xs text-text-secondary mt-0.5">
+                          <span className="font-medium text-text-primary">{uploaded.name}</span> ({uploaded.size})
                         </div>
                       ) : (
-                        <div className="text-[10px] font-mono" style={{ color: 'var(--status-pending)' }}>
+                        <div className="text-xs font-medium text-amber-700 mt-0.5">
                           Pending statutory filing
                         </div>
                       )}
@@ -421,13 +444,22 @@ export default function UploadDocuments() {
                   </div>
 
                   {uploaded && (
-                    <button
-                      onClick={() => setPreviewDoc(uploaded)}
-                      className="p-1 rounded text-text-muted hover:text-accent hover:bg-surface-hover"
-                      title="Preview Document"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setPreviewDoc(uploaded)}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-accent hover:bg-surface-hover transition-colors"
+                        title="Preview Document"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDocument(uploaded.id)}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        title="Delete Document"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               );

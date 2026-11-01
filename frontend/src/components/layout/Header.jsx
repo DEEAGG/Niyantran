@@ -61,17 +61,17 @@ export default function Header({ onMenuClick, isCollapsed }) {
 
         {/* Dynamic Breadcrumb Bar */}
         <nav className="flex items-center gap-1.5 text-xs sm:text-sm font-medium" aria-label="Breadcrumb">
-          <Link to="/dashboard" className="text-slate-400 hover:text-slate-600 transition-colors">
+          <Link to="/dashboard" className="text-slate-500 hover:text-text-primary transition-colors font-medium">
             NIYANTRAN
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-          <span className="font-semibold text-slate-900 tracking-tight">
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <span className="font-bold text-slate-900 tracking-tight">
             {pageTitle}
           </span>
           {segments.length > 1 && (
             <>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
-              <span className="text-brand-blue font-mono text-xs bg-blue-50 px-2 py-0.5 rounded border border-blue-100 font-semibold">
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-accent font-semibold text-xs bg-[#FDF1EE] px-2 py-0.5 rounded border border-accent/25">
                 {segments[1]}
               </span>
             </>
@@ -81,13 +81,13 @@ export default function Header({ onMenuClick, isCollapsed }) {
 
       {/* Right: Status, Date, Notification, Profile */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Mock API Engine Status Indicator */}
+        {/* API Engine Status Indicator */}
         <Link
           to="/settings"
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium border bg-blue-50/90 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 transition-colors"
           title="Click to view API Gateway settings"
         >
-          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
           <span>{isMock ? 'Mock API Active' : 'FastAPI Connected'}</span>
         </Link>
 

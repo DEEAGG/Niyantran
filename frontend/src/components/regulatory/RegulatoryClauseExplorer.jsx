@@ -48,17 +48,17 @@ export default function RegulatoryClauseExplorer({
   const [reviewOpen, setReviewOpen] = useState(false);
 
   const fetchClauses = async () => {
+    const params = {
+      search: search.trim() || undefined,
+      category: selectedCategory !== 'All' ? selectedCategory : undefined,
+      status: selectedStatus !== 'All' ? selectedStatus : undefined,
+      priority: selectedPriority !== 'All' ? selectedPriority : undefined,
+      source_id: selectedSourceId !== 'All' ? selectedSourceId : undefined,
+      limit: 150,
+    };
+
     try {
       setLoading(true);
-      const params = {
-        search: search.trim() || undefined,
-        category: selectedCategory !== 'All' ? selectedCategory : undefined,
-        status: selectedStatus !== 'All' ? selectedStatus : undefined,
-        priority: selectedPriority !== 'All' ? selectedPriority : undefined,
-        source_id: selectedSourceId !== 'All' ? selectedSourceId : undefined,
-        limit: 150,
-      };
-
       const res = await regulatoryService.getReviewQueue(params);
       setClauses(res.data || []);
       if (res.stats) {

@@ -914,6 +914,60 @@ def get_document(document_id: str, current_user: Dict[str, Any] = Depends(get_cu
     return dict(doc)
 
 
+@app.delete("/api/applications/{application_id}/documents/{document_id}")
+@app.delete("/api/documents/{document_id}")
+def delete_application_document(
+    document_id: str,
+    application_id: Optional[str] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    with get_connection() as conn:
+        doc = check_document_access(conn, document_id, current_user)
+        target_app_id = application_id or doc["application_id"]
+        if application_id and doc["application_id"] != application_id:
+            raise HTTPException(status_code=400, detail="Document does not belong to specified application")
+        
+        check_application_access(conn, target_app_id, current_user)
+        
+        # 1. Clean up extracted fields and extraction runs
+        run_ids = [
+            r["id"] for r in conn.execute(
+                "SELECT id FROM extraction_runs WHERE document_id = ?", (document_id,)
+            ).fetchall()
+        ]
+        for run_id in run_ids:
+            conn.execute("DELETE FROM extracted_fields WHERE extraction_run_id = ?", (run_id,))
+        conn.execute("DELETE FROM extraction_runs WHERE document_id = ?", (document_id,))
+        
+        # 2. Clean up authenticity and manual verifications
+        conn.execute("DELETE FROM authenticity_signals WHERE document_id = ?", (document_id,))
+        conn.execute("DELETE FROM manual_verifications WHERE document_id = ?", (document_id,))
+        
+        # 3. Delete document row
+        conn.execute("DELETE FROM documents WHERE id = ?", (document_id,))
+        
+        # 4. Record audit ledger entry
+        add_audit_entry(
+            conn=conn,
+            event_type="DOCUMENT_DELETED",
+            entity_type="document",
+            entity_id=document_id,
+            event_data={
+                "application_id": target_app_id,
+                "original_filename": doc["original_filename"],
+                "document_type": doc["document_type"],
+            },
+            actor=current_user.get("email") or current_user.get("full_name") or "reviewer",
+        )
+        
+    return {
+        "status": "deleted",
+        "document_id": document_id,
+        "application_id": target_app_id,
+        "message": f"Document '{doc['original_filename']}' successfully removed.",
+    }
+
+
 # ==========================================
 # Audit Verification Endpoint
 # ==========================================

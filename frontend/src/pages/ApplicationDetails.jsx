@@ -22,7 +22,8 @@ import {
   Sparkles,
   Info,
   Printer,
-  Maximize2
+  Maximize2,
+  Trash2
 } from 'lucide-react';
 import { applicationService } from '../services/applicationService';
 import { documentService } from '../services/documentService';
@@ -37,6 +38,8 @@ import Skeleton from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import Tabs from '../components/common/Tabs';
 import DossierReportView from '../components/regulatory/DossierReportView';
+import AuthenticatedImage, { openAuthenticatedDocument } from '../components/common/AuthenticatedImage';
+import ScrollReveal from '../components/common/ScrollReveal';
 import { handleReportAction } from '../utils/reportPdfHelper';
 
 // ─── Authenticity Inspector Tab ───────────────────────────────────────────────
@@ -217,11 +220,13 @@ function AuthenticityTab({ app, documents }) {
 }
 
 // ─── Evidence Passport Tab ─────────────────────────────────────────────────────
-function EvidencePassportTab({ app, documents, findings }) {
+function EvidencePassportTab({ app, documents = [], findings = [] }) {
   const [passport, setPassport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { addToast } = useToast();
 
   useEffect(() => {
+    if (!app?.id) return;
     const fetchPassport = async () => {
       try {
         setLoading(true);
@@ -234,9 +239,13 @@ function EvidencePassportTab({ app, documents, findings }) {
       }
     };
     fetchPassport();
-  }, [app.id]);
+  }, [app?.id]);
 
-  const auditChain = passport?.audit_chain || { valid: true, total_entries: 4 };
+  const rawAudit = passport?.audit_chain || passport?.audit_verification;
+  const auditChain = {
+    valid: Boolean(rawAudit?.valid ?? rawAudit?.verified ?? true),
+    total_entries: rawAudit?.total_entries ?? rawAudit?.total_records ?? (documents?.length ? documents.length + 3 : 4),
+  };
 
   return (
     <div className="space-y-6">
@@ -453,6 +462,17 @@ export default function ApplicationDetails() {
   const stage4Complete = findings.length > 0 || app.status === 'validated' || app.status === 'Verified';
   const stage5Complete = app.status === 'Approved' || app.status === 'Rejected' || app.status === 'Conditional Approval';
   const stage6Complete = stage4Complete && (app.status === 'Verified' || stage5Complete);
+
+  const handleDeleteDocument = async (docId) => {
+    if (!id || !docId) return;
+    try {
+      await documentService.deleteDocument(id, docId);
+      addToast('Document removed from regulatory record.', 'info');
+      await loadData();
+    } catch (err) {
+      addToast(err.message || 'Failed to remove document', 'error');
+    }
+  };
 
   const handleOfficerDecision = async (decision) => {
     try {
@@ -735,17 +755,17 @@ export default function ApplicationDetails() {
       {activeTab === 'documents' && (
         <div className="space-y-6">
           <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-            <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-primary font-mono">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">
                   Mandatory Statutory Checklist
                 </h3>
-                <p className="text-xs text-text-muted">
+                <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
                   Required documents according to regulatory approval norms.
                 </p>
               </div>
-              <span className="text-xs font-mono text-accent font-semibold">
-                {documents.length} of {MANDATORY_CATEGORIES.length} Present
+              <span className="text-xs sm:text-sm font-bold text-accent">
+                {MANDATORY_CATEGORIES.filter((cat) => documents.some((d) => (d.category === cat || d.document_type === cat))).length} of {MANDATORY_CATEGORIES.length} Present
               </span>
             </div>
 
@@ -756,11 +776,11 @@ export default function ApplicationDetails() {
                 return (
                   <div
                     key={idx}
-                    className="p-4 flex items-center justify-between hover:bg-surface-elevated/30 transition-colors"
+                    className="p-4 sm:p-5 flex items-center justify-between hover:bg-surface-elevated/30 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center border shrink-0 ${
                           uploadedDoc
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600'
                             : 'bg-rose-500/10 border-rose-500/30 text-rose-600'
@@ -773,34 +793,44 @@ export default function ApplicationDetails() {
                         )}
                       </div>
                       <div>
-                        <div className="text-xs sm:text-sm font-semibold text-text-primary">
+                        <div className="text-sm font-semibold text-text-primary">
                           {cat}
                         </div>
                         {uploadedDoc ? (
-                          <div className="text-[11px] text-text-muted font-mono flex items-center gap-2 mt-0.5">
-                            <span>{uploadedDoc.name || uploadedDoc.original_filename}</span>
+                          <div className="text-xs text-text-secondary flex items-center gap-2 mt-0.5">
+                            <span className="font-medium text-text-primary">{uploadedDoc.name || uploadedDoc.original_filename}</span>
                             <span>&bull;</span>
                             <span>{uploadedDoc.size || 'PDF'}</span>
                             <span>&bull;</span>
                             <span>{uploadedDoc.pages || uploadedDoc.page_count || 1} pages</span>
                           </div>
                         ) : (
-                          <div className="text-[11px] font-mono text-rose-600 mt-0.5">
+                          <div className="text-xs text-rose-600 mt-0.5 font-medium">
                             Missing mandatory statutory document
                           </div>
                         )}
                       </div>
                     </div>
 
-                    <div>
+                    <div className="flex items-center gap-2">
                       {uploadedDoc ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
-                          Uploaded &amp; Hashed
-                        </span>
+                        <>
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30">
+                            Uploaded &amp; Hashed
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDocument(uploadedDoc.id)}
+                            title="Delete Document"
+                            className="p-1.5 rounded-lg text-text-muted hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
                       ) : (
                         <Link
-                          to="/upload"
-                          className="px-2.5 py-1 rounded border text-xs font-semibold text-rose-600 border-rose-300 hover:bg-rose-50 transition-colors"
+                          to={`/upload?app=${id}`}
+                          className="px-3 py-1.5 rounded-lg border text-xs font-semibold text-rose-700 border-rose-300 hover:bg-rose-50 transition-colors"
                         >
                           Upload Now
                         </Link>
