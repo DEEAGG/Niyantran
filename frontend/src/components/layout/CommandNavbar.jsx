@@ -57,6 +57,7 @@ export default function CommandNavbar({ onOpenSearch }) {
     { label: 'Dashboard', to: '/dashboard' },
     { label: 'Intelligence', to: '/features' },
     { label: 'Cases', to: '/cases' },
+    { label: 'Validation', to: '/validation' },
     { label: 'Monitoring', to: '/monitoring' },
   ];
 
@@ -71,16 +72,16 @@ export default function CommandNavbar({ onOpenSearch }) {
           </Link>
 
           {/* Desktop Direct Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-0.5 text-xs font-medium">
+          <nav className="hidden lg:flex items-center gap-1 text-[13px] sm:text-sm font-semibold">
             {navLinks.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                  `px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                     isActive
-                      ? 'bg-[#FDF1EE] text-[#E43D12] font-bold border border-[#E43D12]/30 shadow-xs'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-[#F2EFE9]'
+                      ? 'bg-[#FDF1EE] text-[#C5300B] font-bold border border-[#E43D12]/35 shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-[#F2EFE9] font-medium'
                   }`
                 }
               >
@@ -319,19 +320,19 @@ export default function CommandNavbar({ onOpenSearch }) {
           className="lg:hidden border-b border-[var(--border)] px-4 py-3 space-y-2 bg-[var(--surface-elevated)] shadow-2xl"
           style={{ zIndex: 1000 }}
         >
-          <div className="grid grid-cols-2 gap-1.5 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-sm">
             {navLinks.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="p-2 rounded-md bg-[var(--surface-secondary)] text-text-primary font-medium hover:bg-[var(--surface-hover)]"
+                className="p-2.5 rounded-lg bg-[var(--surface-secondary)] text-text-primary font-semibold hover:bg-[var(--surface-hover)] transition-colors"
               >
                 {item.label}
               </Link>
             ))}
             <Link
               to="/upload"
-              className="p-2 rounded-md bg-accent text-[var(--accent-contrast,white)] font-medium text-center col-span-2"
+              className="p-2.5 rounded-lg bg-accent text-[var(--accent-contrast,white)] font-bold text-center col-span-2 shadow-xs"
             >
               + New Application
             </Link>

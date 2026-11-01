@@ -25,6 +25,7 @@ import { applicationService } from '../services/applicationService';
 import { ruleService } from '../services/ruleService';
 import { auditService } from '../services/auditService';
 import { MagnifierDoodle } from '../components/common/Doodles';
+import ScrollReveal from '../components/common/ScrollReveal';
 
 export default function CoreFeaturesPage() {
   const navigate = useNavigate();
@@ -180,7 +181,7 @@ export default function CoreFeaturesPage() {
   return (
     <div className="space-y-8 pb-16 animate-fadeIn">
       {/* Hero Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs relative overflow-hidden">
+      <ScrollReveal stagger={1} className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -188,32 +189,32 @@ export default function CoreFeaturesPage() {
                 Regulatory Intelligence
               </span>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-xs text-text-secondary font-medium">Eight Core Capabilities</span>
+              <span className="text-xs text-text-secondary font-semibold">Eight Core Capabilities</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary">
-              Regulatory <span className="text-[#E43D12]">Intelligence</span> &amp; Verification Workflow
+              Regulatory <span className="text-accent">Intelligence</span> &amp; Verification Workflow
             </h1>
 
-            <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed">
-              NIYANTRAN is an AI-assisted, evidence-backed regulatory verification platform for checking institution applications against applicable AICTE requirements. Every capability maps directly to our end-to-end audit workflow.
+            <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed font-medium">
+              Autonomous verification platform checking institutional filings against applicable <span className="text-accent font-semibold">AICTE statutory norms</span> with end-to-end evidence provenance.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Link
               to="/demo"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-xs font-bold hover:bg-accent-hover transition-all shadow-xs cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-bold hover:bg-accent-hover transition-all shadow-xs cursor-pointer active:scale-95"
             >
               <Sparkles className="w-4 h-4" />
               <span>Interactive 6-Step Demo</span>
             </Link>
             <Link
               to="/cases"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border bg-surface text-xs font-semibold text-text-primary hover:bg-surface-secondary transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border bg-surface text-xs sm:text-sm font-bold text-text-primary hover:bg-surface-secondary transition-colors"
             >
               <span>Inspect Cases</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -243,32 +244,33 @@ export default function CoreFeaturesPage() {
             ))}
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* 8 Core Feature Cards Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-text-primary tracking-tight">
-              Eight Core Platform Capabilities
+            <h2 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Eight Core Platform <span className="text-accent">Capabilities</span>
             </h2>
-            <p className="text-xs text-text-secondary mt-0.5">
-              Clear English descriptions, working functionality, and source-backed provenance for every module.
+            <p className="text-xs sm:text-sm text-text-secondary mt-1 font-medium">
+              Clear English descriptions, verified functionality, and source-backed provenance for every module.
             </p>
           </div>
 
-          <span className="text-xs font-mono text-text-muted font-semibold hidden sm:inline-block">
+          <span className="text-xs sm:text-sm font-mono text-accent font-bold hidden sm:inline-block bg-[#FDF1EE] px-3 py-1 rounded-full border border-accent/20">
             8 Working Modules Active
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {features.map((feat) => {
+          {features.map((feat, idx) => {
             const Icon = feat.icon;
 
             return (
-              <div
+              <ScrollReveal
                 key={feat.num}
+                stagger={(idx % 2) + 1}
                 className="p-6 rounded-2xl border border-border bg-surface hover:border-accent/40 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
               >
                 <div className="space-y-3.5">
@@ -282,7 +284,7 @@ export default function CoreFeaturesPage() {
                         <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-accent block">
                           {feat.tag}
                         </span>
-                        <h3 className="text-base font-bold text-text-primary group-hover:text-accent transition-colors">
+                        <h3 className="text-base sm:text-lg font-bold text-text-primary group-hover:text-accent transition-colors">
                           {feat.name}
                         </h3>
                       </div>
@@ -290,54 +292,54 @@ export default function CoreFeaturesPage() {
                   </div>
 
                   {/* Highlight pill */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-secondary text-[11px] font-mono font-semibold text-text-secondary border border-border">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-secondary text-xs font-mono font-semibold text-text-secondary border border-border">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#E43D12]" />
-                    <span>Focus: <strong className="text-text-primary">{feat.highlightPhrase}</strong></span>
+                    <span>Focus: <strong className="text-accent font-bold">{feat.highlightPhrase}</strong></span>
                   </div>
 
                   {/* Plain-English Description */}
-                  <p className="text-xs sm:text-[13px] text-text-secondary leading-relaxed">
+                  <p className="text-xs sm:text-sm text-text-secondary leading-relaxed font-medium">
                     {feat.description}
                   </p>
                 </div>
 
                 {/* Card Footer: Action Button & Secondary Route */}
                 <div className="mt-5 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <span className="text-[11px] font-mono text-text-muted">
+                  <span className="text-xs font-mono text-text-muted font-semibold">
                     {feat.metric}
                   </span>
 
                   <div className="flex items-center gap-2">
                     <Link
                       to={feat.route}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent-hover transition-all shadow-xs cursor-pointer active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent text-white text-xs sm:text-sm font-bold hover:bg-accent-hover transition-all shadow-xs cursor-pointer active:scale-95"
                     >
                       <span>{feat.actionText}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
-              </div>
+              </ScrollReveal>
             );
           })}
         </div>
       </section>
 
       {/* Supporting Guidance Callout */}
-      <div className="p-5 rounded-2xl border border-border bg-surface-secondary/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-text-secondary">
+      <ScrollReveal stagger={2} className="p-5 sm:p-6 rounded-2xl border border-border bg-surface-secondary/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs sm:text-sm text-text-secondary">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-accent shrink-0" />
-          <p className="leading-relaxed">
-            <strong>Evidence-First Principle:</strong> NIYANTRAN anchors every extraction and rule calculation to an exact source document, page coordinate, and official AICTE statutory clause. Cryptographic SHA-256 seals confirm post-upload file integrity without altering production records.
+          <ShieldCheck className="w-6 h-6 text-accent shrink-0" />
+          <p className="leading-relaxed font-medium">
+            <strong className="text-text-primary">Evidence-First Principle:</strong> NIYANTRAN anchors every extraction and rule calculation to an exact source document, page coordinate, and official AICTE statutory clause. Cryptographic <span className="text-accent font-bold">SHA-256 seals</span> confirm post-upload file integrity.
           </p>
         </div>
         <Link
           to="/audit"
-          className="text-accent font-semibold hover:underline shrink-0 inline-flex items-center gap-1"
+          className="text-accent font-bold hover:underline shrink-0 inline-flex items-center gap-1 text-xs sm:text-sm"
         >
           Verify Cryptographic Chain &rarr;
         </Link>
-      </div>
+      </ScrollReveal>
     </div>
   );
 }

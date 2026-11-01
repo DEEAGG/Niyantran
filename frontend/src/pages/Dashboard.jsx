@@ -62,9 +62,9 @@ export default function Dashboard() {
         <div className="relative z-10 max-w-4xl mx-auto text-center space-y-4">
           
           {/* Subtle Tag with Vermilion Node Indicator */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-border text-xs font-medium text-text-secondary shadow-sm backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E43D12] animate-pulse" />
-            <span className="font-medium text-text-primary">Autonomous Regulatory Verification &amp; Evidence Tracing</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-border text-xs sm:text-sm font-semibold text-text-secondary shadow-xs backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-full bg-[#E43D12] animate-pulse" />
+            <span className="text-text-primary">Autonomous <span className="text-accent">Regulatory Verification</span> &amp; Evidence Tracing</span>
           </div>
 
           {/* Editorial Animated Headline */}
@@ -77,8 +77,8 @@ export default function Dashboard() {
           </div>
 
           {/* Concise Supporting Subtext */}
-          <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto font-normal leading-relaxed">
-            Review applications, trace evidence, and identify discrepancies in one workspace.
+          <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto font-medium leading-relaxed">
+            Review filings, trace <span className="text-accent font-semibold">evidentiary proof</span>, and identify regulatory discrepancies in one unified workspace.
           </p>
 
           {/* Immediate Action / Real Upload Drop-Zone */}
@@ -86,19 +86,19 @@ export default function Dashboard() {
             <DocumentUploadDropzone />
 
             {/* Guided Interactive Demo Trigger */}
-            <div className="mt-3 flex items-center justify-between p-3.5 rounded-xl border border-border bg-surface shadow-xs text-xs">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+            <div className="mt-3 flex items-center justify-between p-4 rounded-xl border border-border bg-surface shadow-xs text-xs sm:text-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse shrink-0" />
                 <div className="min-w-0 text-left">
-                  <span className="font-semibold text-text-primary text-xs sm:text-sm">Want to see NIYANTRAN in action?</span>
-                  <span className="hidden sm:inline text-text-secondary ml-1.5 text-xs">&bull; Walk through a sample case in 6 easy steps.</span>
+                  <span className="font-bold text-text-primary">Want to see NIYANTRAN in action?</span>
+                  <span className="hidden sm:inline text-text-secondary ml-1.5 font-medium">&bull; Walk through a live case in 6 easy steps.</span>
                 </div>
               </div>
               <Link
                 to="/demo"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-white text-xs font-bold hover:bg-accent-hover transition-all shadow-xs shrink-0 cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-white text-xs sm:text-sm font-bold hover:bg-accent-hover transition-all shadow-xs shrink-0 cursor-pointer active:scale-95"
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-4 h-4" />
                 <span>Try Interactive Demo</span>
               </Link>
             </div>
@@ -106,23 +106,23 @@ export default function Dashboard() {
 
           {/* Active Case Registry Callout Banner */}
           <div className="pt-3 max-w-2xl mx-auto">
-            <div className="p-3.5 rounded-xl border border-border bg-surface/90 backdrop-blur-sm flex items-center justify-between gap-4 text-xs">
+            <div className="p-3.5 rounded-xl border border-border bg-surface/90 backdrop-blur-sm flex items-center justify-between gap-4 text-xs sm:text-sm">
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="px-2 py-0.5 rounded bg-accent/10 text-accent font-mono font-bold shrink-0">
                   REGISTRY
                 </span>
                 <span className="truncate text-text-primary font-medium">
                   {(data?.kpis?.totalApplications ?? data?.totalApplications ?? 0) > 0
-                    ? `${data?.kpis?.totalApplications ?? data?.totalApplications} institutional applications registered • ${data?.kpis?.totalFindingViolations ?? data?.criticalFindings ?? 0} findings require review`
+                    ? `${data?.kpis?.totalApplications ?? data?.totalApplications} applications registered • ${data?.kpis?.totalFindingViolations ?? data?.criticalFindings ?? 0} findings require officer review`
                     : 'Operational workspace ready • Register an application to initiate regulatory compliance audit'}
                 </span>
               </div>
               <Link
                 to={(data?.kpis?.totalApplications ?? data?.totalApplications ?? 0) > 0 ? "/applications" : "/applications/new"}
-                className="inline-flex items-center gap-1 font-semibold text-accent hover:text-accent-hover shrink-0"
+                className="inline-flex items-center gap-1 font-bold text-accent hover:text-accent-hover shrink-0"
               >
                 {(data?.kpis?.totalApplications ?? data?.totalApplications ?? 0) > 0 ? "Inspect Registry" : "New Application"}
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
@@ -133,20 +133,20 @@ export default function Dashboard() {
       {/* ========================================================= */}
       {/* 2. REGULATORY INTELLIGENCE BENTO SHOWCASE                 */}
       {/* ========================================================= */}
-      <ScrollReveal className="space-y-4">
+      <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
               Regulatory Intelligence <span className="text-accent">Overview</span>
             </h2>
-            <p className="text-xs sm:text-sm text-text-secondary mt-1">
+            <p className="text-xs sm:text-sm text-text-secondary mt-1 font-medium">
               Live proof provenance, statutory gazette compliance, and cryptographic audit activity.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <Link
               to="/features"
-              className="text-xs sm:text-sm font-semibold text-accent hover:text-accent-hover inline-flex items-center gap-1.5"
+              className="text-xs sm:text-sm font-bold text-accent hover:text-accent-hover inline-flex items-center gap-1.5"
             >
               Explore Intelligence Features
               <ArrowRight className="w-4 h-4" />
@@ -155,16 +155,16 @@ export default function Dashboard() {
         </div>
 
         <RegulatoryIntelligenceBento />
-      </ScrollReveal>
+      </section>
 
       {/* ========================================================= */}
       {/* 3. WORKLOAD COHORT STATUS & RECENT REGULATORY ACTIVITY    */}
       {/* ========================================================= */}
       {data && (
-        <ScrollReveal className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
           
           {/* Workload Accounting Bar & Summary (Span 7) */}
-          <div className="lg:col-span-7 rounded-2xl border border-border bg-surface p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+          <ScrollReveal stagger={1} className="lg:col-span-7 rounded-2xl border border-border bg-surface p-6 sm:p-7 shadow-sm flex flex-col justify-between">
             <div>
               {(() => {
                 const total = data.cohortBreakdown?.total ?? data.kpis?.totalApplications ?? 0;
@@ -178,17 +178,17 @@ export default function Dashboard() {
                 return (
                   <>
                     <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
-                      <h3 className="text-sm sm:text-base font-bold uppercase tracking-wider text-text-primary">
+                      <h3 className="text-base sm:text-lg font-bold uppercase tracking-wider text-text-primary">
                         Workload Status Breakdown
                       </h3>
-                      <span className="text-xs sm:text-sm font-bold text-accent bg-[#FDF1EE] px-2.5 py-0.5 rounded-full border border-accent/20">
+                      <span className="text-xs sm:text-sm font-bold text-accent bg-[#FDF1EE] px-3 py-1 rounded-full border border-accent/25">
                         {total} Filings Total
                       </span>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="mt-5 space-y-2.5">
-                      <div className="h-3.5 w-full rounded-full bg-surface-secondary overflow-hidden flex">
+                    <div className="mt-5 space-y-3">
+                      <div className="h-4 w-full rounded-full bg-surface-secondary overflow-hidden flex">
                         <div
                           style={{ width: `${verifiedPct}%` }}
                           className="bg-emerald-600 h-full transition-all duration-500"
@@ -206,7 +206,7 @@ export default function Dashboard() {
                         />
                       </div>
 
-                      <div className="flex items-center justify-between text-xs sm:text-sm text-text-secondary pt-1 font-medium">
+                      <div className="flex items-center justify-between text-xs sm:text-sm text-text-secondary pt-1 font-semibold">
                         <div className="flex items-center gap-1.5">
                           <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
                           <span>Verified: <strong className="text-text-primary">{verified}</strong> ({verifiedPct}%)</span>
@@ -225,34 +225,34 @@ export default function Dashboard() {
                 );
               })()}
 
-              <p className="mt-4 text-xs sm:text-sm text-text-secondary leading-relaxed">
-                Workload statuses reflect immutable SQLite records without double-counting. <span className="text-accent font-semibold">Pending filings</span> include incomplete documentation requiring officer ingestion.
+              <p className="mt-4 text-xs sm:text-sm text-text-secondary leading-relaxed font-medium">
+                Workload statuses reflect immutable database records. <span className="text-accent font-bold">Pending filings</span> indicate incomplete uploads requiring document ingestion.
               </p>
             </div>
 
             <div className="pt-4 mt-6 border-t border-border flex items-center justify-between">
-              <span className="text-xs text-text-muted font-medium">
+              <span className="text-xs sm:text-sm text-text-muted font-semibold">
                 Statutory Gazette Version: 2026.2 (Active)
               </span>
               <Link
                 to="/monitoring"
-                className="text-xs sm:text-sm font-semibold text-accent hover:text-accent-hover inline-flex items-center gap-1.5"
+                className="text-xs sm:text-sm font-bold text-accent hover:text-accent-hover inline-flex items-center gap-1.5"
               >
                 Open Monitoring Console
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Recent Filings Quick Registry (Span 5) */}
-          <div className="lg:col-span-5 rounded-2xl border border-border bg-surface p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+          <ScrollReveal stagger={2} className="lg:col-span-5 rounded-2xl border border-border bg-surface p-6 sm:p-7 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
-              <h3 className="text-sm sm:text-base font-bold uppercase tracking-wider text-text-primary">
+              <h3 className="text-base sm:text-lg font-bold uppercase tracking-wider text-text-primary">
                 Recent Regulatory Filings
               </h3>
               <Link
                 to="/applications"
-                className="text-xs sm:text-sm font-semibold text-accent hover:text-accent-hover"
+                className="text-xs sm:text-sm font-bold text-accent hover:text-accent-hover"
               >
                 View all
               </Link>
@@ -302,18 +302,18 @@ export default function Dashboard() {
               )}
             </div>
 
-            <div className="pt-2 text-right">
+            <div className="pt-3 text-right">
               <Link
                 to="/review"
-                className="text-xs sm:text-sm font-semibold text-accent hover:text-accent-hover inline-flex items-center gap-1.5"
+                className="text-xs sm:text-sm font-bold text-accent hover:text-accent-hover inline-flex items-center gap-1.5"
               >
                 Go to Adjudication Review Desk
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
-        </ScrollReveal>
+        </div>
       )}
 
     </div>

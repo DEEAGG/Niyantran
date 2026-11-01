@@ -237,16 +237,16 @@ export default function UploadDocuments() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 font-semibold">
+            <span className="text-xs font-mono uppercase tracking-widest text-accent bg-accent/10 px-2.5 py-0.5 rounded border border-accent/20 font-bold">
               Document Pipeline
             </span>
             <span className="text-xs text-text-muted font-mono">&bull; ReguTrace Ingestion</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-            Document Ingestion & OCR Extraction
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+            Document Ingestion &amp; <span className="text-accent">OCR Extraction</span>
           </h1>
-          <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
-            Upload institutional regulatory files, assign statutory categories, and trigger automated entity extraction.
+          <p className="text-xs sm:text-sm text-text-secondary mt-1 font-medium">
+            Upload institutional regulatory files, fulfill statutory categories, and trigger automated <span className="text-accent font-semibold">entity extraction</span>.
           </p>
         </div>
 
@@ -257,6 +257,7 @@ export default function UploadDocuments() {
             icon={ArrowRight}
             iconPosition="right"
             onClick={() => navigate(`/validation?app=${selectedAppId}`)}
+            className="font-bold text-xs sm:text-sm px-4 py-2"
           >
             Proceed to Validation
           </Button>
@@ -264,9 +265,9 @@ export default function UploadDocuments() {
       </div>
 
       {/* Target Application Selector */}
-      <div className="bg-surface rounded-2xl border border-border p-4 shadow-surface flex flex-col sm:flex-row items-center justify-between gap-3">
+      <ScrollReveal stagger={1} className="bg-surface rounded-2xl border border-border p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <label className="text-xs font-semibold text-text-secondary font-mono uppercase shrink-0">
+          <label className="text-xs sm:text-sm font-bold text-text-secondary font-mono uppercase shrink-0">
             Target Application:
           </label>
           <div className="relative w-full sm:w-96">
@@ -277,7 +278,7 @@ export default function UploadDocuments() {
                 backgroundColor: 'var(--surface-elevated)',
                 color: 'var(--text-primary)',
               }}
-              className="w-full text-text-primary px-3 py-1.5 pr-8 rounded-lg border border-border text-xs font-semibold focus:outline-none focus:border-accent appearance-none cursor-pointer"
+              className="w-full text-text-primary px-3.5 py-2 pr-8 rounded-xl border border-border text-xs sm:text-sm font-bold focus:outline-none focus:border-accent appearance-none cursor-pointer"
             >
               {applications.map((app) => (
                 <option
@@ -294,16 +295,16 @@ export default function UploadDocuments() {
         </div>
 
         {selectedApp && (
-          <div className="text-xs font-semibold text-text-secondary">
-            Uploaded: <span className="font-bold text-accent">{uploadedCount} of 5</span> Statutory Categories
+          <div className="text-xs sm:text-sm font-semibold text-text-secondary">
+            Uploaded: <span className="font-bold text-accent text-sm sm:text-base">{uploadedCount} of 5</span> Statutory Categories
           </div>
         )}
-      </div>
+      </ScrollReveal>
 
       {/* Grid: Upload Dropzone & Category Checklist */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Drag & Drop Ingestion Box (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
+        <ScrollReveal stagger={1} className="lg:col-span-7 space-y-4">
           <div
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
@@ -394,10 +395,10 @@ export default function UploadDocuments() {
               </div>
             </div>
           )}
-        </div>
+        </ScrollReveal>
 
         {/* Right: Statutory Category Checklist (5 Cols) */}
-        <div className="lg:col-span-5 bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-surface space-y-4">
+        <ScrollReveal stagger={2} className="lg:col-span-5 bg-surface rounded-2xl border border-border p-5 sm:p-6 shadow-surface space-y-4">
           <div className="flex items-center justify-between border-b border-border pb-3.5">
             <div>
               <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
@@ -480,12 +481,12 @@ export default function UploadDocuments() {
               Run ReguTrace Entity Extraction
             </Button>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
 
       {/* Extracted Fields Table */}
       {extractedFields.length > 0 && (
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-surface space-y-0">
+        <ScrollReveal stagger={2} className="bg-surface rounded-2xl border border-border overflow-hidden shadow-surface space-y-0">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-text-primary">
@@ -554,7 +555,7 @@ export default function UploadDocuments() {
               </tbody>
             </table>
           </div>
-        </div>
+        </ScrollReveal>
       )}
 
       {/* Document Preview Modal */}

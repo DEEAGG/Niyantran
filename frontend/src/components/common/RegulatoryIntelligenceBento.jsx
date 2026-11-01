@@ -18,6 +18,8 @@ import { applicationService } from '../../services/applicationService';
 import { auditService } from '../../services/auditService';
 import { dashboardService } from '../../services/dashboardService';
 
+import ScrollReveal from './ScrollReveal';
+
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export default function RegulatoryIntelligenceBento({ className = "" }) {
@@ -136,12 +138,12 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* TILE 1: Active Institutional Dossiers Stack (Span 2) */}
-        <div className="md:col-span-2 lg:col-span-2 rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group">
+        <ScrollReveal stagger={1} className="md:col-span-2 lg:col-span-2 rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group">
           {/* Subtle top badge */}
-          <div className="flex items-center justify-between pb-3 border-b border-border/80">
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-accent" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
                 Active Case Dossiers
               </span>
             </div>
@@ -152,10 +154,10 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
                     key={c.id}
                     onClick={() => setActiveCardIndex(i)}
                     className={cn(
-                      "text-[11px] font-mono px-2.5 py-1 rounded-full transition-all",
+                      "text-xs font-mono px-3 py-1 rounded-full transition-all cursor-pointer",
                       activeCardIndex === i
-                        ? "bg-text-primary text-surface font-semibold"
-                        : "bg-surface-secondary text-text-secondary hover:text-text-primary"
+                        ? "bg-text-primary text-surface font-bold"
+                        : "bg-surface-secondary text-text-secondary hover:text-text-primary font-medium"
                     )}
                   >
                     {c.id.slice(-4)}
@@ -171,22 +173,23 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="font-mono text-xs font-bold text-accent px-2 py-0.5 rounded bg-accent/10">
+                    <span className="font-mono text-xs font-bold text-accent px-2 py-0.5 rounded bg-accent/10 border border-accent/20">
                       {activeCase.id}
                     </span>
-                    <span className="text-[11px] font-medium text-text-muted truncate">
+                    <span className="text-xs font-semibold text-text-muted truncate">
                       {activeCase.type}
                     </span>
                   </div>
-                  <h3 className="text-base font-semibold text-text-primary tracking-tight truncate">
+                  <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight truncate mt-1">
                     {activeCase.institution}
                   </h3>
                 </div>
                 <span
-                  className="text-xs font-medium px-2.5 py-1 rounded-full whitespace-nowrap shrink-0"
+                  className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shrink-0 border"
                   style={{
-                    backgroundColor: `${activeCase.statusColor}18`,
-                    color: activeCase.statusColor
+                    backgroundColor: `${activeCase.statusColor}14`,
+                    color: activeCase.statusColor,
+                    borderColor: `${activeCase.statusColor}30`,
                   }}
                 >
                   {activeCase.status}
@@ -194,62 +197,62 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
               </div>
 
               {/* Findings & Provenance line */}
-              <div className="mt-4 pt-3 border-t border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-text-secondary">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span className="font-medium text-text-primary">{activeCase.findings}</span>
+              <div className="mt-4 pt-3.5 border-t border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+                <div className="flex items-center gap-2 text-text-secondary font-medium">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="font-semibold text-text-primary">{activeCase.findings}</span>
                 </div>
-                <div className="flex items-center gap-3 text-text-muted font-mono text-[11px]">
-                  <span>{activeCase.documents} Documents</span>
+                <div className="flex items-center gap-3 text-text-muted font-mono text-xs font-medium">
+                  <span><strong className="text-accent">{activeCase.documents}</strong> Documents</span>
                   <span>Provenance: {activeCase.hash}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="my-8 text-center p-6 rounded-xl border border-dashed border-border text-xs text-text-muted">
-              <p className="font-medium text-text-secondary">No institutional applications registered yet.</p>
-              <p className="mt-1">Upload an institutional dossier or create a filing to initiate regulatory evaluation.</p>
+            <div className="my-8 text-center p-6 rounded-xl border border-dashed border-border text-xs sm:text-sm text-text-muted">
+              <p className="font-semibold text-text-primary">No institutional applications registered yet.</p>
+              <p className="mt-1 text-text-secondary">Upload an institutional dossier or create a filing to initiate regulatory evaluation.</p>
             </div>
           )}
 
           {/* Action Row */}
-          <div className="flex items-center justify-between pt-2 border-t border-border/60">
-            <span className="text-xs text-text-secondary">
-              Direct evidence links to statutory gazette norms.
+          <div className="flex items-center justify-between pt-3 border-t border-border/60 text-xs sm:text-sm">
+            <span className="text-text-secondary font-medium">
+              Direct evidence links to <span className="text-accent font-semibold">statutory norms</span>.
             </span>
             {activeCase ? (
               <button
                 onClick={() => navigate(`/applications/${activeCase.id}`)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
+                className="inline-flex items-center gap-1.5 font-bold text-accent hover:text-accent-hover transition-colors cursor-pointer"
               >
                 Open Dossier Workspace
-                <ArrowUpRight className="w-3.5 h-3.5" />
+                <ArrowUpRight className="w-4 h-4" />
               </button>
             ) : (
               <Link
                 to="/applications/new"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent-hover transition-colors"
+                className="inline-flex items-center gap-1.5 font-bold text-accent hover:text-accent-hover transition-colors"
               >
                 Register New Application
-                <ArrowUpRight className="w-3.5 h-3.5" />
+                <ArrowUpRight className="w-4 h-4" />
               </Link>
             )}
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* TILE 2: Statutory Compliance Gauge */}
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-border/80">
-            <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+        <ScrollReveal stagger={2} className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
+            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
               Norms Compliance
             </span>
-            <span className={cn("text-[11px] font-mono font-medium px-2 py-0.5 rounded-full border", badgeClass)}>
+            <span className={cn("text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border", badgeClass)}>
               {badgeLabel}
             </span>
           </div>
 
           {/* Radial Semi-Circle Gauge */}
-          <div className="my-auto py-2 flex flex-col items-center justify-center text-center">
+          <div className="my-auto py-3 flex flex-col items-center justify-center text-center">
             <div className="relative" style={{ width: 130, height: 75 }}>
               <svg width="130" height="75" viewBox="0 0 130 75" className="overflow-visible">
                 {/* Background arc */}
@@ -292,68 +295,68 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
                 <circle cx="65" cy="68" r="4" fill="#171A20" />
               </svg>
             </div>
-            <p className="mt-2 font-mono text-2xl font-bold text-text-primary tracking-tight">
+            <p className="mt-2.5 font-mono text-3xl font-bold text-text-primary tracking-tight">
               {scoreDisplay}
             </p>
-            <p className="text-[11px] text-text-muted mt-0.5 max-w-[200px] leading-tight">
+            <p className="text-xs text-text-secondary font-medium mt-1 max-w-[210px] leading-relaxed">
               {scoreSubtitle}
             </p>
           </div>
 
-          <div className="pt-2 text-center border-t border-border/60">
-            <span className="text-[11px] font-mono text-text-muted">
+          <div className="pt-3 text-center border-t border-border/60">
+            <span className="text-xs font-mono font-semibold text-text-muted">
               AICTE APH 2024–27 Standards
             </span>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* TILE 3: Real-Time Audit Stream & Security Ledger */}
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-border/80">
+        <ScrollReveal stagger={3} className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
             <div className="flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-accent" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              <Database className="w-4 h-4 text-accent" />
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
                 Audit Stream
               </span>
             </div>
-            <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
               Live Chain
             </span>
           </div>
 
-          <div className="my-auto py-2">
-            <div className="flex items-baseline justify-between mb-1">
-              <span className="text-xs font-medium text-text-secondary">Audit Block Height</span>
-              <span className="font-mono text-sm font-bold text-text-primary">
+          <div className="my-auto py-3">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="text-xs sm:text-sm font-semibold text-text-secondary">Audit Block Height</span>
+              <span className="font-mono text-base font-bold text-text-primary">
                 #{blockHeight.toLocaleString()}
               </span>
             </div>
             
             {/* Hash Receipt Preview */}
-            <div className="p-3 rounded-lg bg-surface-secondary/70 border border-border font-mono text-[11px] space-y-1">
+            <div className="p-3.5 rounded-xl bg-surface-secondary/70 border border-border font-mono text-xs space-y-1.5">
               <div className="flex items-center justify-between text-text-muted">
-                <span>CHAIN STATE</span>
-                <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> {auditData?.verified ? 'VERIFIED' : 'ACTIVE'}
+                <span className="font-bold">CHAIN STATE</span>
+                <span className="text-emerald-700 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {auditData?.verified ? 'VERIFIED' : 'ACTIVE'}
                 </span>
               </div>
-              <p className="truncate text-text-primary text-[10px]">
+              <p className="truncate text-text-primary text-[11px] font-semibold">
                 Latest Hash: {auditData?.latest_hash ? `${auditData.latest_hash.slice(0, 16)}…` : 'GENESIS'}
               </p>
-              <p className="text-[10px] text-text-muted">
-                Ledger Status: Tamper-Evident SHA-256 Chain
+              <p className="text-[11px] text-text-secondary font-medium">
+                Ledger: <span className="text-accent font-semibold">SHA-256</span> Tamper-Evident Chain
               </p>
             </div>
           </div>
 
           <Link
             to="/audit"
-            className="inline-flex items-center justify-between text-xs font-semibold text-accent hover:text-accent-hover pt-2 border-t border-border/60 transition-colors"
+            className="inline-flex items-center justify-between text-xs sm:text-sm font-bold text-accent hover:text-accent-hover pt-3 border-t border-border/60 transition-colors"
           >
             <span>View Cryptographic Ledger</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-4 h-4" />
           </Link>
-        </div>
+        </ScrollReveal>
 
       </div>
 
@@ -361,43 +364,43 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         {/* Signal 1: Tamper-Evident SHA-256 */}
-        <div className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 transition-colors">
+        <ScrollReveal stagger={1} className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 shadow-xs transition-colors">
           <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-text-primary">File Hash Provenance</p>
-            <p className="text-[11px] text-text-secondary mt-0.5">
-              Every document hashed with SHA-256 at upload boundary.
+            <p className="text-xs sm:text-sm font-bold text-text-primary">File Hash Provenance</p>
+            <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+              Every document hashed with <span className="text-accent font-semibold">SHA-256</span> at upload boundary.
             </p>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Signal 2: OCR Evidence */}
-        <div className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 transition-colors">
+        <ScrollReveal stagger={2} className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 shadow-xs transition-colors">
           <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
             <Fingerprint className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-text-primary">Spatial OCR Citations</p>
-            <p className="text-[11px] text-text-secondary mt-0.5">
-              Extracted entities linked to exact page coordinates.
+            <p className="text-xs sm:text-sm font-bold text-text-primary">Spatial OCR Citations</p>
+            <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+              Extracted entities linked to exact <span className="text-accent font-semibold">page coordinates</span>.
             </p>
           </div>
-        </div>
+        </ScrollReveal>
 
         {/* Signal 3: Gazette Policy Engine */}
-        <div className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 transition-colors">
+        <ScrollReveal stagger={3} className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 shadow-xs transition-colors">
           <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
             <FileCheck2 className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-text-primary">Statutory Backtesting</p>
-            <p className="text-[11px] text-text-secondary mt-0.5">
-              Replay filings non-destructively against updated rulesets.
+            <p className="text-xs sm:text-sm font-bold text-text-primary">Statutory Backtesting</p>
+            <p className="text-xs text-text-secondary mt-0.5 leading-snug">
+              Replay filings against <span className="text-accent font-semibold">updated rulesets</span>.
             </p>
           </div>
-        </div>
+        </ScrollReveal>
 
       </div>
     </div>

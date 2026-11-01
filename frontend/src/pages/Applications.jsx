@@ -26,6 +26,7 @@ import Skeleton from '../components/common/Skeleton';
 import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
 import Pagination from '../components/common/Pagination';
+import ScrollReveal from '../components/common/ScrollReveal';
 import { DocumentStackDoodle } from '../components/common/Doodles';
 
 export default function Applications() {
@@ -121,11 +122,11 @@ export default function Applications() {
             <DocumentStackDoodle className="w-11 h-11" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              Institutional Cases
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+              Institutional <span className="text-accent">Cases</span>
             </h1>
-            <p className="text-xs text-text-secondary mt-0.5">
-              Review institutional approval applications, examine submitted evidence, and track verification decisions.
+            <p className="text-xs sm:text-sm text-text-secondary mt-1 font-medium">
+              Review institutional <span className="text-accent font-semibold">approval filings</span>, examine evidentiary proof, and track <span className="text-accent font-semibold">statutory decisions</span>.
             </p>
           </div>
         </div>
@@ -136,7 +137,7 @@ export default function Applications() {
             size="sm"
             icon={Plus}
             onClick={() => navigate('/applications/new')}
-            className="bg-[#E43D12] hover:bg-[#CC340E] text-white font-semibold"
+            className="bg-[#E43D12] hover:bg-[#CC340E] text-white font-bold text-xs sm:text-sm px-4 py-2 shadow-xs"
           >
             New Application
           </Button>
@@ -144,19 +145,19 @@ export default function Applications() {
       </div>
 
       {/* Unified KPI Ribbon */}
-      <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-xs">
+      <ScrollReveal stagger={1} className="bg-surface rounded-2xl border border-border overflow-hidden shadow-xs">
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-border">
           <button
             type="button"
             onClick={() => setStatusFilter('All')}
-            className={`p-4 text-left transition-colors cursor-pointer ${
+            className={`p-5 text-left transition-colors cursor-pointer ${
               statusFilter === 'All' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
             }`}
           >
-            <div className="text-xs font-medium text-text-secondary">All Active Cases</div>
-            <div className="text-2xl font-semibold text-text-primary mt-1 font-mono">{totalCount}</div>
-            <div className="text-[11px] text-text-muted mt-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+            <div className="text-xs sm:text-sm font-semibold text-text-secondary">All Active Cases</div>
+            <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{totalCount}</div>
+            <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-accent" />
               <span>Full Workload</span>
             </div>
           </button>
@@ -164,14 +165,14 @@ export default function Applications() {
           <button
             type="button"
             onClick={() => setStatusFilter('Verified')}
-            className={`p-4 text-left transition-colors cursor-pointer ${
+            className={`p-5 text-left transition-colors cursor-pointer ${
               statusFilter === 'Verified' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
             }`}
           >
-            <div className="text-xs font-medium text-text-secondary">Verified Clear</div>
-            <div className="text-2xl font-semibold text-text-primary mt-1 font-mono">{verifiedCount}</div>
-            <div className="text-[11px] text-text-muted mt-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <div className="text-xs sm:text-sm font-semibold text-text-secondary">Verified Clear</div>
+            <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{verifiedCount}</div>
+            <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Zero Violations</span>
             </div>
           </button>
@@ -179,14 +180,14 @@ export default function Applications() {
           <button
             type="button"
             onClick={() => setStatusFilter('Discrepancy Detected')}
-            className={`p-4 text-left transition-colors cursor-pointer ${
+            className={`p-5 text-left transition-colors cursor-pointer ${
               statusFilter === 'Discrepancy Detected' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
             }`}
           >
-            <div className="text-xs font-medium text-text-secondary">Issues Flagged</div>
-            <div className="text-2xl font-semibold text-text-primary mt-1 font-mono">{reviewCount}</div>
-            <div className="text-[11px] text-text-muted mt-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            <div className="text-xs sm:text-sm font-semibold text-text-secondary">Issues Flagged</div>
+            <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{reviewCount}</div>
+            <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
               <span>Officer Action Needed</span>
             </div>
           </button>
@@ -194,19 +195,19 @@ export default function Applications() {
           <button
             type="button"
             onClick={() => setStatusFilter('Missing Documents')}
-            className={`p-4 text-left transition-colors cursor-pointer ${
+            className={`p-5 text-left transition-colors cursor-pointer ${
               statusFilter === 'Missing Documents' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
             }`}
           >
-            <div className="text-xs font-medium text-text-secondary">Missing Documents</div>
-            <div className="text-2xl font-semibold text-text-primary mt-1 font-mono">{missingDocsCount}</div>
-            <div className="text-[11px] text-text-muted mt-1 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            <div className="text-xs sm:text-sm font-semibold text-text-secondary">Missing Documents</div>
+            <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{missingDocsCount}</div>
+            <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
               <span>Incomplete Filing</span>
             </div>
           </button>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Search & Filter Toolbar */}
       <div className="bg-surface p-4 rounded-xl border border-border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
@@ -309,17 +310,17 @@ export default function Applications() {
         />
       ) : viewMode === 'cards' ? (
         /* CARD GRID VIEW */
-        <div className="space-y-4">
+        <ScrollReveal stagger={2} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {paginatedApplications.map((app) => (
               <div
                 key={app.id}
                 onClick={() => navigate(`/applications/${app.id}`)}
-                className="bg-surface rounded-2xl border border-border p-5 hover:border-accent/40 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+                className="bg-surface rounded-2xl border border-border p-5 hover:border-accent/40 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-surface-elevated text-accent font-bold border border-border">
+                    <span className="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-surface-elevated text-accent font-bold border border-border">
                       {app.id}
                     </span>
                     <Badge
@@ -382,10 +383,10 @@ export default function Applications() {
               onPageChange={setCurrentPage}
             />
           )}
-        </div>
+        </ScrollReveal>
       ) : (
         /* TABLE VIEW */
-        <div className="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
+        <ScrollReveal stagger={2} className="bg-surface rounded-2xl border border-border shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
@@ -490,7 +491,7 @@ export default function Applications() {
               onPageChange={setCurrentPage}
             />
           )}
-        </div>
+        </ScrollReveal>
       )}
     </div>
   );

@@ -520,18 +520,18 @@ export default function ApplicationDetails() {
             </Badge>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
             {displayName}
           </h1>
 
-          <div className="flex items-center gap-3 text-xs text-text-secondary pt-0.5">
-            <span>Type: <strong>{app.applicationType || 'Technical Approval'}</strong></span>
+          <div className="flex items-center gap-3 text-xs sm:text-sm text-text-secondary pt-0.5 font-medium">
+            <span>Type: <strong className="text-text-primary">{app.applicationType || 'Technical Approval'}</strong></span>
             <span>&bull;</span>
-            <span>Submitted: <strong className="font-mono">{app.submittedAt || (app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Active')}</strong></span>
+            <span>Submitted: <strong className="font-mono text-text-primary">{app.submittedAt || (app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Active')}</strong></span>
             {app.academicYear && (
               <>
                 <span>&bull;</span>
-                <span>Session: <strong>{app.academicYear}</strong></span>
+                <span>Session: <strong className="text-accent">{app.academicYear}</strong></span>
               </>
             )}
           </div>
@@ -665,60 +665,60 @@ export default function ApplicationDetails() {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Institutional Overview Strip */}
-          <div className="bg-surface rounded-2xl border border-border p-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <ScrollReveal stagger={1} className="bg-surface rounded-2xl border border-border p-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs sm:text-sm shadow-xs">
             <div>
-              <span className="text-[10px] font-mono uppercase text-text-muted">Permanent Institution Code</span>
-              <div className="font-mono text-sm font-bold text-text-primary mt-0.5">{app.institutionCode || 'AICTE-NRO-REQ'}</div>
-              <div className="text-[11px] text-text-secondary mt-0.5">{app.applicationType || 'Technical Approval'}</div>
+              <span className="text-[11px] font-mono uppercase text-text-muted font-bold">Institution Code</span>
+              <div className="font-mono text-sm sm:text-base font-bold text-text-primary mt-0.5">{app.institutionCode || 'AICTE-NRO-REQ'}</div>
+              <div className="text-xs text-text-secondary mt-0.5 font-medium">{app.applicationType || 'Technical Approval'}</div>
             </div>
 
             <div>
-              <span className="text-[10px] font-mono uppercase text-text-muted">Approved Intake Capacity</span>
-              <div className="font-mono text-sm font-bold text-accent mt-0.5">
+              <span className="text-[11px] font-mono uppercase text-text-muted font-bold">Approved Intake Capacity</span>
+              <div className="font-mono text-sm sm:text-base font-bold text-accent mt-0.5">
                 {app.intakeCapacity ? `${app.intakeCapacity} Seats` : "Standard Intake"}
               </div>
-              <div className="text-[11px] text-text-secondary mt-0.5">Session: {app.academicYear || '2025-2026'}</div>
+              <div className="text-xs text-text-secondary mt-0.5 font-medium">Session: {app.academicYear || '2025-2026'}</div>
             </div>
 
             <div>
-              <span className="text-[10px] font-mono uppercase text-text-muted">Applicant Details</span>
-              <div className="text-text-primary truncate font-medium mt-0.5">{app.applicantName || 'Authorized Signatory'}</div>
-              <div className="text-text-muted font-mono text-[11px] mt-0.5">{app.contactEmail || 'office@institution.edu.in'}</div>
+              <span className="text-[11px] font-mono uppercase text-text-muted font-bold">Applicant Contact</span>
+              <div className="text-text-primary truncate font-bold mt-0.5">{app.applicantName || 'Authorized Signatory'}</div>
+              <div className="text-text-muted font-mono text-xs mt-0.5 truncate">{app.contactEmail || 'office@institution.edu.in'}</div>
             </div>
 
             <div>
-              <span className="text-[10px] font-mono uppercase text-text-muted">Campus Address</span>
-              <div className="text-text-secondary truncate mt-0.5 leading-snug">{app.address || 'Regional Municipal Jurisdiction'}</div>
+              <span className="text-[11px] font-mono uppercase text-text-muted font-bold">Campus Address</span>
+              <div className="text-text-secondary truncate mt-0.5 leading-snug font-medium">{app.address || 'Regional Municipal Jurisdiction'}</div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Quick Scorecard & Status Guidance */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border border-border bg-surface space-y-2 text-xs">
-              <span className="font-mono text-[10px] uppercase font-bold text-text-muted">What is this case?</span>
-              <p className="text-text-secondary leading-relaxed">
-                {displayName} is filing for <strong>{app.applicationType || 'Regulatory Approval'}</strong> under AICTE statutory guidelines.
+          <ScrollReveal stagger={2} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-5 rounded-2xl border border-border bg-surface space-y-2 text-xs sm:text-sm shadow-xs">
+              <span className="font-mono text-[11px] uppercase font-bold text-accent">Case Purpose</span>
+              <p className="text-text-secondary leading-relaxed font-medium">
+                {displayName} is filing for <strong className="text-text-primary">{app.applicationType || 'Regulatory Approval'}</strong> under AICTE statutory guidelines.
               </p>
-              <div className="pt-2 text-[11px] text-accent font-semibold">
+              <div className="pt-2 text-xs text-accent font-bold">
                 Status: {app.status || 'Under Review'}
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border border-border bg-surface space-y-2 text-xs">
-              <span className="font-mono text-[10px] uppercase font-bold text-text-muted">Evidence Summary</span>
-              <div className="space-y-1 font-mono text-text-primary">
-                <div>&bull; {documents.length} Uploaded Documents</div>
-                <div>&bull; {extractedFields.length} Extracted Information Fields</div>
-                <div>&bull; {findings.length} Compliance Issues Identified</div>
+            <div className="p-5 rounded-2xl border border-border bg-surface space-y-2 text-xs sm:text-sm shadow-xs">
+              <span className="font-mono text-[11px] uppercase font-bold text-text-muted">Evidence Summary</span>
+              <div className="space-y-1.5 font-mono text-text-primary font-semibold text-xs sm:text-sm">
+                <div>&bull; <span className="text-accent">{documents.length}</span> Uploaded Documents</div>
+                <div>&bull; <span className="text-accent">{extractedFields.length}</span> Extracted Fields</div>
+                <div>&bull; <span className="text-accent">{findings.length}</span> Issues Identified</div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl border border-border bg-surface space-y-2 text-xs flex flex-col justify-between">
+            <div className="p-5 rounded-2xl border border-border bg-surface space-y-2 text-xs sm:text-sm flex flex-col justify-between shadow-xs">
               <div>
-                <span className="font-mono text-[10px] uppercase font-bold text-text-muted">Recommended Next Action</span>
-                <p className="text-text-secondary leading-relaxed mt-1">
+                <span className="font-mono text-[11px] uppercase font-bold text-text-muted">Recommended Action</span>
+                <p className="text-text-secondary leading-relaxed mt-1 font-medium">
                   {findings.length > 0
-                    ? `Review the ${findings.length} flagged statutory findings and make an officer determination.`
+                    ? `Review the ${findings.length} flagged statutory findings and record an officer determination.`
                     : (documents.length === 0
                       ? 'Upload mandatory regulatory documents to initiate OCR extraction.'
                       : (extractedFields.length === 0
@@ -745,7 +745,7 @@ export default function ApplicationDetails() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       )}
 

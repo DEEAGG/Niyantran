@@ -26,6 +26,7 @@ import { useToast } from '../context/ToastContext';
 import Skeleton from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import { DecorativeStamp } from '../components/common/Doodles';
+import ScrollReveal from '../components/common/ScrollReveal';
 
 export default function MonitoringPage() {
   const navigate = useNavigate();
@@ -115,15 +116,18 @@ export default function MonitoringPage() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#E43D12] font-mono">
+              <span className="text-xs font-bold uppercase tracking-wider text-accent font-mono">
                 SYSTEM MONITORING
               </span>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-xs text-text-secondary">Workload Throughput &amp; System Health</span>
+              <span className="text-xs text-text-secondary font-semibold">Workload Throughput &amp; System Health</span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-text-primary">
-              Workload &amp; Verification Monitoring
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
+              Workload &amp; Verification <span className="text-accent">Monitoring</span>
             </h1>
+            <p className="text-xs sm:text-sm text-text-secondary mt-1 font-medium">
+              Real-time throughput, <span className="text-accent font-semibold">cryptographic audit chain</span> verification, and statutory queue health.
+            </p>
           </div>
         </div>
 
@@ -131,7 +135,7 @@ export default function MonitoringPage() {
           <button
             onClick={handleRunVerification}
             disabled={verifying}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#E43D12] text-white text-xs font-semibold hover:bg-[#CC340E] transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#E43D12] text-white text-xs sm:text-sm font-bold hover:bg-[#CC340E] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
           >
             <RotateCw className={`w-3.5 h-3.5 ${verifying ? 'animate-spin' : ''}`} />
             <span>{verifying ? 'Checking Hash Chain...' : 'Verify Ledger Integrity'}</span>
@@ -139,7 +143,7 @@ export default function MonitoringPage() {
 
           <Link
             to="/audit"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface text-xs font-semibold text-text-primary hover:bg-surface-secondary transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border bg-surface text-xs sm:text-sm font-bold text-text-primary hover:bg-surface-secondary transition-colors"
           >
             <Database className="w-3.5 h-3.5 text-accent" />
             <span>View Full Ledger</span>
@@ -150,118 +154,118 @@ export default function MonitoringPage() {
       {/* ========================================================= */}
       {/* 1. WHAT NEEDS ATTENTION RIGHT NOW                         */}
       {/* ========================================================= */}
-      <section className="space-y-3">
+      <section className="space-y-4">
         <div>
-          <h2 className="text-base font-bold text-text-primary">
-            What Needs Attention Right Now
+          <h2 className="text-lg sm:text-xl font-bold text-text-primary tracking-tight">
+            What Needs Attention <span className="text-accent">Right Now</span>
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
-            Key operational categories requiring officer review or monitoring.
+          <p className="text-xs sm:text-sm text-text-secondary mt-0.5 font-medium">
+            Key operational categories requiring officer review or active monitoring.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Processing in Progress */}
-          <div className="p-5 rounded-2xl border border-border bg-surface shadow-xs flex flex-col justify-between">
-            <div className="space-y-1">
+          <ScrollReveal stagger={1} className="p-6 rounded-2xl border border-border bg-surface shadow-xs flex flex-col justify-between hover:border-accent/30 transition-all">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-text-muted">Processing in Progress</span>
+                <span className="text-xs sm:text-sm font-bold text-text-secondary">Processing in Progress</span>
                 <Clock className="w-4 h-4 text-blue-500" />
               </div>
-              <div className="text-3xl font-bold font-mono text-text-primary pt-1">
+              <div className="text-3xl sm:text-4xl font-bold font-mono text-text-primary pt-1 tracking-tight">
                 {pending}
               </div>
-              <p className="text-[11px] text-text-secondary leading-snug pt-1">
+              <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
                 Applications currently being drafted or waiting for document ingestion.
               </p>
             </div>
-            <div className="pt-4 border-t border-border/60 mt-2">
+            <div className="pt-4 border-t border-border/60 mt-3">
               <Link
                 to="/cases?status=Under+Review"
-                className="text-xs font-semibold text-accent hover:underline flex items-center justify-between"
+                className="text-xs sm:text-sm font-bold text-accent hover:underline flex items-center justify-between"
               >
                 <span>Inspect in-progress cases</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Card 2: Cases Waiting for Review */}
-          <div className="p-5 rounded-2xl border border-amber-300 dark:border-amber-900 bg-amber-500/5 shadow-xs flex flex-col justify-between">
-            <div className="space-y-1">
+          <ScrollReveal stagger={2} className="p-6 rounded-2xl border border-amber-300 dark:border-amber-900 bg-amber-500/5 shadow-xs flex flex-col justify-between hover:border-amber-500/60 transition-all">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">Waiting for Review</span>
+                <span className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300">Waiting for Review</span>
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
               </div>
-              <div className="text-3xl font-bold font-mono text-amber-700 dark:text-amber-400 pt-1">
+              <div className="text-3xl sm:text-4xl font-bold font-mono text-amber-700 dark:text-amber-400 pt-1 tracking-tight">
                 {flagged}
               </div>
-              <p className="text-[11px] text-text-secondary leading-snug pt-1">
+              <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
                 Cases with discrepancies or missing documents requiring officer determination.
               </p>
             </div>
-            <div className="pt-4 border-t border-amber-200 dark:border-amber-900/60 mt-2">
+            <div className="pt-4 border-t border-amber-200 dark:border-amber-900/60 mt-3">
               <Link
                 to="/cases?filter=missing"
-                className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:underline flex items-center justify-between"
+                className="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center justify-between"
               >
                 <span>Open Review Desk</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Card 3: Verified Compliant */}
-          <div className="p-5 rounded-2xl border border-emerald-300 dark:border-emerald-900 bg-emerald-500/5 shadow-xs flex flex-col justify-between">
-            <div className="space-y-1">
+          <ScrollReveal stagger={3} className="p-6 rounded-2xl border border-emerald-300 dark:border-emerald-900 bg-emerald-500/5 shadow-xs flex flex-col justify-between hover:border-emerald-500/60 transition-all">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Verified Compliant</span>
+                <span className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300">Verified Compliant</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="text-3xl font-bold font-mono text-emerald-700 dark:text-emerald-400 pt-1">
+              <div className="text-3xl sm:text-4xl font-bold font-mono text-emerald-700 dark:text-emerald-400 pt-1 tracking-tight">
                 {verified}
               </div>
-              <p className="text-[11px] text-text-secondary leading-snug pt-1">
+              <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
                 Institutional filings meeting 100% of evaluated AICTE statutory criteria.
               </p>
             </div>
-            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-900/60 mt-2">
+            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-900/60 mt-3">
               <Link
                 to="/cases?status=Verified"
-                className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center justify-between"
+                className="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center justify-between"
               >
                 <span>Browse clear cases</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Card 4: System & Database Health */}
-          <div className="p-5 rounded-2xl border border-border bg-surface shadow-xs flex flex-col justify-between">
-            <div className="space-y-1">
+          <ScrollReveal stagger={4} className="p-6 rounded-2xl border border-border bg-surface shadow-xs flex flex-col justify-between hover:border-accent/30 transition-all">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-text-muted">System &amp; Ledger Health</span>
+                <span className="text-xs sm:text-sm font-bold text-text-secondary">System &amp; Ledger Health</span>
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
               </div>
-              <div className="flex items-center gap-1.5 text-base font-bold text-emerald-600 pt-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-2 text-base sm:text-lg font-bold text-emerald-600 pt-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span>100% Operational</span>
               </div>
-              <p className="text-[11px] text-text-secondary leading-snug pt-1">
+              <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
                 Database active. Cryptographic chain intact across {auditVerification?.total_records ?? 0} records.
               </p>
             </div>
-            <div className="pt-4 border-t border-border/60 mt-2">
+            <div className="pt-4 border-t border-border/60 mt-3">
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-xs font-semibold text-accent hover:underline flex items-center justify-between w-full cursor-pointer"
+                className="text-xs sm:text-sm font-bold text-accent hover:underline flex items-center justify-between w-full cursor-pointer"
               >
                 <span>{showAdvanced ? 'Hide diagnostics' : 'Show system diagnostics'}</span>
                 {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
