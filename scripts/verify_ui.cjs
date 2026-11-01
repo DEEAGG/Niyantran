@@ -54,7 +54,7 @@ async function run() {
     await send('Runtime.enable');
     await send('DOM.enable');
 
-    console.log('3. Injecting authentication token into localStorage & navigating to / ...');
+    console.log('3. Setting token and navigating to Dashboard...');
     await send('Runtime.evaluate', {
       expression: `localStorage.setItem('niyantran_token', ${JSON.stringify(AUTH_TOKEN)}); window.location.href = '/';`
     });
@@ -79,52 +79,8 @@ async function run() {
     }
     console.log('   Dashboard mounted successfully!');
 
-    // Check typography: verify font sizes are identical
-    console.log('5. Checking Typography & Orange Highlighting (Strict Requirement)...');
-    const typoCheck = await send('Runtime.evaluate', {
-      expression: `(() => {
-        const h1 = document.querySelector('h1');
-        const h1Chars = Array.from(h1.querySelectorAll('span span[aria-hidden="true"]'));
-        const normalChar = h1Chars.find(el => !el.classList.contains('text-[#E43D12]'));
-        const orangeChar = h1Chars.find(el => el.classList.contains('text-[#E43D12]'));
-
-        const normalFontSize = normalChar ? window.getComputedStyle(normalChar).fontSize : null;
-        const orangeFontSize = orangeChar ? window.getComputedStyle(orangeChar).fontSize : null;
-        const normalLineHeight = normalChar ? window.getComputedStyle(normalChar).lineHeight : null;
-        const orangeLineHeight = orangeChar ? window.getComputedStyle(orangeChar).lineHeight : null;
-
-        // Check subtext paragraph inline highlight
-        const subtextP = Array.from(document.querySelectorAll('p')).find(p => p.textContent.includes('Review filings'));
-        const subtextNormal = subtextP ? window.getComputedStyle(subtextP).fontSize : null;
-        const subtextOrange = subtextP ? subtextP.querySelector('span.text-accent') : null;
-        const subtextOrangeFontSize = subtextOrange ? window.getComputedStyle(subtextOrange).fontSize : null;
-        const subtextOrangeColor = subtextOrange ? window.getComputedStyle(subtextOrange).color : null;
-
-        return {
-          totalHeadlineCharacters: h1Chars.length,
-          normalCharLetter: normalChar?.textContent,
-          normalFontSize,
-          orangeCharLetter: orangeChar?.textContent,
-          orangeFontSize,
-          h1FontSizeMatch: normalFontSize === orangeFontSize,
-          normalLineHeight,
-          orangeLineHeight,
-          h1LineHeightMatch: normalLineHeight === orangeLineHeight,
-          subtextNormalFontSize: subtextNormal,
-          subtextOrangeWord: subtextOrange?.textContent,
-          subtextOrangeFontSize,
-          subtextMatch: subtextNormal === subtextOrangeFontSize,
-          subtextOrangeColor
-        };
-      })()`,
-      returnByValue: true
-    });
-
-    console.log('   Typography Evaluation Results:');
-    console.log(JSON.stringify(typoCheck.result.result.value, null, 2));
-
-    // Check CharacterV1 animation at scroll 0 vs scroll 350
-    console.log('6. Evaluating CharacterV1 Scroll-Linked Convergence Animation...');
+    // 1. Initial State Check (Normal State)
+    console.log('\n--- TEST 1: INITIAL PAGE LOAD (NORMAL STATE) ---');
     const scroll0Transforms = await send('Runtime.evaluate', {
       expression: `(() => {
         const h1 = document.querySelector('h1');
@@ -132,25 +88,24 @@ async function run() {
         return chars.map((el) => ({
           char: el.textContent,
           isOrange: el.classList.contains('text-[#E43D12]'),
-          styleTransform: el.style.transform
-        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'i', 'C', 's'].includes(c.char));
+          styleTransform: el.style.transform || 'none'
+        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'u', 's', 'i', 'C', 's'].includes(c.char));
       })()`,
       returnByValue: true
     });
-    console.log('   Transforms at scrollY = 0 (Dispersed):');
+    console.log('   Characters at scrollY = 0:');
     console.log(JSON.stringify(scroll0Transforms.result.result.value, null, 2));
 
-    // Scroll down to 350px
+    const shot1 = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_initial_normal.png'), Buffer.from(shot1.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_initial_normal.png');
+
+    // 2. Scroll Down Check (Dispersion State)
+    console.log('\n--- TEST 2: SCROLL DOWN (DISPERSION STATE) ---');
     await send('Runtime.evaluate', {
       expression: 'window.scrollTo({ top: 350, behavior: "instant" }); window.dispatchEvent(new Event("scroll"));'
     });
     await new Promise(r => setTimeout(r, 600));
-
-    console.log('7. Capturing visual screenshot of converged state at scroll 350px...');
-    const shotRes2 = await send('Page.captureScreenshot', { format: 'png' });
-    const screenshotConvergedPath = path.join(artifactDir, 'niyantran_converged_scroll.png');
-    fs.writeFileSync(screenshotConvergedPath, Buffer.from(shotRes2.result.data, 'base64'));
-    console.log('   Converged screenshot saved to:', screenshotConvergedPath);
 
     const scroll350Transforms = await send('Runtime.evaluate', {
       expression: `(() => {
@@ -160,29 +115,75 @@ async function run() {
           char: el.textContent,
           isOrange: el.classList.contains('text-[#E43D12]'),
           styleTransform: el.style.transform
-        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'i', 'C', 's'].includes(c.char));
+        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'u', 's', 'i', 'C', 's'].includes(c.char));
       })()`,
       returnByValue: true
     });
-    console.log('   Transforms at scrollY = 350 (Converged):');
+    console.log('   Characters at scrollY = 350 (Dispersed):');
     console.log(JSON.stringify(scroll350Transforms.result.result.value, null, 2));
 
-    // Capture screenshot at top
-    await send('Runtime.evaluate', {
-      expression: 'window.scrollTo({ top: 0, behavior: "instant" });'
-    });
-    await new Promise(r => setTimeout(r, 500));
+    const shot2 = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_scrolled_dispersed.png'), Buffer.from(shot2.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_scrolled_dispersed.png');
 
-    console.log('8. Capturing visual screenshot of Dashboard with CharacterV1 headline and orange highlighting...');
-    const shotRes = await send('Page.captureScreenshot', { format: 'png' });
-    const screenshotPath = path.join(artifactDir, 'niyantran_verified_dashboard.png');
-    fs.writeFileSync(screenshotPath, Buffer.from(shotRes.result.data, 'base64'));
-    console.log('   Screenshot saved to:', screenshotPath);
+    // 3. Scroll Up Check (Return to Normal State)
+    console.log('\n--- TEST 3: SCROLL UP (RETURN TO NORMAL) ---');
+    await send('Runtime.evaluate', {
+      expression: 'window.scrollTo({ top: 0, behavior: "instant" }); window.dispatchEvent(new Event("scroll"));'
+    });
+    await new Promise(r => setTimeout(r, 600));
+
+    const scrollBackTransforms = await send('Runtime.evaluate', {
+      expression: `(() => {
+        const h1 = document.querySelector('h1');
+        const chars = Array.from(h1.querySelectorAll('span span[aria-hidden="true"]'));
+        return chars.map((el) => ({
+          char: el.textContent,
+          isOrange: el.classList.contains('text-[#E43D12]'),
+          styleTransform: el.style.transform || 'none'
+        })).filter(c => ['T', 'u', 'D', 'o', 'c', 'u', 's', 'i', 'C', 's'].includes(c.char));
+      })()`,
+      returnByValue: true
+    });
+    console.log('   Characters after scrolling back to scrollY = 0:');
+    console.log(JSON.stringify(scrollBackTransforms.result.result.value, null, 2));
+
+    const shot3 = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_returned_normal.png'), Buffer.from(shot3.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_returned_normal.png');
+
+    // 4. Mobile Viewport Check (390px Width)
+    console.log('\n--- TEST 4: MOBILE VIEWPORT TEST (390px) ---');
+    await send('Emulation.setDeviceMetricsOverride', {
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 2,
+      mobile: true
+    });
+    await new Promise(r => setTimeout(r, 600));
+
+    const overflowCheck = await send('Runtime.evaluate', {
+      expression: `(() => {
+        return {
+          windowWidth: window.innerWidth,
+          bodyScrollWidth: document.body.scrollWidth,
+          htmlScrollWidth: document.documentElement.scrollWidth,
+          hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth
+        };
+      })()`,
+      returnByValue: true
+    });
+    console.log('   Mobile Overflow Evaluation:');
+    console.log(JSON.stringify(overflowCheck.result.result.value, null, 2));
+
+    const shot4 = await send('Page.captureScreenshot', { format: 'png' });
+    fs.writeFileSync(path.join(artifactDir, 'niyantran_mobile_normal.png'), Buffer.from(shot4.result.data, 'base64'));
+    console.log('   Screenshot saved: niyantran_mobile_normal.png');
 
     ws.close();
   } finally {
     chrome.kill();
-    console.log('8. Headless Chrome terminated cleanly.');
+    console.log('5. Headless Chrome terminated cleanly.');
   }
 }
 

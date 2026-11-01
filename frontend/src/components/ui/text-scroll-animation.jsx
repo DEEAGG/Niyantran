@@ -120,18 +120,18 @@ const CharacterV1Span = ({
   // Distance from horizontal center of the headline
   const distanceFromCenter = globalIndex - centerIndex;
 
-  // CharacterV1 core transformation:
-  // Left characters start with negative X, right characters with positive X.
-  // As user scrolls from scrollYProgress 0 -> 0.5, characters converge toward 0.
-  // Maximum horizontal displacement is bounded to keep text readable on all screens.
-  const initialX = Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 7.5, 95);
-  const initialRotateX = Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 2, 28);
-  const initialY = Math.min(Math.abs(distanceFromCenter) * 1.2, 16);
+  // CharacterV1 Dispersion Transformation:
+  // - Initial state (scrollYProgress = 0, on load / top of page): perfectly normal (0 displacement, 0 rotation, opacity 1)
+  // - On scroll down (scrollYProgress -> 0.5): characters disperse outwards (left moves left, right moves right)
+  // - On scroll up: smoothly returns back to 0 (normal, readable state)
+  const maxDispersedX = Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 6.5, 80);
+  const maxDispersedRotateX = Math.sign(distanceFromCenter) * Math.min(Math.abs(distanceFromCenter) * 1.8, 24);
+  const maxDispersedY = Math.min(Math.abs(distanceFromCenter) * 1.0, 14);
 
-  const x = useTransform(scrollYProgress, [0, 0.5], [initialX, 0]);
-  const rotateX = useTransform(scrollYProgress, [0, 0.5], [initialRotateX, 0]);
-  const y = useTransform(scrollYProgress, [0, 0.5], [initialY, 0]);
-  const opacity = useTransform(scrollYProgress, [0, 0.45], [0.85, 1]);
+  const x = useTransform(scrollYProgress, [0, 0.5], [0, maxDispersedX]);
+  const rotateX = useTransform(scrollYProgress, [0, 0.5], [0, maxDispersedRotateX]);
+  const y = useTransform(scrollYProgress, [0, 0.5], [0, maxDispersedY]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.7]);
 
   return (
     <motion.span
