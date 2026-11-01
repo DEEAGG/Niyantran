@@ -115,6 +115,11 @@
   line-height: inherit !important;
 }
 
+span.text-accent, strong.text-accent, em.text-accent {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
 /* Restrained Scroll-Triggered Reveal Animation System */
 .reveal-on-scroll {
   opacity: 0;

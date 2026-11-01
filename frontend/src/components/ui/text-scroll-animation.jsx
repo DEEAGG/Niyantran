@@ -23,10 +23,15 @@ export const EditorialScrollHeading = ({
   const targetRef = containerRef || localRef;
   const shouldReduceMotion = useReducedMotion();
 
-  // Scroll tracking: scoped to the target container from top to bottom
+  const isHeroContainer = Boolean(containerRef);
+  const offsetConfig = isHeroContainer
+    ? ["start start", "end start"]
+    : ["start 90%", "center 50%"];
+
+  // Scroll tracking: scoped to the target container or heading viewport entry
   const { scrollYProgress } = useScroll({
     target: targetRef,
-    offset: ["start start", "end start"],
+    offset: offsetConfig,
   });
 
   const words = text.split(" ");
