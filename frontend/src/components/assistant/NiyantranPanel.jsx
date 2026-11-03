@@ -21,6 +21,11 @@ import {
   Printer,
   FileSpreadsheet,
   Layers,
+  ChevronDown,
+  ChevronUp,
+  Scale,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { useAssistant } from '../../context/AssistantContext';
 import { assistantService } from '../../services/assistantService';
@@ -36,6 +41,8 @@ const ICON_MAP = {
   ArrowRight,
   FileSpreadsheet,
   Layers,
+  AlertTriangle,
+  Scale,
 };
 
 export default function NiyantranPanel({ applicationId = null }) {
@@ -47,8 +54,13 @@ export default function NiyantranPanel({ applicationId = null }) {
   const [loading, setLoading] = useState(false);
   const [suggestedPrompts, setSuggestedPrompts] = useState([]);
   const [workflowStatus, setWorkflowStatus] = useState(null);
+  const [expandedCards, setExpandedCards] = useState({});
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  const toggleCard = (id) => {
+    setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -121,6 +133,8 @@ export default function NiyantranPanel({ applicationId = null }) {
         message: res.message,
         suggested_actions: res.suggested_actions || [],
         citations: res.citations || [],
+        evidence_card: res.evidence_card || null,
+        response_type: res.response_type || 'standard',
         intent: res.intent,
       };
 
@@ -315,8 +329,130 @@ export default function NiyantranPanel({ applicationId = null }) {
                     })}
                   </div>
 
-                  {/* Regulatory Citations Card */}
-                  {msg.citations && msg.citations.length > 0 && (
+                  {/* Structured Regulatory Evidence Card */}
+                  {msg.evidence_card && (
+                    <div className="pt-2 border-t border-[#E4E2DC] space-y-2">
+                      <div className="p-3 rounded-xl bg-[#FAF9F5] border border-[#E4E2DC] space-y-2.5 shadow-2xs">
+                        {/* Header: Title and Status Badge */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Scale className="w-4 h-4 text-[#E43D12] shrink-0" />
+                            <span className="font-bold text-[12px] text-text-primary leading-tight truncate">
+                              {msg.evidence_card.title}
+                            </span>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-mono uppercase font-bold shrink-0 border ${
+                              msg.evidence_card.status === 'COMPLIANT'
+                                ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
+                                : msg.evidence_card.status === 'NON-COMPLIANT'
+                                ? 'bg-rose-500/15 text-rose-700 border-rose-500/30'
+                                : msg.evidence_card.status === 'PARTIALLY COMPLIANT'
+                                ? 'bg-amber-500/15 text-amber-700 border-amber-500/30'
+                                : 'bg-blue-500/15 text-blue-700 border-blue-500/30'
+                            }`}
+                          >
+                            {msg.evidence_card.status}
+                          </span>
+                        </div>
+
+                        {/* Source Provenance */}
+                        <div className="text-[10px] text-text-muted font-mono bg-white/80 px-2 py-1 rounded border border-[#E4E2DC]/60 flex items-center justify-between">
+                          <span className="truncate">{msg.evidence_card.source}</span>
+                          <span className="shrink-0 font-semibold text-text-secondary ml-1">
+                            {msg.evidence_card.clause}{msg.evidence_card.page ? ` • Pg ${msg.evidence_card.page}` : ''}
+                          </span>
+                        </div>
+
+                        {/* Structured Parameters Grid */}
+                        {msg.evidence_card.parameters && Object.keys(msg.evidence_card.parameters).length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
+                            {Object.entries(msg.evidence_card.parameters).map(([key, val], pIdx) => (
+                              <div key={pIdx} className="bg-white px-2 py-1 rounded border border-[#E4E2DC] text-[10.5px]">
+                                <span className="text-text-muted text-[10px] block font-mono">{key}</span>
+                                <span className="font-semibold text-text-primary">{val}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Expandable Details Accordion */}
+                        {msg.evidence_card.details && (
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={() => toggleCard(msg.id)}
+                              className="w-full flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-white hover:bg-[#F2EFE9] border border-[#E4E2DC] text-[10px] font-mono text-text-secondary transition-colors cursor-pointer"
+                            >
+                              <span className="font-semibold text-text-primary">
+                                {expandedCards[msg.id] ? 'Hide Statutory Analysis' : 'View Calculation & Verbatim Excerpt'}
+                              </span>
+                              {expandedCards[msg.id] ? (
+                                <ChevronUp className="w-3.5 h-3.5 text-text-muted" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+                              )}
+                            </button>
+
+                            {/* Expanded Content */}
+                            {expandedCards[msg.id] && (
+                              <div className="mt-2 p-2.5 rounded-lg bg-white border border-[#E4E2DC] space-y-2 text-[10.5px]">
+                                {msg.evidence_card.details.calculation && (
+                                  <div>
+                                    <span className="text-[10px] font-mono uppercase text-text-muted font-bold block mb-0.5">
+                                      Calculation Breakdown
+                                    </span>
+                                    <div className="p-2 rounded bg-[#FAF9F5] border border-[#E4E2DC] font-mono text-[10px] text-text-primary whitespace-pre-wrap">
+                                      {msg.evidence_card.details.calculation}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {msg.evidence_card.details.conditions && (
+                                  <div>
+                                    <span className="text-[10px] font-mono uppercase text-text-muted font-bold block mb-0.5">
+                                      Applicable Conditions
+                                    </span>
+                                    <p className="text-text-secondary leading-relaxed">
+                                      {msg.evidence_card.details.conditions}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {msg.evidence_card.details.verbatim && (
+                                  <div>
+                                    <span className="text-[10px] font-mono uppercase text-text-muted font-bold block mb-0.5">
+                                      Verbatim Statutory Text
+                                    </span>
+                                    <blockquote className="p-2 rounded bg-[#FAF9F5] border-l-2 border-[#E43D12] text-[10px] font-mono text-text-secondary italic">
+                                      "{msg.evidence_card.details.verbatim}"
+                                    </blockquote>
+                                  </div>
+                                )}
+
+                                {msg.evidence_card.details.source_url && msg.evidence_card.details.source_url !== 'None' && (
+                                  <div className="pt-1 border-t border-[#E4E2DC]">
+                                    <a
+                                      href={msg.evidence_card.details.source_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-[10px] text-[#C5300B] hover:underline flex items-center gap-1 font-mono"
+                                    >
+                                      <span>View Official Statutory Source</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fallback Regulatory Citations Card (if no dedicated evidence card) */}
+                  {!msg.evidence_card && msg.citations && msg.citations.length > 0 && (
                     <div className="pt-2 border-t border-[#E4E2DC] space-y-2">
                       <div className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-text-muted">
                         <BookOpen className="w-3 h-3 text-[#E43D12]" />
