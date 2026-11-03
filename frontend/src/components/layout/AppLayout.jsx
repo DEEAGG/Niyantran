@@ -3,12 +3,16 @@ import { Outlet, Link } from 'react-router-dom';
 import CommandNavbar from './CommandNavbar';
 import GlobalSearchModal from '../common/GlobalSearchModal';
 import AnimatedGradient, { NIYANTRAN_BRAND_GRADIENT } from '../ui/animated-gradient';
+import { AssistantProvider } from '../../context/AssistantContext';
+import NiyantranLauncher from '../assistant/NiyantranLauncher';
+import NiyantranPanel from '../assistant/NiyantranPanel';
 
 export default function AppLayout() {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen relative bg-[#F7F6F2] text-text-primary flex flex-col font-sans selection:bg-accent selection:text-background transition-colors duration-200 overflow-x-hidden">
+    <AssistantProvider>
+      <div className="min-h-screen relative bg-[#F7F6F2] text-text-primary flex flex-col font-sans selection:bg-accent selection:text-background transition-colors duration-200 overflow-x-hidden">
       {/* True Full-Viewport Floating Gradient Background */}
       <div 
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none w-screen h-screen min-h-[100dvh]" 
@@ -121,7 +125,12 @@ export default function AppLayout() {
             </div>
           </div>
         </footer>
+
+        {/* NIYANTRAN Assistant Draggable Floating Launcher & Slide-over Panel */}
+        <NiyantranLauncher />
+        <NiyantranPanel />
       </div>
     </div>
+    </AssistantProvider>
   );
 }

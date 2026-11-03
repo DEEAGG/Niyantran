@@ -262,3 +262,23 @@ span.text-accent, strong.text-accent, em.text-accent {
     animation: none !important;
   }
 }
+
+/* NIYANTRAN Assistant Dock Flight & Landing Pulse Animations */
+@keyframes niyantran-landing-pulse {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(228, 61, 18, 0.6);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 8px rgba(228, 61, 18, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(228, 61, 18, 0);
+  }
+}
+
+.niyantran-landing-pulse {
+  animation: niyantran-landing-pulse 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}

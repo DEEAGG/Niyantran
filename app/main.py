@@ -57,6 +57,7 @@ from app.auth import (
     require_permission,
     IS_PRODUCTION,
 )
+from app.copilot import copilot_router
 
 
 def _resolve_tesseract() -> str:
@@ -160,6 +161,7 @@ async def favicon():
 
 
 app.include_router(auth_router)
+app.include_router(copilot_router)
 
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"

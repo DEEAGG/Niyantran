@@ -21,6 +21,7 @@ import {
 import BrandLogo from '../common/BrandLogo';
 import { useTheme, THEMES } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import NiyantranNavbarDock from '../assistant/NiyantranNavbarDock';
 
 export default function CommandNavbar({ onOpenSearch }) {
   const location = useLocation();
@@ -99,6 +100,9 @@ export default function CommandNavbar({ onOpenSearch }) {
             <span className="text-text-primary font-medium">ReguTrace Engine</span>
             <span className="text-text-muted">v2.0</span>
           </div>
+
+          {/* Docked NIYANTRAN Assistant Pill */}
+          <NiyantranNavbarDock />
 
           {/* Quick Search Shortcut */}
           <button
