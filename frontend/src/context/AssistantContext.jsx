@@ -109,9 +109,9 @@ export function AssistantProvider({ children }) {
     clone.style.top = `${startRect.top}px`;
     clone.style.width = `${startRect.width}px`;
     clone.style.height = `${startRect.height}px`;
-    clone.style.background = 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)';
-    clone.style.border = '1px solid rgba(165, 180, 252, 0.5)';
-    clone.style.boxShadow = '0 10px 25px -5px rgba(99, 102, 241, 0.6)';
+    clone.style.background = 'linear-gradient(135deg, #E43D12 0%, #FF5E36 50%, #EFB112 100%)';
+    clone.style.border = '1px solid rgba(255, 94, 54, 0.4)';
+    clone.style.boxShadow = '0 10px 25px -5px rgba(228, 61, 18, 0.5)';
     clone.innerHTML = '<span style="color:white; font-size: 18px; font-weight: bold;">✦</span>';
     document.body.appendChild(clone);
 
@@ -188,9 +188,9 @@ export function AssistantProvider({ children }) {
       clone.style.top = `${startRect.top}px`;
       clone.style.width = `${startRect.width}px`;
       clone.style.height = `${startRect.height}px`;
-      clone.style.background = 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)';
-      clone.style.border = '1px solid rgba(165, 180, 252, 0.5)';
-      clone.style.boxShadow = '0 10px 25px -5px rgba(99, 102, 241, 0.6)';
+      clone.style.background = 'linear-gradient(135deg, #E43D12 0%, #FF5E36 50%, #EFB112 100%)';
+      clone.style.border = '1px solid rgba(255, 94, 54, 0.4)';
+      clone.style.boxShadow = '0 10px 25px -5px rgba(228, 61, 18, 0.5)';
       clone.innerHTML = '<span style="color:white; font-size: 16px; font-weight: bold;">✦</span>';
       document.body.appendChild(clone);
 

@@ -26,8 +26,8 @@ export default function ThemeSwitcher() {
         <div className="flex items-center gap-1 pl-1 border-l border-border">
           {isDark ? (
             <>
-              <span className="w-2 h-2 rounded-full bg-[#0B0F17] border border-border" />
-              <span className="w-2 h-2 rounded-full bg-[#111827]" />
+              <span className="w-2 h-2 rounded-full bg-[#0D1117] border border-border" />
+              <span className="w-2 h-2 rounded-full bg-[#161B22]" />
               <span className="w-2 h-2 rounded-full bg-[#E43D12]" />
             </>
           ) : (

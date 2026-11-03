@@ -51,51 +51,68 @@
     --status-pending: #C2410C; /* Orange-700 */
     --status-error: #B91C1C; /* Red-700 */
     --status-error-bg: #FEF2F2;
+
+    /* Moving gradient blob light tokens (warm vermilion, golden yellow, rose pink) */
+    --blob-vermilion: rgba(228, 61, 18, 0.22);
+    --blob-yellow: rgba(239, 177, 18, 0.20);
+    --blob-pink: rgba(214, 83, 109, 0.16);
+    --blob-opacity: 0.70;
   }
 
   .theme-dark,
   [data-theme="dark"],
   .dark {
-    --background: #0B0F17;
-    --surface: #111827;
-    --surface-elevated: #1F2937;
-    --surface-hover: #1E293B;
-    --surface-secondary: #162032;
+    /* Naturally darkened canvas derived from warm ivory/stone */
+    --background: #0D1117;
+    --surface: #161B22;
+    --surface-elevated: #212836;
+    --surface-hover: #263042;
+    --surface-secondary: #1A202C;
 
-    --text-primary: #F8FAFC;
-    --text-secondary: #CBD5E1;
-    --text-muted: #94A3B8;
+    /* Crisp, high-contrast readable typography */
+    --text-primary: #F3F4F6;
+    --text-secondary: #9CA3AF;
+    --text-muted: #6B7280;
 
-    --border: #1E293B;
-    --border-strong: #334155;
-    --border-subtle: #192231;
+    /* Refined structural borders */
+    --border: #283242;
+    --border-strong: #38465C;
+    --border-subtle: #1E2533;
 
+    /* Primary Identity: Original Vermilion Red-Orange */
     --accent: #E43D12;
     --accent-hover: #FF5E36;
     --accent-foreground: #FFFFFF;
-    --accent-secondary: #2A1713;
+    --accent-secondary: rgba(228, 61, 18, 0.15);
     --accent-glow: rgba(228, 61, 18, 0.25);
 
-    --color-brand-vermilion: #FF5E36;
-    --color-brand-vermilion-surface: #2A1713;
-    --color-brand-pink: #F472B6;
-    --color-brand-pink-surface: #291522;
-    --color-brand-yellow: #FBBF24;
-    --color-brand-yellow-surface: #292211;
+    /* Brand Graphic Accents: Vermilion, Rose Pink, Golden Yellow */
+    --color-brand-vermilion: #E43D12;
+    --color-brand-vermilion-surface: rgba(228, 61, 18, 0.15);
+    --color-brand-pink: #D6536D;
+    --color-brand-pink-surface: rgba(214, 83, 109, 0.14);
+    --color-brand-yellow: #EFB112;
+    --color-brand-yellow-surface: rgba(239, 177, 18, 0.14);
 
-    --input-background: #111827;
-    --input-text: #F8FAFC;
-    --popover-background: #1F2937;
-    --popover-text: #F8FAFC;
-    --focus-ring: rgba(228, 61, 18, 0.4);
+    --input-background: #121620;
+    --input-text: #F3F4F6;
+    --popover-background: #1C2330;
+    --popover-text: #F3F4F6;
+    --focus-ring: rgba(228, 61, 18, 0.35);
 
     --status-success: #22C55E;
-    --status-success-bg: #052E16;
+    --status-success-bg: rgba(34, 197, 94, 0.15);
     --status-warning: #F59E0B;
-    --status-warning-bg: #451A03;
-    --status-pending: #FB923C;
+    --status-warning-bg: rgba(245, 158, 11, 0.15);
+    --status-pending: #F97316;
     --status-error: #EF4444;
-    --status-error-bg: #450A0A;
+    --status-error-bg: rgba(239, 68, 68, 0.15);
+
+    /* Moving gradient blob dark tokens (subtle, elegant, atmospheric glow of same brand colors) */
+    --blob-vermilion: rgba(228, 61, 18, 0.09);
+    --blob-yellow: rgba(239, 177, 18, 0.07);
+    --blob-pink: rgba(214, 83, 109, 0.06);
+    --blob-opacity: 0.55;
   }
 
   /* Single Global Font Family: Inter across entire application */

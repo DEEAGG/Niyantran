@@ -171,9 +171,9 @@ const presets: Record<PresetName, PresetParams> = {
     shapeSize: 48,
   },
   Niyantran: {
-    color1: "#F7F6F2",
-    color2: "rgba(228, 61, 18, 0.28)",
-    color3: "rgba(239, 177, 18, 0.26)",
+    color1: "#0D1117",
+    color2: "rgba(228, 61, 18, 0.08)",
+    color3: "rgba(239, 177, 18, 0.06)",
     lightColors: {
       color1: "#F7F6F2",
       color2: "rgba(228, 61, 18, 0.28)",
@@ -274,10 +274,11 @@ export default function AnimatedGradient({
 
   const params = useMemo((): PresetParams => {
     if (config.preset === "custom") {
+      const isDark = isMounted && resolvedTheme === "dark";
       return {
-        color1: config.color1,
-        color2: config.color2,
-        color3: config.color3,
+        color1: isDark ? "#0D1117" : config.color1,
+        color2: isDark ? "rgba(228, 61, 18, 0.08)" : config.color2,
+        color3: isDark ? "rgba(239, 177, 18, 0.06)" : config.color3,
         rotation: config.rotation ?? 0,
         proportion: config.proportion ?? 35,
         scale: config.scale ?? 1,

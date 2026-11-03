@@ -55,10 +55,10 @@ export default function NiyantranLauncher() {
           }
         }}
         aria-label="Open NIYANTRAN Guide"
-        className="relative group p-3.5 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-600 text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 flex items-center justify-center"
+        className="relative group p-3.5 rounded-2xl bg-gradient-to-tr from-[#E43D12] via-[#FF5E36] to-[#EFB112] text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/20 flex items-center justify-center"
       >
         {/* Subtle radiating glow ring */}
-        <span className="absolute -inset-1 rounded-2xl bg-indigo-600 opacity-35 group-hover:opacity-65 blur-xs transition-opacity animate-pulse" />
+        <span className="absolute -inset-1 rounded-2xl bg-[#E43D12] opacity-35 group-hover:opacity-65 blur-xs transition-opacity animate-pulse" />
 
         <div className="relative flex items-center justify-center">
           <Sparkles className="w-5 h-5 text-white" />

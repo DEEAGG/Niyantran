@@ -12,7 +12,7 @@ export default function AppLayout() {
 
   return (
     <AssistantProvider>
-      <div className="min-h-screen relative bg-[#F7F6F2] text-text-primary flex flex-col font-sans selection:bg-accent selection:text-background transition-colors duration-200 overflow-x-hidden">
+      <div className="min-h-screen relative bg-background text-text-primary flex flex-col font-sans selection:bg-accent selection:text-background transition-colors duration-200 overflow-x-hidden">
       {/* True Full-Viewport Floating Gradient Background */}
       <div 
         className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none w-screen h-screen min-h-[100dvh]" 
@@ -34,8 +34,8 @@ export default function AppLayout() {
         {/* Primary WebGL2 Shader Animated Gradient */}
         <AnimatedGradient
           config={NIYANTRAN_BRAND_GRADIENT}
-          className="w-full h-full opacity-70"
-          noise={{ opacity: 0.07, scale: 1 }}
+          className="w-full h-full opacity-70 dark:opacity-45"
+          noise={{ opacity: 0.06, scale: 1 }}
           style={{
             position: 'absolute',
             inset: 0,
@@ -48,37 +48,40 @@ export default function AppLayout() {
         <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
           {/* Blob 1: Soft Vermilion, top-left drift */}
           <div 
-            className="absolute rounded-full blur-[80px] sm:blur-[110px] pointer-events-none animate-float-blob-1 opacity-70"
+            className="absolute rounded-full blur-[80px] sm:blur-[110px] pointer-events-none animate-float-blob-1"
             style={{
               top: '-8vh',
               left: '6vw',
               width: 'min(50vw, 750px)',
               height: 'min(50vw, 750px)',
-              background: 'radial-gradient(circle, rgba(228, 61, 18, 0.22) 0%, rgba(228, 61, 18, 0.06) 50%, transparent 72%)',
+              background: 'radial-gradient(circle, var(--blob-vermilion) 0%, transparent 72%)',
+              opacity: 'var(--blob-opacity)',
             }}
           />
 
           {/* Blob 2: Golden Yellow, bottom-right drift */}
           <div 
-            className="absolute rounded-full blur-[75px] sm:blur-[100px] pointer-events-none animate-float-blob-2 opacity-65"
+            className="absolute rounded-full blur-[75px] sm:blur-[100px] pointer-events-none animate-float-blob-2"
             style={{
               bottom: '-6vh',
               right: '6vw',
               width: 'min(46vw, 680px)',
               height: 'min(46vw, 680px)',
-              background: 'radial-gradient(circle, rgba(239, 177, 18, 0.20) 0%, rgba(239, 177, 18, 0.05) 50%, transparent 72%)',
+              background: 'radial-gradient(circle, var(--blob-yellow) 0%, transparent 72%)',
+              opacity: 'var(--blob-opacity)',
             }}
           />
 
           {/* Blob 3: Rose Pink, center-right drift */}
           <div 
-            className="absolute rounded-full blur-[80px] sm:blur-[105px] pointer-events-none animate-float-blob-3 opacity-60"
+            className="absolute rounded-full blur-[80px] sm:blur-[105px] pointer-events-none animate-float-blob-3"
             style={{
               top: '28vh',
               right: '24vw',
               width: 'min(40vw, 560px)',
               height: 'min(40vw, 560px)',
-              background: 'radial-gradient(circle, rgba(214, 83, 109, 0.16) 0%, rgba(214, 83, 109, 0.04) 50%, transparent 72%)',
+              background: 'radial-gradient(circle, var(--blob-pink) 0%, transparent 72%)',
+              opacity: 'var(--blob-opacity)',
             }}
           />
         </div>
@@ -101,7 +104,7 @@ export default function AppLayout() {
         </main>
 
         {/* Discreet Warm Editorial Footer */}
-        <footer className="border-t border-[#E4E2DC] bg-white/90 text-text-muted text-xs py-5 px-4 sm:px-6 backdrop-blur-sm">
+        <footer className="border-t border-border bg-surface/90 text-text-muted text-xs py-5 px-4 sm:px-6 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div className="flex items-center gap-2">
               <span className="font-bold text-text-primary tracking-wide">NIYANTRAN</span>

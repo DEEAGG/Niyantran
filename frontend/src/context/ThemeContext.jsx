@@ -17,8 +17,8 @@ export const THEME_METADATA = [
   {
     id: THEMES.DARK,
     name: 'Dark',
-    description: 'Refined deep midnight palette with slate surfaces, structural borders, and vermilion regulatory accents.',
-    swatches: ['#0B0F17', '#111827', '#1E293B', '#E43D12', '#F8FAFC'],
+    description: 'Naturally darkened NIYANTRAN canvas with deep warm charcoal surfaces, refined borders, and signature vermilion regulatory accents.',
+    swatches: ['#0D1117', '#161B22', '#283242', '#E43D12', '#F3F4F6'],
   },
 ];
 

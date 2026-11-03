@@ -83,8 +83,8 @@ export default function CommandNavbar({ onOpenSearch }) {
                 className={({ isActive }) =>
                   `px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                     isActive
-                      ? 'bg-[#FDF1EE] text-[#C5300B] font-bold border border-[#E43D12]/35 shadow-xs'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-[#F2EFE9] font-medium'
+                      ? 'bg-[var(--accent-secondary)] text-[var(--accent)] font-bold border border-[var(--accent)]/35 shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] font-medium'
                   }`
                 }
               >
@@ -97,7 +97,7 @@ export default function CommandNavbar({ onOpenSearch }) {
         {/* Right Section: System status, Search, Notifications, CTA, Profile */}
         <div className="flex items-center gap-2.5">
           {/* Engine Status Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-white border border-[#E4E2DC] text-[11px] text-text-secondary font-mono shadow-xs">
+          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-elevated)] border border-[var(--border)] text-[11px] text-text-secondary font-mono shadow-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-text-primary font-medium">ReguTrace Engine</span>
             <span className="text-text-muted">v2.0</span>
@@ -110,11 +110,11 @@ export default function CommandNavbar({ onOpenSearch }) {
           <button
             type="button"
             onClick={() => onOpenSearch && onOpenSearch()}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white border border-[#E4E2DC] text-xs text-text-muted hover:text-text-primary hover:border-[#E43D12]/40 transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-xs text-text-muted hover:text-text-primary hover:border-[var(--accent)]/40 transition-all cursor-pointer shadow-xs"
           >
             <Search className="w-3.5 h-3.5 text-text-muted" />
             <span className="hidden md:inline">Quick search...</span>
-            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-[#F7F6F2] border border-[#E4E2DC] text-[10px] font-mono text-text-secondary">
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] text-[10px] font-mono text-text-secondary">
               ⌘K
             </kbd>
           </button>
@@ -202,7 +202,7 @@ export default function CommandNavbar({ onOpenSearch }) {
               }}
               className="flex items-center gap-2 pl-2 border-l border-[var(--border)] focus:outline-none group cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-md bg-[#FDF1EE] border border-[#E43D12]/30 flex items-center justify-center font-bold text-xs text-[#E43D12] group-hover:border-[#E43D12] transition-colors font-mono">
+              <div className="w-7 h-7 rounded-md bg-[var(--accent-secondary)] border border-[var(--accent)]/30 flex items-center justify-center font-bold text-xs text-[var(--accent)] group-hover:border-[var(--accent)] transition-colors font-mono">
                 {user?.initials || 'AO'}
               </div>
               <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
@@ -277,8 +277,8 @@ export default function CommandNavbar({ onOpenSearch }) {
                         {theme === THEMES.DARK && <Check className="w-3 h-3 text-accent" />}
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-[#0B0F17] border border-[var(--border)]" />
-                        <span className="w-2 h-2 rounded-full bg-[#111827]" />
+                        <span className="w-2 h-2 rounded-full bg-[#0D1117] border border-[var(--border)]" />
+                        <span className="w-2 h-2 rounded-full bg-[#161B22]" />
                         <span className="w-2 h-2 rounded-full bg-[#E43D12]" />
                       </div>
                     </button>
