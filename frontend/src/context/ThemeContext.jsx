@@ -3,51 +3,85 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 export const THEMES = {
-  EXPERIMENTAL: 'theme-experimental', // Premium Dark Neutral: #0D1117, #1C232B, #28323D, #34404C, #83B8E0
-  OBSIDIAN: 'theme-obsidian',         // Obsidian Command: #090D14, #131A26, #1B2434, #3E4F69, #5B8CFF
+  LIGHT: 'theme-light',
+  DARK: 'theme-dark',
 };
 
 export const THEME_METADATA = [
   {
-    id: THEMES.EXPERIMENTAL,
-    name: 'Premium Dark Neutral (Default)',
-    description: 'Sophisticated dark palette: #0D1117 canvas, #1C232B primary surface, #28323D elevated surface, #34404C structural borders, #83B8E0 sky accent, and vibrant regulatory status colors (#22C55E, #FACC15, #F97316, #EF4444).',
-    swatches: ['#0D1117', '#1C232B', '#28323D', '#34404C', '#83B8E0'],
+    id: THEMES.LIGHT,
+    name: 'Light',
+    description: 'Clean, high-contrast light regulatory canvas with warm ivory surfaces and deep slate typography (WCAG AAA).',
+    swatches: ['#F8F7F4', '#FFFFFF', '#E2DFD7', '#E43D12', '#0F172A'],
   },
   {
-    id: THEMES.OBSIDIAN,
-    name: 'Obsidian Command',
-    description: 'High-contrast dark preset: #090D14 canvas, #131A26 surfaces, #3E4F69 structural borders, and #5B8CFF neon blue accent.',
-    swatches: ['#090D14', '#131A26', '#1B2434', '#3E4F69', '#5B8CFF'],
+    id: THEMES.DARK,
+    name: 'Dark',
+    description: 'Refined deep midnight palette with slate surfaces, structural borders, and vermilion regulatory accents.',
+    swatches: ['#0B0F17', '#111827', '#1E293B', '#E43D12', '#F8FAFC'],
   },
 ];
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('niyantran_theme');
-    if (saved === THEMES.OBSIDIAN) return THEMES.OBSIDIAN;
-    return THEMES.EXPERIMENTAL;
+    try {
+      const saved = localStorage.getItem('niyantran_theme');
+      if (saved === THEMES.DARK || saved === 'dark' || saved === 'theme-obsidian') {
+        return THEMES.DARK;
+      }
+      return THEMES.LIGHT;
+    } catch {
+      return THEMES.LIGHT;
+    }
   });
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove(THEMES.EXPERIMENTAL, THEMES.OBSIDIAN);
-    root.classList.add(theme);
-    root.setAttribute('data-theme', theme);
-    localStorage.setItem('niyantran_theme', theme);
+    // Clean up all possible legacy and current theme classes
+    root.classList.remove(
+      THEMES.LIGHT,
+      THEMES.DARK,
+      'theme-experimental',
+      'theme-obsidian',
+      'theme-ivory',
+      'light',
+      'dark'
+    );
+
+    if (theme === THEMES.DARK) {
+      root.classList.add(THEMES.DARK, 'dark');
+      root.setAttribute('data-theme', 'dark');
+    } else {
+      root.classList.add(THEMES.LIGHT, 'light');
+      root.setAttribute('data-theme', 'light');
+    }
+
+    try {
+      localStorage.setItem('niyantran_theme', theme);
+    } catch {
+      // storage unavailable
+    }
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) =>
-      prev === THEMES.EXPERIMENTAL ? THEMES.OBSIDIAN : THEMES.EXPERIMENTAL
-    );
+    setTheme((prev) => (prev === THEMES.DARK ? THEMES.LIGHT : THEMES.DARK));
   };
 
   const currentTheme = THEME_METADATA.find((t) => t.id === theme) || THEME_METADATA[0];
-  const resolvedTheme = theme === THEMES.OBSIDIAN ? 'dark' : 'light';
+  const resolvedTheme = theme === THEMES.DARK ? 'dark' : 'light';
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme, THEMES, themes: THEME_METADATA, currentTheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        resolvedTheme,
+        setTheme,
+        toggleTheme,
+        THEMES,
+        themes: THEME_METADATA,
+        currentTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

@@ -290,7 +290,7 @@ export default function Settings() {
               </h2>
             </div>
             <span className="text-xs font-mono text-accent">
-              Active: {currentTheme?.name || 'Earth Modern'}
+              Active: {currentTheme?.name || 'Light'}
             </span>
           </div>
 

@@ -12,6 +12,8 @@ import {
   Settings as SettingsIcon,
   Palette,
   Check,
+  Sun,
+  Moon,
   AlertTriangle,
   GitBranch,
   ShieldCheck,
@@ -237,41 +239,47 @@ export default function CommandNavbar({ onOpenSearch }) {
                   <div className="grid grid-cols-2 gap-1.5 pt-1">
                     <button
                       type="button"
-                      onClick={() => setTheme(THEMES.EXPERIMENTAL)}
+                      onClick={() => setTheme(THEMES.LIGHT)}
                       className={`p-2 rounded-md text-left text-xs border transition-all cursor-pointer ${
-                        theme === THEMES.EXPERIMENTAL
+                        theme === THEMES.LIGHT
                           ? 'bg-accent/15 border-accent text-accent font-semibold'
                           : 'bg-[var(--background)] border-[var(--border)] text-text-secondary hover:bg-[var(--surface-hover)]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px]">Dark Neutral</span>
-                        {theme === THEMES.EXPERIMENTAL && <Check className="w-3 h-3 text-accent" />}
+                        <span className="text-[11px] flex items-center gap-1 font-medium">
+                          <Sun className="w-3 h-3 text-amber-500" />
+                          Light
+                        </span>
+                        {theme === THEMES.LIGHT && <Check className="w-3 h-3 text-accent" />}
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-[#0A0D12] border border-[var(--border)]" />
-                        <span className="w-2 h-2 rounded-full bg-[#111620]" />
-                        <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                        <span className="w-2 h-2 rounded-full bg-[#F8F7F4] border border-[var(--border)]" />
+                        <span className="w-2 h-2 rounded-full bg-[#FFFFFF]" />
+                        <span className="w-2 h-2 rounded-full bg-[#E43D12]" />
                       </div>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setTheme(THEMES.OBSIDIAN)}
+                      onClick={() => setTheme(THEMES.DARK)}
                       className={`p-2 rounded-md text-left text-xs border transition-all cursor-pointer ${
-                        theme === THEMES.OBSIDIAN
+                        theme === THEMES.DARK
                           ? 'bg-accent/15 border-accent text-accent font-semibold'
                           : 'bg-[var(--background)] border-[var(--border)] text-text-secondary hover:bg-[var(--surface-hover)]'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px]">Obsidian</span>
-                        {theme === THEMES.OBSIDIAN && <Check className="w-3 h-3 text-accent" />}
+                        <span className="text-[11px] flex items-center gap-1 font-medium">
+                          <Moon className="w-3 h-3 text-accent" />
+                          Dark
+                        </span>
+                        {theme === THEMES.DARK && <Check className="w-3 h-3 text-accent" />}
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-[#090D14] border border-[#232B38]" />
-                        <span className="w-2 h-2 rounded-full bg-[#131A26]" />
-                        <span className="w-2 h-2 rounded-full bg-[#3B82F6]" />
+                        <span className="w-2 h-2 rounded-full bg-[#0B0F17] border border-[var(--border)]" />
+                        <span className="w-2 h-2 rounded-full bg-[#111827]" />
+                        <span className="w-2 h-2 rounded-full bg-[#E43D12]" />
                       </div>
                     </button>
                   </div>

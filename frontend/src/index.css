@@ -5,9 +5,9 @@
 @layer base {
   /* NIYANTRAN Design System: "Quiet intelligence. Clear decisions." */
   :root,
-  .theme-ivory,
-  .theme-experimental,
-  .theme-obsidian {
+  .theme-light,
+  [data-theme="light"],
+  .light {
     --background: #F8F7F4;
     --surface: #FFFFFF;
     --surface-elevated: #FFFFFF;
@@ -53,6 +53,51 @@
     --status-error-bg: #FEF2F2;
   }
 
+  .theme-dark,
+  [data-theme="dark"],
+  .dark {
+    --background: #0B0F17;
+    --surface: #111827;
+    --surface-elevated: #1F2937;
+    --surface-hover: #1E293B;
+    --surface-secondary: #162032;
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+
+    --border: #1E293B;
+    --border-strong: #334155;
+    --border-subtle: #192231;
+
+    --accent: #E43D12;
+    --accent-hover: #FF5E36;
+    --accent-foreground: #FFFFFF;
+    --accent-secondary: #2A1713;
+    --accent-glow: rgba(228, 61, 18, 0.25);
+
+    --color-brand-vermilion: #FF5E36;
+    --color-brand-vermilion-surface: #2A1713;
+    --color-brand-pink: #F472B6;
+    --color-brand-pink-surface: #291522;
+    --color-brand-yellow: #FBBF24;
+    --color-brand-yellow-surface: #292211;
+
+    --input-background: #111827;
+    --input-text: #F8FAFC;
+    --popover-background: #1F2937;
+    --popover-text: #F8FAFC;
+    --focus-ring: rgba(228, 61, 18, 0.4);
+
+    --status-success: #22C55E;
+    --status-success-bg: #052E16;
+    --status-warning: #F59E0B;
+    --status-warning-bg: #451A03;
+    --status-pending: #FB923C;
+    --status-error: #EF4444;
+    --status-error-bg: #450A0A;
+  }
+
   /* Single Global Font Family: Inter across entire application */
   *,
   *::before,
@@ -84,8 +129,8 @@
   /* Explicit theme-aware styles for native selects and options */
   select,
   select option {
-    background-color: #FFFFFF !important;
-    color: #0F172A !important;
+    background-color: var(--surface) !important;
+    color: var(--text-primary) !important;
   }
 
   /* Form inputs and textareas */
@@ -168,11 +213,11 @@ span.text-accent, strong.text-accent, em.text-accent {
 
 /* Dedicated Solid Opaque Dropdown Menu */
 .dropdown-menu {
-  background-color: #FFFFFF !important;
-  color: #0F172A !important;
-  border: 1px solid #E2DFD7 !important;
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 4px 10px -2px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.08) !important;
   z-index: 1000 !important;
   opacity: 1 !important;
   backdrop-filter: none !important;
@@ -182,11 +227,11 @@ span.text-accent, strong.text-accent, em.text-accent {
 .dropdown-item {
   transition: background-color 0.15s ease-in-out;
   border-radius: 8px;
-  color: #0F172A;
+  color: var(--text-primary);
 }
 
 .dropdown-item:hover {
-  background-color: #F8F7F4 !important;
+  background-color: var(--surface-hover) !important;
 }
 
 /* Primary Action Button Styling */
