@@ -1069,10 +1069,14 @@ class ComplianceReasoningEngine:
         sess = self.get_or_create_session(user_id)
 
         # 1. Multi-turn incremental land addition follow-up ("What if I arrange another half acre?" / "add 1 acre")
-        add_match = re.search(r"(?:arrange|add|got|buy|purchase|another|aur|more)\s+(?:another\s+)?(half|\d+(?:\.\d+)?)\s*(?:acres?|acre|ekad)?", q_lower)
-        if add_match and sess.get("land_area") is not None and ("acre" in q_lower or "land" in q_lower or "half" in q_lower or sess.get("last_topic") == "land"):
+        add_match = (
+            re.search(r"(?:arrange|add|got|buy|purchase|another|aur|more|jode|badhaye|le)\s+(?:another\s+|aur\s+)?(half|aadha|adha|\d+(?:\.\d+)?)\s*(?:acres?|acre|ekad)?", q_lower)
+            or re.search(r"(?:aur\s+|another\s+)?(half|aadha|adha|\d+(?:\.\d+)?)\s*(?:acres?|acre|ekad)\s*(?:arrange|add|aur|more|jode|karein)?", q_lower)
+            or re.search(r"(?:another|aur)\s+(half|aadha|adha|\d+(?:\.\d+)?)", q_lower)
+        )
+        if add_match and sess.get("land_area") is not None and ("acre" in q_lower or "land" in q_lower or "half" in q_lower or "aadha" in q_lower or "adha" in q_lower or sess.get("last_topic") == "land"):
             add_val_str = add_match.group(1)
-            add_val = 0.5 if add_val_str == "half" else float(add_val_str)
+            add_val = 0.5 if add_val_str in ("half", "aadha", "adha") else float(add_val_str)
             prev_actual = sess["land_area"]
             new_actual = prev_actual + add_val
             sess["land_area"] = new_actual
@@ -1082,7 +1086,7 @@ class ComplianceReasoningEngine:
             if diff > 0:
                 status = "NON-COMPLIANT"
                 if lang == "hi":
-                    ans = f"Half acre add karne ke baad aapke paas {new_actual:.1f} acres honge. 3.5 acres ki requirement ke hisaab se abhi bhi {diff:.1f} acre ki shortfall rahegi."
+                    ans = f"Additional land add karne ke baad aapke paas {new_actual:.1f} acres honge. {req:.1f} acres ki requirement ke hisaab se abhi bhi {diff:.1f} acre ki shortfall rahegi."
                 else:
                     ans = f"Adding {add_val:.1f} acre brings your total to {new_actual:.1f} acres. You will still have a {diff:.1f}-acre shortfall against the {req:.1f}-acre requirement."
             else:
@@ -1190,18 +1194,19 @@ class ComplianceReasoningEngine:
                         "page": 4,
                         "parameters": {
                             "Submitted Built-Up Space": f"{val:,} sq.m",
-                            "AICTE Minimum Standard": f"{req:,} sq.m (Clause 2.4)",
-                            "Deficit / Shortfall": f"{diff:,} sq.m deficit" if diff > 0 else "0 sq.m (Satisfied)"
+                            "AICTE Baseline Benchmark": f"{req:,} sq.m (Clause 2.4 initial intake)",
+                            "Deficit / Shortfall": f"{diff:,} sq.m deficit" if diff > 0 else "0 sq.m (Satisfied)",
+                            "Regulatory Distinction": "Derived initial-intake benchmark (min 1,000 sqm admin + smart classrooms)"
                         },
                         "details": {
-                            "calculation": f"Submitted ({val:,} sqm) vs AICTE Initial Threshold ({req:,} sqm). Net Deficit = {diff:,} sqm.",
-                            "conditions": "Administrative area must comprise at least 1,000 sqm; instructional classrooms require min 66 sqm each.",
-                            "verbatim": "For establishment of new technical institutions, the minimum built-up space requirement shall be 4,000 sqm with at least 1,000 sqm administrative floor space.",
+                            "calculation": f"Submitted ({val:,} sqm) vs Derived Initial Benchmark ({req:,} sqm). Net Deficit = {diff:,} sqm.",
+                            "conditions": "Clause 2.4 mandates a minimum 1,000 sqm administrative floor and 66 sqm per smart classroom. Total built-up requirement expands strictly with approved student intake divisions; 4,000 sqm is a derived initial benchmark, not a universal flat statutory figure.",
+                            "verbatim": "The total built-up area must satisfy the minimum prescribed carpet area calculated on the basis of approved intake capacity. Administrative area must comprise at least 1,000 sqm including Principal office, Board room, and Central Office. Instructional area must comprise smart classrooms with minimum 66 sqm each.",
                             "source_url": "https://www.aicte-india.org/bulletins/approval-process-handbook-2024-2027"
                         }
                     },
                     "citations": [
-                        {"source": "AICTE Approval Process Handbook (APH) 2024-2027", "clause": "Chapter II Clause 2.4", "page": 4, "status": "VERIFIED", "url": "https://www.aicte-india.org/bulletins/approval-process-handbook-2024-2027", "title": "Built-Up Space and Floor Space Index Norms"}
+                        {"source": "AICTE Approval Process Handbook (APH) 2024-2027", "clause": "Chapter II Clause 2.4", "page": 4, "status": "UNVERIFIED", "url": "https://www.aicte-india.org/bulletins/approval-process-handbook-2024-2027", "title": "Built-Up Space and Floor Space Index Norms"}
                     ],
                     "suggested_actions": [{"label": "Review Infrastructure Norms", "path": "/verification", "variant": "primary", "icon": "ShieldCheck"}],
                     "intent": "compliance_comparison"
@@ -1216,8 +1221,8 @@ class ComplianceReasoningEngine:
                 "response_type": "document_discrepancy",
                 "evidence_card": {
                     "status": "NON-COMPLIANT",
-                    "title": "Cross-Document Legal Entity Name Mismatch",
-                    "source": "NIYANTRAN Statutory Consistency Matrix",
+                    "title": "Cross-Document Legal Entity Name Mismatch (Internal Rule 3.1)",
+                    "source": "NIYANTRAN Consistency Matrix (Internal Validation Rule)",
                     "clause": "Rule 3.1 Entity Matching",
                     "page": 2,
                     "parameters": {
@@ -1249,8 +1254,8 @@ class ComplianceReasoningEngine:
                 "response_type": "document_discrepancy",
                 "evidence_card": {
                     "status": "NON-COMPLIANT",
-                    "title": "Trust Registration Number Discrepancy",
-                    "source": "NIYANTRAN Statutory Consistency Matrix",
+                    "title": "Trust Registration Number Discrepancy (Internal Rule 3.2)",
+                    "source": "NIYANTRAN Consistency Matrix (Internal Validation Rule)",
                     "clause": "Cross-Document Integrity Standard Rule 3.2",
                     "page": 2,
                     "parameters": {
@@ -1381,8 +1386,8 @@ class ComplianceReasoningEngine:
                 "response_type": "document_discrepancy",
                 "evidence_card": {
                     "status": "NON-COMPLIANT",
-                    "title": "Campus Address & Postal Code Discrepancy",
-                    "source": "NIYANTRAN Statutory Consistency Matrix",
+                    "title": "Campus Address & Postal Code Discrepancy (Internal Rule 3.4)",
+                    "source": "NIYANTRAN Consistency Matrix (Internal Validation Rule)",
                     "clause": "Cross-Document Rule 3.4",
                     "page": 2,
                     "parameters": {
@@ -1604,26 +1609,56 @@ class ComplianceReasoningEngine:
 
         # 16. Two numbers land comparison (e.g. 2.5 vs 3.5)
         land_nums = re.findall(r"(\d+(?:\.\d+)?)\s*(?:acres?|acre|ekad)", q_lower)
-        if len(land_nums) >= 2 and ("requirement" in q_lower or "chahiye" in q_lower or "shortfall" in q_lower or "lekin" in q_lower or "but" in q_lower or "problem" in q_lower):
+        if len(land_nums) >= 2 and ("requirement" in q_lower or "chahiye" in q_lower or "shortfall" in q_lower or "lekin" in q_lower or "but" in q_lower or "problem" in q_lower or "compliant" in q_lower or "satisfy" in q_lower):
             sess["last_topic"] = "land"
             val1, val2 = float(land_nums[0]), float(land_nums[1])
-            actual = val1 if val1 < val2 else val2
-            required = val2 if val1 < val2 else val1
+            actual, required = val1, val2
+
+            # Determine actual submitted vs stated requirement
+            req_match = re.search(r"(?:require|requirement|chahiye|norm|standard)\s+(?:is\s+)?(\d+(?:\.\d+)?)", q_lower)
+            have_match = re.search(r"(?:have|paas|submitted|possess|holds?|current|actual|hamare)\s+(?:is\s+)?(\d+(?:\.\d+)?)", q_lower)
+            if req_match:
+                rm = float(req_match.group(1))
+                if rm == val2:
+                    actual, required = val1, val2
+                elif rm == val1:
+                    actual, required = val2, val1
+            elif have_match:
+                hm = float(have_match.group(1))
+                if hm == val1:
+                    actual, required = val1, val2
+                elif hm == val2:
+                    actual, required = val2, val1
+            elif ("requirement" in q_lower or "chahiye" in q_lower) and val1 < val2:
+                actual, required = val1, val2
+
             sess["land_area"] = actual
             sess["required_land"] = required
             diff = required - actual
+            pct = (abs(diff) / required) * 100 if required > 0 else 0.0
 
             if diff > 0:
-                pct = (diff / required) * 100
                 status = "NON-COMPLIANT"
                 if lang == "hi":
                     ans = f"Applicable requirement agar {required:.1f} acres hai, toh aapke paas {diff:.1f} acre ki shortfall hai. Isse land compliance discrepancy aa sakti hai."
                 else:
                     ans = f"With a stated requirement of {required:.1f} acres, your submitted {actual:.1f} acres results in a {diff:.1f}-acre shortfall ({pct:.1f}% deficit). This will trigger a land compliance discrepancy."
+                calc_str = f"Submitted ({actual:.2f} Acres) vs Required ({required:.2f} Acres). Net Shortfall = {diff:.2f} Acres ({pct:.1f}% deficit)."
+            elif diff < 0:
+                surplus = abs(diff)
+                status = "COMPLIANT"
+                if lang == "hi":
+                    ans = f"Aapke paas {actual:.1f} acres hain jo {required:.1f} acres ki requirement se {surplus:.1f} acres surplus hai, isliye land compliance fully met hai."
+                else:
+                    ans = f"Your submitted {actual:.1f} acres exceeds the required {required:.1f}-acre threshold by {surplus:.1f} acres (compliant surplus)."
+                calc_str = f"Submitted ({actual:.2f} Acres) vs Required ({required:.2f} Acres). Net Surplus = +{surplus:.2f} Acres ({pct:.1f}% surplus)."
             else:
                 status = "COMPLIANT"
-                surplus = abs(diff)
-                ans = f"Your submitted {actual:.1f} acres satisfies the required {required:.1f}-acre threshold."
+                if lang == "hi":
+                    ans = f"Aapka submitted land area ({actual:.1f} acres) exactly required threshold ({required:.1f} acres) ko satisfy karta hai."
+                else:
+                    ans = f"Your submitted land area of {actual:.1f} acres exactly meets the required {required:.1f}-acre threshold."
+                calc_str = f"Submitted ({actual:.2f} Acres) exactly equals Required ({required:.2f} Acres). Net Variance = 0.00 Acres (0.0%)."
 
             return {
                 "answer": ans,
@@ -1638,11 +1673,11 @@ class ComplianceReasoningEngine:
                     "parameters": {
                         "Submitted Land Area": f"{actual:.1f} Acres",
                         "Stated Requirement": f"{required:.1f} Acres",
-                        "Shortfall": f"{diff:.1f} Acre ({pct:.1f}% deficit)" if diff > 0 else "0.0 Acres",
+                        "Variance / Shortfall": f"-{diff:.1f} Acre ({pct:.1f}% deficit)" if diff > 0 else (f"+{abs(diff):.1f} Acres (Surplus)" if diff < 0 else "0.0 Acres (Exact Match)"),
                         "Applicable Norm": "AICTE APH Clause 2.1 & 2.2"
                     },
                     "details": {
-                        "calculation": f"Submitted ({actual:.2f} Acres) vs Required ({required:.2f} Acres). Net Shortfall = {diff:.2f} Acres ({pct:.1f}% deficit).",
+                        "calculation": calc_str,
                         "conditions": "Single contiguous parcel; minimum area depends on municipal classification (Metro: 1.5–2.5, Urban: 2.5–4.0, Rural: 5.0–7.5 acres).",
                         "verbatim": "Land Area requirements must be fulfilled in full as single contiguous parcels. Fractional shortfalls shall result in deficiency findings.",
                         "source_url": "https://www.aicte-india.org/bulletins/approval-process-handbook-2024-2027"

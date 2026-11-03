@@ -50,6 +50,62 @@ class TestComplianceEngine20Scenarios:
         assert "2.5" in str(data["evidence_card"]["parameters"])
         assert len(data["suggested_actions"]) > 0
 
+    def test_scenario_exact_land_match(self, client):
+        res = client.post("/api/copilot/chat", json={
+            "message": "Our land area is 3.5 acres and the requirement is 3.5 acres.",
+            "context": {"current_path": "/dashboard"},
+            "session_id": "test-session-exact"
+        })
+        assert res.status_code == 200
+        data = res.json()["data"]
+        assert "meets the required" in data["message"].lower() or "exactly" in data["message"].lower()
+        assert data["evidence_card"]["status"] == "COMPLIANT"
+
+    def test_scenario_surplus_land_area(self, client):
+        res = client.post("/api/copilot/chat", json={
+            "message": "Our land area is 5.0 acres while requirement is 3.5 acres. Are we compliant?",
+            "context": {"current_path": "/dashboard"},
+            "session_id": "test-session-surplus"
+        })
+        assert res.status_code == 200
+        data = res.json()["data"]
+        assert "exceeds" in data["message"].lower() or "surplus" in data["message"].lower()
+        assert data["evidence_card"]["status"] == "COMPLIANT"
+
+    def test_scenario_hindi_multiturn(self, client):
+        sid = "test-session-hindi-mt"
+        # Turn 1
+        r1 = client.post("/api/copilot/chat", json={
+            "message": "Hamare paas 2.5 acre zameen hai.",
+            "session_id": sid
+        })
+        assert r1.status_code == 200
+        assert r1.json()["data"]["evidence_card"]["status"] == "INSUFFICIENT INFORMATION"
+
+        # Turn 2
+        r2 = client.post("/api/copilot/chat", json={
+            "message": "Engineering college hai hamara.",
+            "session_id": sid
+        })
+        assert r2.status_code == 200
+        assert r2.json()["data"]["evidence_card"]["status"] == "COMPLIANT"
+
+        # Turn 3
+        r3 = client.post("/api/copilot/chat", json={
+            "message": "Agar hum aur aadha acre arrange karein toh?",
+            "session_id": sid
+        })
+        assert r3.status_code == 200
+        assert r3.json()["data"]["evidence_card"]["status"] == "NON-COMPLIANT"
+
+        # Turn 4
+        r4 = client.post("/api/copilot/chat", json={
+            "message": "Aur aadha acre add karein toh?",
+            "session_id": sid
+        })
+        assert r4.status_code == 200
+        assert r4.json()["data"]["evidence_card"]["status"] == "COMPLIANT"
+
     def test_scenario_02_land_addition_multiturn(self, client):
         session_id = "test-session-multiturn-1"
         client.post("/api/copilot/chat", json={
