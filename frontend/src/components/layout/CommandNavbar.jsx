@@ -33,7 +33,7 @@ export default function CommandNavbar({ onOpenSearch }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  
+
   const profileRef = useRef(null);
   const notifRef = useRef(null);
 
@@ -67,7 +67,7 @@ export default function CommandNavbar({ onOpenSearch }) {
   return (
     <header className="sticky top-0 z-[100] w-full h-14 border-b border-[var(--border)] bg-[var(--surface)] select-none">
       <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4">
-        
+
         {/* Left: Brand Logo & Wordmark */}
         <div className="flex items-center gap-6 shrink-0">
           <Link to="/dashboard" className="focus:outline-none flex items-center gap-2 group">
@@ -81,10 +81,9 @@ export default function CommandNavbar({ onOpenSearch }) {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
-                    isActive
-                      ? 'bg-[var(--accent-secondary)] text-[var(--accent)] font-bold border border-[var(--accent)]/35 shadow-xs'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] font-medium'
+                  `px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${isActive
+                    ? 'bg-[var(--accent-secondary)] text-[var(--accent)] font-semibold'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-[var(--surface-hover)] font-medium'
                   }`
                 }
               >
@@ -97,8 +96,8 @@ export default function CommandNavbar({ onOpenSearch }) {
         {/* Right Section: System status, Search, Notifications, CTA, Profile */}
         <div className="flex items-center gap-2.5">
           {/* Engine Status Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-elevated)] border border-[var(--border)] text-[11px] text-text-secondary font-mono shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-elevated)] border border-[var(--border)] text-[11px] text-text-secondary font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span className="text-text-primary font-medium">ReguTrace Engine</span>
             <span className="text-text-muted">v2.0</span>
           </div>
@@ -122,7 +121,7 @@ export default function CommandNavbar({ onOpenSearch }) {
           {/* New Filing CTA Button in Vermilion */}
           <Link
             to="/upload"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E43D12] text-white text-xs font-semibold hover:bg-[#CC340E] transition-all shadow-sm active:scale-95"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors"
           >
             <FilePlus className="w-3.5 h-3.5" />
             <span>New Filing</span>
@@ -144,7 +143,7 @@ export default function CommandNavbar({ onOpenSearch }) {
             </button>
 
             {notificationsOpen && (
-              <div 
+              <div
                 className="dropdown-menu absolute right-0 mt-2 w-80 p-3 shadow-2xl rounded-lg border border-[var(--border)]"
                 style={{ backgroundColor: 'var(--surface-elevated)', opacity: 1, zIndex: 1000 }}
               >
@@ -156,7 +155,7 @@ export default function CommandNavbar({ onOpenSearch }) {
                 </div>
 
                 <div className="py-2 space-y-2 text-xs">
-                  <Link 
+                  <Link
                     to="/applications/APP-2026-003/evidence"
                     className="block p-2 rounded-md bg-[var(--background)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors"
                   >
@@ -172,7 +171,7 @@ export default function CommandNavbar({ onOpenSearch }) {
                     </p>
                   </Link>
 
-                  <Link 
+                  <Link
                     to="/review"
                     className="block p-2 rounded-md bg-[var(--background)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors"
                   >
@@ -209,7 +208,7 @@ export default function CommandNavbar({ onOpenSearch }) {
             </button>
 
             {profileOpen && (
-              <div 
+              <div
                 className="dropdown-menu absolute right-0 mt-2 w-64 p-3 shadow-2xl rounded-lg border border-[var(--border)] space-y-3"
                 style={{ backgroundColor: 'var(--surface-elevated)', opacity: 1, zIndex: 1000 }}
               >
@@ -221,8 +220,8 @@ export default function CommandNavbar({ onOpenSearch }) {
                     {user?.role === 'admin'
                       ? 'System Administrator'
                       : user?.role === 'reviewer'
-                      ? 'Regulatory Reviewer'
-                      : 'Institution Officer'}
+                        ? 'Regulatory Reviewer'
+                        : 'Institution Officer'}
                   </div>
                   <div className="text-[10px] font-mono text-[#E43D12] mt-0.5 truncate">
                     {user?.institution_name || user?.email}
@@ -240,11 +239,10 @@ export default function CommandNavbar({ onOpenSearch }) {
                     <button
                       type="button"
                       onClick={() => setTheme(THEMES.LIGHT)}
-                      className={`p-2 rounded-md text-left text-xs border transition-all cursor-pointer ${
-                        theme === THEMES.LIGHT
+                      className={`p-2 rounded-md text-left text-xs border transition-all cursor-pointer ${theme === THEMES.LIGHT
                           ? 'bg-accent/15 border-accent text-accent font-semibold'
                           : 'bg-[var(--background)] border-[var(--border)] text-text-secondary hover:bg-[var(--surface-hover)]'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[11px] flex items-center gap-1 font-medium">
@@ -263,11 +261,10 @@ export default function CommandNavbar({ onOpenSearch }) {
                     <button
                       type="button"
                       onClick={() => setTheme(THEMES.DARK)}
-                      className={`p-2 rounded-md text-left text-xs border transition-all cursor-pointer ${
-                        theme === THEMES.DARK
+                      className={`p-2 rounded-md text-left text-xs border transition-all cursor-pointer ${theme === THEMES.DARK
                           ? 'bg-accent/15 border-accent text-accent font-semibold'
                           : 'bg-[var(--background)] border-[var(--border)] text-text-secondary hover:bg-[var(--surface-hover)]'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[11px] flex items-center gap-1 font-medium">
@@ -328,7 +325,7 @@ export default function CommandNavbar({ onOpenSearch }) {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="lg:hidden border-b border-[var(--border)] px-4 py-3 space-y-2 bg-[var(--surface-elevated)] shadow-2xl"
           style={{ zIndex: 1000 }}
         >

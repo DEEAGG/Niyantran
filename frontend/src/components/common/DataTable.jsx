@@ -45,7 +45,7 @@ export default function DataTable({
     <div className={cn('bg-surface rounded-xl border border-border shadow-surface overflow-hidden', className)}>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs sm:text-sm text-text-secondary">
-          <thead className="bg-background border-b border-border text-[11px] font-semibold uppercase tracking-wider text-text-muted font-mono">
+          <thead className="bg-background border-b border-border text-xs font-medium text-text-muted">
             <tr>
               {columns.map((col, idx) => {
                 const isSortable = col.sortable && onSort;

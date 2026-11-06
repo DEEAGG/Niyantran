@@ -45,8 +45,12 @@ export default {
         },
         status: {
           success: 'var(--status-success)',
+          'success-bg': 'var(--status-success-bg)',
           warning: 'var(--status-warning)',
+          'warning-bg': 'var(--status-warning-bg)',
+          pending: 'var(--status-pending)',
           error: 'var(--status-error)',
+          'error-bg': 'var(--status-error-bg)',
         },
         brand: {
           DEFAULT: '#E43D12',

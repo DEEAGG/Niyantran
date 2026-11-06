@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer base {
+
   /* NIYANTRAN Design System: "Quiet intelligence. Clear decisions." */
   :root,
   .theme-light,
@@ -15,9 +16,12 @@
     --surface-secondary: #EFEBE4;
 
     /* High-contrast WCAG AAA typography colors */
-    --text-primary: #0F172A; /* Deep dark slate-900 (16:1 contrast against white) */
-    --text-secondary: #334155; /* Slate-700 (8.5:1 contrast against white) */
-    --text-muted: #64748B; /* Slate-500 (4.6:1 contrast against white) */
+    --text-primary: #0F172A;
+    /* Deep dark slate-900 (16:1 contrast against white) */
+    --text-secondary: #334155;
+    /* Slate-700 (8.5:1 contrast against white) */
+    --text-muted: #64748B;
+    /* Slate-500 (4.6:1 contrast against white) */
 
     --border: #E2DFD7;
     --border-strong: #CDC8BC;
@@ -44,12 +48,16 @@
     --popover-text: #0F172A;
     --focus-ring: rgba(228, 61, 18, 0.35);
 
-    --status-success: #15803D; /* Green-700 for high contrast */
+    --status-success: #15803D;
+    /* Green-700 for high contrast */
     --status-success-bg: #ECFDF5;
-    --status-warning: #B45309; /* Amber-700 */
+    --status-warning: #B45309;
+    /* Amber-700 */
     --status-warning-bg: #FFFBEB;
-    --status-pending: #C2410C; /* Orange-700 */
-    --status-error: #B91C1C; /* Red-700 */
+    --status-pending: #C2410C;
+    /* Orange-700 */
+    --status-error: #B91C1C;
+    /* Red-700 */
     --status-error-bg: #FEF2F2;
 
     /* Moving gradient blob light tokens (warm vermilion, golden yellow, rose pink) */
@@ -177,7 +185,9 @@
   line-height: inherit !important;
 }
 
-span.text-accent, strong.text-accent, em.text-accent {
+span.text-accent,
+strong.text-accent,
+em.text-accent {
   font-size: inherit !important;
   line-height: inherit !important;
 }
@@ -187,7 +197,7 @@ span.text-accent, strong.text-accent, em.text-accent {
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -196,10 +206,21 @@ span.text-accent, strong.text-accent, em.text-accent {
   transform: translateY(0);
 }
 
-.reveal-stagger-1 { transition-delay: 0.08s; }
-.reveal-stagger-2 { transition-delay: 0.16s; }
-.reveal-stagger-3 { transition-delay: 0.24s; }
-.reveal-stagger-4 { transition-delay: 0.32s; }
+.reveal-stagger-1 {
+  transition-delay: 0.08s;
+}
+
+.reveal-stagger-2 {
+  transition-delay: 0.16s;
+}
+
+.reveal-stagger-3 {
+  transition-delay: 0.24s;
+}
+
+.reveal-stagger-4 {
+  transition-delay: 0.32s;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .reveal-on-scroll {
@@ -262,41 +283,52 @@ span.text-accent, strong.text-accent, em.text-accent {
 
 .btn-primary:hover {
   background-color: var(--accent-hover);
-  box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 /* Responsive Floating Gradient Blobs Keyframes & Utilities */
 @keyframes float-blob-1 {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(4vw, -4vh) scale(1.06);
   }
+
   66% {
     transform: translate(-3vw, 3vh) scale(0.95);
   }
 }
 
 @keyframes float-blob-2 {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(-4vw, 5vh) scale(0.94);
   }
+
   66% {
     transform: translate(3vw, -3vh) scale(1.05);
   }
 }
 
 @keyframes float-blob-3 {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(5vw, 3vh) scale(1.04);
   }
+
   66% {
     transform: translate(-4vw, -4vh) scale(0.96);
   }
@@ -318,6 +350,7 @@ span.text-accent, strong.text-accent, em.text-accent {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .animate-float-blob-1,
   .animate-float-blob-2,
   .animate-float-blob-3 {
@@ -331,10 +364,12 @@ span.text-accent, strong.text-accent, em.text-accent {
     transform: scale(0.92);
     box-shadow: 0 0 0 0 rgba(228, 61, 18, 0.6);
   }
+
   50% {
     transform: scale(1.08);
     box-shadow: 0 0 0 8px rgba(228, 61, 18, 0);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(228, 61, 18, 0);

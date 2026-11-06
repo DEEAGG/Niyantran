@@ -24,7 +24,7 @@ export default function StatCard({
     >
       <div className="flex items-start justify-between">
         <div>
-          <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider font-mono">
+          <span className="text-xs font-medium text-text-muted">
             {title}
           </span>
           <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 tracking-tight font-sans">

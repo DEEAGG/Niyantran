@@ -22,7 +22,7 @@ export default function Button({
 
   const variants = {
     primary:
-      'bg-accent text-accent-foreground font-semibold hover:bg-accent-hover shadow-md shadow-accent/15 hover:shadow-lg hover:shadow-accent/25 hover:-translate-y-0.5 active:translate-y-0 focus:ring-accent border border-accent/40',
+      'bg-accent text-accent-foreground font-semibold hover:bg-accent-hover focus:ring-accent active:scale-[0.98]',
     secondary:
       'bg-surface-elevated text-text-primary border border-border hover:bg-surface-hover hover:border-border-strong hover:text-text-primary focus:ring-accent',
     accent:
