@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  FileCheck2, 
-  ShieldCheck, 
-  AlertTriangle, 
-  ExternalLink, 
-  ArrowUpRight, 
-  CheckCircle2, 
-  Clock, 
+import {
+  FileCheck2,
+  ShieldCheck,
+  AlertTriangle,
+  ExternalLink,
+  ArrowUpRight,
+  CheckCircle2,
+  Clock,
   Database,
   Layers,
   ChevronRight,
@@ -46,7 +46,7 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
         const isVerified = a.status === 'Verified';
         const isDiscrepancy = a.status === 'Discrepancy Detected';
         const isUnderReview = a.status === 'Under Review';
-        
+
         let findingsText = 'Awaiting Evaluation';
         if (a.failedRules > 0) {
           findingsText = `${a.failedRules} violations recorded • ${a.unverifiedRules || 0} unverified`;
@@ -63,7 +63,13 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
           institution: a.institutionName || a.institution_name || 'Institutional Applicant',
           type: a.applicationType || a.application_type || 'Technical Approval',
           status: a.status || 'Draft',
-          statusColor: isVerified ? '#18794E' : isDiscrepancy ? '#DC2626' : isUnderReview ? '#B45309' : '#4357E8',
+          statusClass: isVerified
+            ? 'text-status-success bg-status-success-bg border-status-success/30'
+            : isDiscrepancy
+              ? 'text-status-error bg-status-error-bg border-status-error/30'
+              : isUnderReview
+                ? 'text-status-warning bg-status-warning-bg border-status-warning/30'
+                : 'text-text-secondary bg-surface-secondary border-border',
           findings: findingsText,
           documents: a.documentCount || (a.documents ? a.documents.length : 0),
           hash: a.sha256 ? `${a.sha256.slice(0, 6)}…${a.sha256.slice(-4)}` : 'Provenance Hash Active',
@@ -90,7 +96,7 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
   const hasComplianceScore = complianceOverview && complianceOverview.score !== null && complianceOverview.score !== undefined;
   const rawScore = hasComplianceScore ? complianceOverview.score : 0;
   const gaugePercent = hasComplianceScore ? Math.min(1, Math.max(0, rawScore / 100)) : 0;
-  
+
   const R = 54;
   const circumference = Math.PI * R;
   const dashOffset = circumference * (1 - gaugePercent);
@@ -112,38 +118,38 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
     if (failed > 0) {
       scoreSubtitle = `${failed} Violations • ${unverified} Unverified (${passed}/${total} Passed)`;
       badgeLabel = 'Discrepancy Detected';
-      badgeClass = 'text-red-700 bg-red-50 border-red-200';
+      badgeClass = 'text-status-error bg-status-error-bg border-status-error/30';
     } else if (unverified > 0) {
       scoreSubtitle = `${unverified} Unverified • Insufficient Evidence (${passed}/${total} Passed)`;
       badgeLabel = 'Insufficient Evidence';
-      badgeClass = 'text-amber-700 bg-amber-50 border-amber-200';
+      badgeClass = 'text-status-warning bg-status-warning-bg border-status-warning/30';
     } else if (passed === total && total > 0) {
       scoreSubtitle = `All ${total} Statutory Norms Compliant`;
       badgeLabel = 'Compliant';
-      badgeClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      badgeClass = 'text-status-success bg-status-success-bg border-status-success/30';
     } else {
       scoreSubtitle = `${passed} of ${total} Rules Compliant`;
       badgeLabel = complianceOverview.status || 'Evaluated';
-      badgeClass = 'text-blue-700 bg-blue-50 border-blue-200';
+      badgeClass = 'text-text-secondary bg-surface-secondary border-border';
     }
   } else if (totalCases > 0) {
     scoreSubtitle = 'Awaiting Regulatory Evaluation';
     badgeLabel = 'Awaiting Evaluation';
-    badgeClass = 'text-amber-700 bg-amber-50 border-amber-200';
+    badgeClass = 'text-status-warning bg-status-warning-bg border-status-warning/30';
   }
 
   return (
     <div className={cn("w-full space-y-4", className)}>
       {/* Bento Grid Container */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        
+
         {/* TILE 1: Active Institutional Dossiers Stack (Span 2) */}
         <ScrollReveal stagger={1} className="md:col-span-2 lg:col-span-2 rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between relative overflow-hidden group">
           {/* Subtle top badge */}
           <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-accent" />
-              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
+              <span className="text-xs sm:text-sm font-semibold text-text-primary">
                 Active Case Dossiers
               </span>
             </div>
@@ -185,12 +191,10 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
                   </h3>
                 </div>
                 <span
-                  className="text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shrink-0 border"
-                  style={{
-                    backgroundColor: `${activeCase.statusColor}14`,
-                    color: activeCase.statusColor,
-                    borderColor: `${activeCase.statusColor}30`,
-                  }}
+                  className={cn(
+                    "text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap shrink-0 border",
+                    activeCase.statusClass
+                  )}
                 >
                   {activeCase.status}
                 </span>
@@ -243,7 +247,7 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
         {/* TILE 2: Statutory Compliance Gauge */}
         <ScrollReveal stagger={2} className="rounded-2xl border border-border bg-surface p-6 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
-            <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
+            <span className="text-xs sm:text-sm font-semibold text-text-primary">
               Norms Compliance
             </span>
             <span className={cn("text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border", badgeClass)}>
@@ -315,11 +319,11 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
           <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
             <div className="flex items-center gap-1.5">
               <Database className="w-4 h-4 text-accent" />
-              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-text-primary">
+              <span className="text-xs sm:text-sm font-semibold text-text-primary">
                 Audit Stream
               </span>
             </div>
-            <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+            <span className="text-xs font-mono font-bold text-status-success bg-status-success-bg px-2.5 py-0.5 rounded border border-status-success/30">
               Live Chain
             </span>
           </div>
@@ -331,13 +335,13 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
                 #{blockHeight.toLocaleString()}
               </span>
             </div>
-            
+
             {/* Hash Receipt Preview */}
             <div className="p-3.5 rounded-xl bg-surface-secondary/70 border border-border font-mono text-xs space-y-1.5">
               <div className="flex items-center justify-between text-text-muted">
-                <span className="font-bold">CHAIN STATE</span>
-                <span className="text-emerald-700 font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> {auditData?.verified ? 'VERIFIED' : 'ACTIVE'}
+                <span className="font-semibold">Chain state</span>
+                <span className="text-status-success font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {auditData?.verified ? 'Verified' : 'Active'}
                 </span>
               </div>
               <p className="truncate text-text-primary text-[11px] font-semibold">
@@ -362,7 +366,7 @@ export default function RegulatoryIntelligenceBento({ className = "" }) {
 
       {/* Secondary Ribbon: Multi-Signal Authenticity */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
+
         {/* Signal 1: Tamper-Evident SHA-256 */}
         <ScrollReveal stagger={1} className="p-4 rounded-xl border border-border bg-surface flex items-center gap-3.5 hover:border-accent/40 shadow-xs transition-colors">
           <div className="w-10 h-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">

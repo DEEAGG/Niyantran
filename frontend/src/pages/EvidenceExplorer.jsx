@@ -146,11 +146,11 @@ export default function EvidenceExplorer() {
     && Number(selectedBBox.y1) > Number(selectedBBox.y0);
   const bboxQuery = bboxIsValid
     ? '?bbox=' + encodeURIComponent(JSON.stringify({
-        x0: Number(selectedBBox.x0),
-        y0: Number(selectedBBox.y0),
-        x1: Number(selectedBBox.x1),
-        y1: Number(selectedBBox.y1),
-      }))
+      x0: Number(selectedBBox.x0),
+      y0: Number(selectedBBox.y0),
+      x1: Number(selectedBBox.x1),
+      y1: Number(selectedBBox.y1),
+    }))
     : '';
   const pageImageUrl = selectedDocumentId
     ? '/api/documents/' + encodeURIComponent(selectedDocumentId) + '/page/' + (Number(selectedPage) || 1) + bboxQuery
@@ -219,7 +219,7 @@ export default function EvidenceExplorer() {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 font-semibold">
+              <span className="text-[10px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 font-medium">
                 Forensic Evidence Workbench
               </span>
               <span className="font-mono text-xs text-text-muted">{activeAppId}</span>
@@ -257,12 +257,11 @@ export default function EvidenceExplorer() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch min-h-[640px]">
         {/* PANEL 1: Findings Navigator (3 Cols) */}
         <div
-          className={`lg:col-span-3 bg-surface rounded-2xl border border-border flex flex-col shadow-surface overflow-hidden ${
-            mobileTab === 'findings' ? 'block' : 'hidden lg:flex'
-          }`}
+          className={`lg:col-span-3 bg-surface rounded-2xl border border-border flex flex-col shadow-surface overflow-hidden ${mobileTab === 'findings' ? 'block' : 'hidden lg:flex'
+            }`}
         >
           <div className="p-3.5 border-b border-border bg-background/50 flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-text-primary font-mono">
+            <span className="text-xs font-medium text-text-primary font-mono">
               Findings ({findings.length})
             </span>
             <span className="text-[10px] text-text-muted font-mono">All Severe Items</span>
@@ -276,11 +275,10 @@ export default function EvidenceExplorer() {
                 <div
                   key={f.id}
                   onClick={() => handleSelectFinding(f)}
-                  className={`p-3 rounded-xl cursor-pointer transition-all ${
-                    isSelected
+                  className={`p-3 rounded-xl cursor-pointer transition-all ${isSelected
                       ? 'bg-surface-elevated border border-accent/40 shadow-subtle'
                       : 'hover:bg-surface-elevated/40 border border-transparent'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-[11px] font-bold text-accent">{f.id}</span>
@@ -303,7 +301,7 @@ export default function EvidenceExplorer() {
             })}
             <div className="mt-4 pt-3 border-t border-border/70">
               <div className="px-2 mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
+                <span className="text-[10px] font-mono font-medium text-text-muted">
                   Extracted Fields
                 </span>
                 <span className="text-[10px] font-mono text-text-muted">{extractedFields.length}</span>
@@ -327,7 +325,7 @@ export default function EvidenceExplorer() {
                   >
                     <span className="flex items-start justify-between gap-2">
                       <span className="text-[11px] font-semibold text-text-primary">{field.fieldName}</span>
-                      <span className={"text-[9px] font-mono shrink-0 " + (hasBox ? 'text-emerald-500' : 'text-text-muted')}>
+                      <span className={"text-[9px] font-mono shrink-0 " + (hasBox ? 'text-status-success' : 'text-text-muted')}>
                         {hasBox ? 'BOX' : 'NO BOX'}
                       </span>
                     </span>
@@ -344,9 +342,8 @@ export default function EvidenceExplorer() {
 
         {/* PANEL 2: Document Evidence Viewer & Side-by-Side Comparison (6 Cols) */}
         <div
-          className={`lg:col-span-6 bg-surface rounded-2xl border border-border flex flex-col shadow-surface overflow-hidden ${
-            mobileTab === 'evidence' ? 'block' : 'hidden lg:flex'
-          }`}
+          className={`lg:col-span-6 bg-surface rounded-2xl border border-border flex flex-col shadow-surface overflow-hidden ${mobileTab === 'evidence' ? 'block' : 'hidden lg:flex'
+            }`}
         >
           {/* Viewer Toolbar */}
           <div className="p-3 border-b border-border bg-background/50 flex items-center justify-between text-xs gap-3">
@@ -370,7 +367,7 @@ export default function EvidenceExplorer() {
           </div>
 
           <div className="p-3 border-b border-border grid grid-cols-1 sm:grid-cols-2 gap-3 bg-surface">
-            <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+            <label className="text-[10px] font-medium text-text-muted">
               Document
               <select
                 value={selectedDocumentId}
@@ -388,7 +385,7 @@ export default function EvidenceExplorer() {
                 ))}
               </select>
             </label>
-            <label className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+            <label className="text-[10px] font-medium text-text-muted">
               Page
               <select
                 value={selectedPage}
@@ -433,7 +430,7 @@ export default function EvidenceExplorer() {
               ) : selectedField ? (
                 <span><strong className="text-text-primary">{selectedField.fieldName}</strong> has no usable source bounding box. The page is shown without a highlight; re-run extraction for this document if a source location is needed.</span>
               ) : (
-                <span>Select an extracted field from the left panel. Fields with a <strong className="text-emerald-500">BOX</strong> label have coordinates available for highlighting.</span>
+                <span>Select an extracted field from the left panel. Fields with a <strong className="text-status-success">BOX</strong> label have coordinates available for highlighting.</span>
               )}
             </div>
           </div>
@@ -441,13 +438,12 @@ export default function EvidenceExplorer() {
 
         {/* PANEL 3: Explanation & Adjudication Inspector (3 Cols) */}
         <div
-          className={`lg:col-span-3 bg-surface rounded-2xl border border-border flex flex-col justify-between shadow-surface overflow-hidden ${
-            mobileTab === 'explanation' ? 'block' : 'hidden lg:flex'
-          }`}
+          className={`lg:col-span-3 bg-surface rounded-2xl border border-border flex flex-col justify-between shadow-surface overflow-hidden ${mobileTab === 'explanation' ? 'block' : 'hidden lg:flex'
+            }`}
         >
-        <div className="p-4 space-y-4 overflow-y-auto">
+          <div className="p-4 space-y-4 overflow-y-auto">
             <div className="border-b border-border pb-3">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
+              <span className="text-[10px] font-mono text-accent font-medium block">
                 Regulatory Diagnosis
               </span>
               <h3 className="text-sm font-bold text-text-primary mt-1">
@@ -524,8 +520,8 @@ export default function EvidenceExplorer() {
                 {selectedFinding?.reviewerDecision ? (
                   <Badge variant={
                     selectedFinding.reviewerDecision === 'Accepted' ? 'success'
-                    : selectedFinding.reviewerDecision === 'False Positive' ? 'neutral'
-                    : 'warning'
+                      : selectedFinding.reviewerDecision === 'False Positive' ? 'neutral'
+                        : 'warning'
                   } size="sm">{selectedFinding.reviewerDecision}</Badge>
                 ) : (
                   <Badge variant="neutral" size="sm">Unconfirmed</Badge>

@@ -16,7 +16,6 @@ import {
   Flag,
   RotateCcw,
   Layers,
-  Sparkles,
   Search,
   History,
   FileSearch,
@@ -31,7 +30,6 @@ import { useToast } from '../context/ToastContext';
 import Skeleton from '../components/common/Skeleton';
 import ErrorState from '../components/common/ErrorState';
 import EmptyState from '../components/common/EmptyState';
-import { MagnifierDoodle } from '../components/common/Doodles';
 
 // Regulatory Intelligence Components
 import RegulatorySourceRegistry from '../components/regulatory/RegulatorySourceRegistry';
@@ -236,16 +234,13 @@ export default function IntelligencePage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border relative">
         <div className="flex items-center gap-3.5">
-          <div className="hidden sm:block">
-            <MagnifierDoodle className="w-10 h-10" />
-          </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#E43D12] font-mono">
-                REGULATORY INTELLIGENCE
+              <span className="text-xs font-medium text-accent font-mono">
+                Regulatory Intelligence
               </span>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-xs text-text-secondary">Source-Backed Verification &amp; Official Rules</span>
+              <span className="text-xs text-text-secondary">Source-backed verification &amp; official rules</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-text-primary">
               Regulatory Intelligence Hub
@@ -365,11 +360,10 @@ export default function IntelligencePage() {
             <button
               type="button"
               onClick={() => handleTabChange('registry')}
-              className={`pb-3 px-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                mainTab === 'registry'
-                  ? 'border-[#E43D12] text-[#E43D12]'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
+              className={`pb-3 px-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${mainTab === 'registry'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+                }`}
             >
               <BookOpen className="w-4 h-4" />
               <span>Official Handbooks &amp; Sources</span>
@@ -381,11 +375,10 @@ export default function IntelligencePage() {
             <button
               type="button"
               onClick={() => handleTabChange('clauses')}
-              className={`pb-3 px-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                mainTab === 'clauses'
-                  ? 'border-[#E43D12] text-[#E43D12]'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
+              className={`pb-3 px-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${mainTab === 'clauses'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+                }`}
             >
               <FileSearch className="w-4 h-4" />
               <span>Statutory Clauses &amp; Legal Text</span>
@@ -394,11 +387,10 @@ export default function IntelligencePage() {
             <button
               type="button"
               onClick={() => handleTabChange('adjudication')}
-              className={`pb-3 px-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-                mainTab === 'adjudication'
-                  ? 'border-[#E43D12] text-[#E43D12]'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              }`}
+              className={`pb-3 px-3 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${mainTab === 'adjudication'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+                }`}
             >
               <Scale className="w-4 h-4" />
               <span>Case Issues &amp; Officer Review</span>
@@ -436,7 +428,7 @@ export default function IntelligencePage() {
               {/* Case Selector Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-surface border border-border">
                 <div>
-                  <span className="text-[11px] font-semibold text-text-muted uppercase">Active Application Under Review</span>
+                  <span className="text-[11px] font-medium text-text-muted">Active application under review</span>
                   <h2 className="text-lg font-bold text-text-primary">
                     {appDetails?.institution_name || selectedAppId}
                   </h2>
@@ -447,7 +439,7 @@ export default function IntelligencePage() {
                   <select
                     value={selectedAppId || ''}
                     onChange={(e) => handleSelectCase(e.target.value)}
-                    className="text-xs bg-white border border-border rounded-lg px-3 py-2 text-text-primary font-mono focus:outline-none focus:border-[#E43D12]"
+                    className="text-xs bg-surface-elevated border border-border rounded-lg px-3 py-2 text-text-primary font-mono focus:outline-none focus:border-accent"
                   >
                     {availableCases.map((c) => (
                       <option key={c.id} value={c.id}>{c.label}</option>
@@ -464,13 +456,13 @@ export default function IntelligencePage() {
               ) : error ? (
                 <ErrorState message={error} onRetry={() => fetchIntelligence(selectedAppId)} />
               ) : (
-                <div className="p-6 rounded-2xl border border-amber-200 bg-amber-50/50 shadow-sm space-y-4">
+                <div className="p-6 rounded-2xl border border-status-warning bg-status-warning-bg shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
-                      <AlertTriangle className="w-4 h-4 text-amber-700" />
+                    <div className="flex items-center gap-2 text-text-primary font-bold text-sm">
+                      <AlertTriangle className="w-4 h-4 text-status-warning" />
                       <span>Regulatory Issues Requiring Officer Action</span>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-amber-200 text-amber-900">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-status-warning-bg text-status-warning">
                       {findings.length} Issues Identified
                     </span>
                   </div>
@@ -484,11 +476,11 @@ export default function IntelligencePage() {
                       {findings.map((f) => (
                         <div
                           key={f.id}
-                          className="p-4 rounded-xl border border-border bg-white dark:bg-neutral-900 space-y-2 text-xs"
+                          className="p-4 rounded-xl border border-border bg-surface-elevated/60 space-y-2 text-xs"
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-text-primary">{f.title || f.code}</span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-rose-100 text-rose-800">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-status-error-bg text-status-error">
                               {f.severity || 'Medium'}
                             </span>
                           </div>
@@ -503,7 +495,7 @@ export default function IntelligencePage() {
                               type="button"
                               onClick={() => handleDecision(f.id, 'APPROVED')}
                               disabled={submittingId === f.id}
-                              className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors cursor-pointer"
+                              className="px-3 py-1 rounded-lg bg-status-success text-white text-xs font-semibold hover:brightness-110 transition-[filter] cursor-pointer"
                             >
                               Accept &amp; Clear
                             </button>
@@ -511,7 +503,7 @@ export default function IntelligencePage() {
                               type="button"
                               onClick={() => handleDecision(f.id, 'FLAGGED')}
                               disabled={submittingId === f.id}
-                              className="px-3 py-1 rounded-lg bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-colors cursor-pointer"
+                              className="px-3 py-1 rounded-lg bg-status-warning text-white text-xs font-semibold hover:brightness-110 transition-[filter] cursor-pointer"
                             >
                               Request Clarification
                             </button>

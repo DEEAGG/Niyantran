@@ -190,7 +190,7 @@ export default function VerificationHub() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#E43D12] font-mono">
+              <span className="text-xs font-semibold text-accent font-mono">
                 VERIFICATION &amp; COMPLIANCE
               </span>
               <span className="text-text-muted">&bull;</span>
@@ -241,7 +241,7 @@ export default function VerificationHub() {
       {/* Target Application Selector Bar */}
       <div className="p-4 rounded-xl border border-border bg-surface shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <label htmlFor="app-select" className="text-xs font-mono font-semibold uppercase text-text-secondary shrink-0">
+          <label htmlFor="app-select" className="text-xs font-mono font-medium text-text-secondary shrink-0">
             Target Application:
           </label>
           <select
@@ -274,15 +274,14 @@ export default function VerificationHub() {
         <button
           type="button"
           onClick={() => handleTabChange('validation')}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'validation'
-              ? 'border-[#E43D12] text-[#E43D12]'
+          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === 'validation'
+              ? 'border-accent text-accent'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+            }`}
         >
           <ShieldCheck className="w-4 h-4" />
           <span>Statutory Compliance Findings</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-status-warning-bg text-status-warning border border-status-warning-bg">
             {findings.length}
           </span>
         </button>
@@ -290,11 +289,10 @@ export default function VerificationHub() {
         <button
           type="button"
           onClick={() => handleTabChange('extraction')}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'extraction'
-              ? 'border-[#E43D12] text-[#E43D12]'
+          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === 'extraction'
+              ? 'border-accent text-accent'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+            }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
           <span>OCR &amp; Structured Fields</span>
@@ -306,15 +304,14 @@ export default function VerificationHub() {
         <button
           type="button"
           onClick={() => handleTabChange('consistency')}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'consistency'
-              ? 'border-[#E43D12] text-[#E43D12]'
+          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === 'consistency'
+              ? 'border-accent text-accent'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+            }`}
         >
           <SplitSquareVertical className="w-4 h-4" />
           <span>Document Completeness &amp; Multi-Signal Screening</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-status-success-bg text-status-success border border-status-success-bg">
             {documents.length} Files
           </span>
         </button>
@@ -322,15 +319,14 @@ export default function VerificationHub() {
         <button
           type="button"
           onClick={() => handleTabChange('evidence')}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
-            activeTab === 'evidence'
-              ? 'border-[#E43D12] text-[#E43D12]'
+          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${activeTab === 'evidence'
+              ? 'border-accent text-accent'
               : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
+            }`}
         >
           <Eye className="w-4 h-4" />
           <span>Spatial Document Inspector</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-50 text-blue-700 border border-blue-200">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-accent/10 text-accent border border-accent/20">
             PyMuPDF
           </span>
         </button>
@@ -349,11 +345,10 @@ export default function VerificationHub() {
                 <button
                   key={sev}
                   onClick={() => setSelectedSeverity(sev)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                    selectedSeverity === sev
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${selectedSeverity === sev
                       ? 'bg-accent text-accent-foreground font-semibold shadow-xs'
                       : 'bg-surface text-text-secondary hover:text-text-primary border border-border'
-                  }`}
+                    }`}
                 >
                   {sev}
                 </button>
@@ -409,8 +404,8 @@ export default function VerificationHub() {
                           f.severity === 'Critical'
                             ? 'danger'
                             : f.severity === 'High'
-                            ? 'warning'
-                            : 'neutral'
+                              ? 'warning'
+                              : 'neutral'
                         }
                         size="sm"
                       >
@@ -430,9 +425,9 @@ export default function VerificationHub() {
                   </p>
 
                   {f.recommendation && (
-                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 space-y-1">
+                    <div className="p-3 rounded-xl bg-status-warning-bg border border-status-warning-bg text-xs text-status-warning space-y-1">
                       <div className="font-bold flex items-center gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <AlertTriangle className="w-3.5 h-3.5 text-status-warning shrink-0" />
                         <span>Recommended Remedial Action:</span>
                       </div>
                       <p className="leading-relaxed pl-5">{f.recommendation}</p>
@@ -501,7 +496,7 @@ export default function VerificationHub() {
           ) : (
             <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-xs">
               <table className="w-full text-left text-xs">
-                <thead className="bg-surface-secondary/70 border-b border-border text-text-secondary font-semibold uppercase tracking-wider">
+                <thead className="bg-surface-secondary/70 border-b border-border text-text-secondary font-medium">
                   <tr>
                     <th className="py-3 px-4">Field Attribute</th>
                     <th className="py-3 px-4">Extracted Value</th>
@@ -525,11 +520,10 @@ export default function VerificationHub() {
                       </td>
                       <td className="py-3 px-4 font-mono">
                         <span
-                          className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                            (field.confidence || 0) >= 0.85
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}
+                          className={`px-2 py-0.5 rounded text-[11px] font-bold ${(field.confidence || 0) >= 0.85
+                              ? 'bg-status-success-bg text-status-success border border-status-success-bg'
+                              : 'bg-status-warning-bg text-status-warning border border-status-warning-bg'
+                            }`}
                         >
                           {((field.confidence || 0.95) * 100).toFixed(0)}%
                         </span>
@@ -538,7 +532,7 @@ export default function VerificationHub() {
                         Page {field.page_number || field.pageNumber || 1}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                        <span className="text-[11px] font-medium text-status-success bg-status-success-bg border border-status-success-bg px-2 py-0.5 rounded">
                           Extracted
                         </span>
                       </td>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   UploadCloud,
@@ -18,19 +18,21 @@ import {
   ChevronRight,
   FileCheck2,
   Layers,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Building2
 } from 'lucide-react';
 import { dashboardService } from '../services/dashboardService';
 import { applicationService } from '../services/applicationService';
 import { ruleService } from '../services/ruleService';
 import { auditService } from '../services/auditService';
-import { MagnifierDoodle } from '../components/common/Doodles';
 import ScrollReveal from '../components/common/ScrollReveal';
-import { EditorialScrollHeading } from '../components/ui/text-scroll-animation';
+import PageHeader from '../components/common/PageHeader';
+import Button from '../components/common/Button';
+import Badge from '../components/common/Badge';
+import StatCard from '../components/common/StatCard';
 
 export default function CoreFeaturesPage() {
   const navigate = useNavigate();
-  const bannerRef = useRef(null);
   const [stats, setStats] = useState({
     applications: 0,
     documents: 0,
@@ -182,54 +184,40 @@ export default function CoreFeaturesPage() {
 
   return (
     <div className="space-y-8 pb-16 animate-fadeIn">
-      {/* Hero Banner */}
-      <div ref={bannerRef} className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3.5 max-w-3xl">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#E43D12]/10 text-[#E43D12] border border-[#E43D12]/20 uppercase">
-                Regulatory Intelligence
-              </span>
+      {/* Hero */}
+      <div className="p-6 sm:p-8 rounded-3xl border border-border bg-surface shadow-xs">
+        <PageHeader
+          eyebrow={
+            <span className="inline-flex items-center gap-2">
+              <Badge variant="info">Regulatory intelligence</Badge>
               <span className="text-text-muted">&bull;</span>
-              <span className="text-xs text-text-secondary font-semibold">Eight Core Capabilities</span>
-            </div>
-
-            <EditorialScrollHeading
-              text="Regulatory Intelligence & Verification Workflow"
-              highlightWord="Intelligence"
-              containerRef={bannerRef}
-              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text-primary justify-start text-left leading-[1.3] sm:leading-[1.28] gap-x-[0.32em] gap-y-2.5 sm:gap-y-3 py-1"
-            />
-
-            <p className="text-xs sm:text-sm text-text-secondary max-w-2xl leading-relaxed font-medium pt-0.5">
-              Autonomous verification platform checking institutional filings against applicable <span className="text-accent font-semibold">AICTE statutory norms</span> with end-to-end evidence provenance.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <Link
-              to="/demo"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-bold hover:bg-accent-hover transition-all shadow-xs cursor-pointer active:scale-95"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Interactive 6-Step Demo</span>
-            </Link>
-            <Link
-              to="/cases"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-border bg-surface text-xs sm:text-sm font-bold text-text-primary hover:bg-surface-secondary transition-colors"
-            >
-              <span>Inspect Cases</span>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
+              <span className="text-xs text-text-secondary font-medium">Eight core capabilities</span>
+            </span>
+          }
+          title={
+            <>
+              Regulatory <span className="text-accent">Intelligence</span> &amp; Verification Workflow
+            </>
+          }
+          description="Autonomous verification platform checking institutional filings against applicable AICTE statutory norms with end-to-end evidence provenance."
+          actions={
+            <>
+              <Button variant="primary" size="sm" icon={Sparkles} onClick={() => navigate('/demo')}>
+                Interactive demo
+              </Button>
+              <Button variant="secondary" size="sm" icon={ChevronRight} iconPosition="right" onClick={() => navigate('/cases')}>
+                Inspect cases
+              </Button>
+            </>
+          }
+        />
 
         {/* End-to-End Workflow Ribbon */}
         <div className="mt-8 pt-6 border-t border-border">
-          <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-text-muted mb-3 flex items-center gap-2">
-            <span>Standard Operational Workflow:</span>
-            <span className="text-[#E43D12]">&bull;</span>
-            <span className="text-text-secondary font-normal font-sans">Click any step or card to open the feature directly</span>
+          <div className="text-[11px] font-medium text-text-muted mb-3 flex items-center gap-2">
+            <span>Standard operational workflow:</span>
+            <span className="text-accent">&bull;</span>
+            <span className="text-text-secondary font-normal">Click any step or card to open the feature directly</span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
@@ -237,7 +225,7 @@ export default function CoreFeaturesPage() {
               <div
                 key={s.num}
                 onClick={() => navigate(features[idx].route)}
-                className="p-2.5 rounded-xl border border-border bg-surface-secondary/40 hover:bg-[#FDF1EE] hover:border-[#E43D12]/40 transition-all cursor-pointer group flex flex-col justify-between text-left"
+                className="p-2.5 rounded-xl border border-border bg-surface-secondary/40 hover:bg-accent/10 hover:border-accent/40 transition-all cursor-pointer group flex flex-col justify-between text-left"
               >
                 <span className="text-[10px] font-mono font-bold text-accent group-hover:text-accent-hover">
                   Step 0{s.num}
@@ -251,6 +239,14 @@ export default function CoreFeaturesPage() {
         </div>
       </div>
 
+      {/* Platform Metrics */}
+      <ScrollReveal stagger={1} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Applications" value={stats.applications} subtitle="Total institutional filings" icon={Building2} />
+        <StatCard title="Documents" value={stats.documents} subtitle="Processed across filings" icon={FileText} />
+        <StatCard title="Rules" value={stats.rules} subtitle="Active statutory norms" icon={Scale} />
+        <StatCard title="Audit records" value={stats.auditRecords} subtitle="Sealed in ledger" icon={History} />
+      </ScrollReveal>
+
       {/* 8 Core Feature Cards Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -263,9 +259,7 @@ export default function CoreFeaturesPage() {
             </p>
           </div>
 
-          <span className="text-xs sm:text-sm font-mono text-accent font-bold hidden sm:inline-block bg-[#FDF1EE] px-3 py-1 rounded-full border border-accent/20">
-            8 Working Modules Active
-          </span>
+          <Badge variant="info" className="hidden sm:inline-flex">8 working modules active</Badge>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -282,11 +276,11 @@ export default function CoreFeaturesPage() {
                   {/* Card Top: Number, Badge, Metric */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-xl bg-[#FDF1EE] border border-[#E43D12]/20 flex items-center justify-center text-[#E43D12] group-hover:scale-105 transition-transform shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 border border-border/20 flex items-center justify-center text-accent shrink-0">
                         <Icon className="w-5 h-5 stroke-[1.8]" />
                       </div>
                       <div>
-                        <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-accent block">
+                        <span className="text-[11px] font-medium text-accent block">
                           {feat.tag}
                         </span>
                         <h3 className="text-base sm:text-lg font-bold text-text-primary group-hover:text-accent transition-colors">
@@ -297,8 +291,8 @@ export default function CoreFeaturesPage() {
                   </div>
 
                   {/* Highlight pill */}
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-secondary text-xs font-mono font-semibold text-text-secondary border border-border">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E43D12]" />
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-secondary text-xs font-medium text-text-secondary border border-border">
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                     <span>Focus: <strong className="text-accent font-bold">{feat.highlightPhrase}</strong></span>
                   </div>
 

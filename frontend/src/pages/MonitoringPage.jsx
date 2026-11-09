@@ -116,7 +116,7 @@ export default function MonitoringPage() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-accent font-mono">
+              <span className="text-xs font-bold text-accent font-mono">
                 SYSTEM MONITORING
               </span>
               <span className="text-text-muted">&bull;</span>
@@ -135,7 +135,7 @@ export default function MonitoringPage() {
           <button
             onClick={handleRunVerification}
             disabled={verifying}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#E43D12] text-white text-xs sm:text-sm font-bold hover:bg-[#CC340E] transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-accent text-white text-xs sm:text-sm font-bold hover:bg-accent-hover transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
           >
             <RotateCw className={`w-3.5 h-3.5 ${verifying ? 'animate-spin' : ''}`} />
             <span>{verifying ? 'Checking Hash Chain...' : 'Verify Ledger Integrity'}</span>
@@ -170,7 +170,7 @@ export default function MonitoringPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs sm:text-sm font-bold text-text-secondary">Processing in Progress</span>
-                <Clock className="w-4 h-4 text-blue-500" />
+                <Clock className="w-4 h-4 text-text-secondary" />
               </div>
               <div className="text-3xl sm:text-4xl font-bold font-mono text-text-primary pt-1 tracking-tight">
                 {pending}
@@ -191,23 +191,23 @@ export default function MonitoringPage() {
           </ScrollReveal>
 
           {/* Card 2: Cases Waiting for Review */}
-          <ScrollReveal stagger={2} className="p-6 rounded-2xl border border-amber-300 dark:border-amber-900 bg-amber-500/5 shadow-xs flex flex-col justify-between hover:border-amber-500/60 transition-all">
+          <ScrollReveal stagger={2} className="p-6 rounded-2xl border border-status-warning bg-status-warning-bg shadow-xs flex flex-col justify-between hover:border-status-warning transition-all">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-bold text-amber-800 dark:text-amber-300">Waiting for Review</span>
-                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                <span className="text-xs sm:text-sm font-bold text-status-warning">Waiting for Review</span>
+                <AlertTriangle className="w-4 h-4 text-status-warning" />
               </div>
-              <div className="text-3xl sm:text-4xl font-bold font-mono text-amber-700 dark:text-amber-400 pt-1 tracking-tight">
+              <div className="text-3xl sm:text-4xl font-bold font-mono text-status-warning pt-1 tracking-tight">
                 {flagged}
               </div>
               <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
                 Cases with discrepancies or missing documents requiring officer determination.
               </p>
             </div>
-            <div className="pt-4 border-t border-amber-200 dark:border-amber-900/60 mt-3">
+            <div className="pt-4 border-t border-status-warning mt-3">
               <Link
                 to="/cases?filter=missing"
-                className="text-xs sm:text-sm font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center justify-between"
+                className="text-xs sm:text-sm font-bold text-status-warning hover:underline flex items-center justify-between"
               >
                 <span>Open Review Desk</span>
                 <ChevronRight className="w-4 h-4" />
@@ -216,23 +216,23 @@ export default function MonitoringPage() {
           </ScrollReveal>
 
           {/* Card 3: Verified Compliant */}
-          <ScrollReveal stagger={3} className="p-6 rounded-2xl border border-emerald-300 dark:border-emerald-900 bg-emerald-500/5 shadow-xs flex flex-col justify-between hover:border-emerald-500/60 transition-all">
+          <ScrollReveal stagger={3} className="p-6 rounded-2xl border border-status-success bg-status-success-bg shadow-xs flex flex-col justify-between hover:border-status-success transition-all">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300">Verified Compliant</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span className="text-xs sm:text-sm font-bold text-status-success">Verified Compliant</span>
+                <CheckCircle2 className="w-4 h-4 text-status-success" />
               </div>
-              <div className="text-3xl sm:text-4xl font-bold font-mono text-emerald-700 dark:text-emerald-400 pt-1 tracking-tight">
+              <div className="text-3xl sm:text-4xl font-bold font-mono text-status-success pt-1 tracking-tight">
                 {verified}
               </div>
               <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
                 Institutional filings meeting 100% of evaluated AICTE statutory criteria.
               </p>
             </div>
-            <div className="pt-4 border-t border-emerald-200 dark:border-emerald-900/60 mt-3">
+            <div className="pt-4 border-t border-status-success mt-3">
               <Link
                 to="/cases?status=Verified"
-                className="text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center justify-between"
+                className="text-xs sm:text-sm font-bold text-status-success hover:underline flex items-center justify-between"
               >
                 <span>Browse clear cases</span>
                 <ChevronRight className="w-4 h-4" />
@@ -245,10 +245,10 @@ export default function MonitoringPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs sm:text-sm font-bold text-text-secondary">System &amp; Ledger Health</span>
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <ShieldCheck className="w-4 h-4 text-status-success" />
               </div>
-              <div className="flex items-center gap-2 text-base sm:text-lg font-bold text-emerald-600 pt-1">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-center gap-2 text-base sm:text-lg font-bold text-status-success pt-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-status-success" />
                 <span>100% Operational</span>
               </div>
               <p className="text-xs text-text-secondary leading-relaxed pt-1 font-medium">
@@ -319,7 +319,7 @@ export default function MonitoringPage() {
                     {log.timestamp ? log.timestamp.replace('T', ' ').slice(0, 16) : 'Recorded'}
                   </td>
                   <td className="py-3 px-4 font-mono text-[11px] text-text-muted truncate max-w-xs">
-                    <span className="text-emerald-600 font-semibold">✓ Sealed: </span>
+                    <span className="text-status-success font-semibold">✓ Sealed: </span>
                     {log.currentHash ? `${log.currentHash.slice(0, 16)}...` : 'SHA-256 Validated'}
                   </td>
                 </tr>
@@ -341,14 +341,14 @@ export default function MonitoringPage() {
                 Advanced Technical Diagnostics
               </h3>
             </div>
-            <span className="font-mono text-[10px] text-text-muted uppercase">
+            <span className="font-mono text-[10px] text-text-muted">
               Auditor / DevOps View
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
             <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
-              <span className="text-text-muted font-mono text-[10px] uppercase">Ledger Root Hash</span>
+              <span className="text-text-muted font-mono text-[10px]">Ledger Root Hash</span>
               <div className="font-mono text-[11px] text-accent font-bold truncate">
                 {auditVerification?.latest_hash || 'b36c55fb9fc722a921dc3127e9ed0ba9623262f36950788b605edcb8eedca0b0'}
               </div>
@@ -356,15 +356,15 @@ export default function MonitoringPage() {
             </div>
 
             <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
-              <span className="text-text-muted font-mono text-[10px] uppercase">Database Engine</span>
+              <span className="text-text-muted font-mono text-[10px]">Database Engine</span>
               <div className="font-bold text-text-primary">SQLite 3.x (Local-First)</div>
-              <div className="text-[10px] text-emerald-600">Connected at data/niyantran.db</div>
+              <div className="text-[10px] text-status-success">Connected at data/niyantran.db</div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-surface border border-border space-y-1">
-              <span className="text-text-muted font-mono text-[10px] uppercase">OCR Extraction Pipeline</span>
+              <span className="text-text-muted font-mono text-[10px]">OCR Extraction Pipeline</span>
               <div className="font-bold text-text-primary">Tesseract OCR &amp; PyMuPDF</div>
-              <div className="text-[10px] text-emerald-600">Dual PDF &amp; Image OCR Available</div>
+              <div className="text-[10px] text-status-success">Dual PDF &amp; Image OCR Available</div>
             </div>
           </div>
         </section>

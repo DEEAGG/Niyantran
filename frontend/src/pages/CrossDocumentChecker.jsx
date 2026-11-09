@@ -224,7 +224,7 @@ export default function CrossDocumentChecker() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#E43D12]/10 text-[#E43D12] border border-[#E43D12]/20 uppercase">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-accent/10 text-accent border border-accent/20">
                 Feature 3 • Consistency Engine
               </span>
               <span className="text-text-muted">&bull;</span>
@@ -264,7 +264,7 @@ export default function CrossDocumentChecker() {
 
         {/* Application Selector */}
         <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="text-xs font-semibold text-text-muted uppercase tracking-wider shrink-0">
+          <label className="text-xs font-semibold text-text-muted shrink-0">
             Selected Application:
           </label>
           <select
@@ -286,18 +286,17 @@ export default function CrossDocumentChecker() {
             <span className="text-text-secondary font-medium">Attributes Compared:</span>
             <span className="font-mono font-bold text-text-primary text-sm">{totalCompared}</span>
           </div>
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
-            <span className="text-emerald-800 font-medium flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="p-3 rounded-xl bg-status-success-bg border border-status-success flex items-center justify-between">
+            <span className="text-status-success font-medium flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
               Cross-Document Matches:
             </span>
-            <span className="font-mono font-bold text-emerald-700 text-sm">{matchCount}</span>
+            <span className="font-mono font-bold text-status-success text-sm">{matchCount}</span>
           </div>
-          <div className={`p-3 rounded-xl border flex items-center justify-between ${
-            conflictCount > 0 
-              ? 'bg-[#E43D12]/10 border-[#E43D12]/30 text-[#E43D12]' 
+          <div className={`p-3 rounded-xl border flex items-center justify-between ${conflictCount > 0
+              ? 'bg-accent/10 border-accent/30 text-accent'
               : 'bg-surface-secondary/50 border-border text-text-secondary'
-          }`}>
+            }`}>
             <span className="font-medium flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5" />
               Conflicting Values Detected:
@@ -326,11 +325,10 @@ export default function CrossDocumentChecker() {
               key={type}
               type="button"
               onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                filterType === type
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${filterType === type
                   ? 'bg-accent text-white shadow-xs'
                   : 'bg-surface border border-border text-text-secondary hover:text-text-primary'
-              }`}
+                }`}
             >
               {type === 'ALL' ? 'All Attributes' : type === 'CONFLICTS' ? 'Conflicts Only' : 'Matches Only'}
             </button>
@@ -364,18 +362,16 @@ export default function CrossDocumentChecker() {
             return (
               <div
                 key={group.key}
-                className={`p-5 rounded-2xl border transition-all duration-150 bg-surface shadow-xs ${
-                  isConflict
-                    ? 'border-[#E43D12]/40 bg-[#FDF1EE]/30'
+                className={`p-5 rounded-2xl border transition-all duration-150 bg-surface shadow-xs ${isConflict
+                    ? 'border-accent/40 bg-accent/5'
                     : 'border-border hover:border-accent/30'
-                }`}
+                  }`}
               >
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/70">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                      isConflict ? 'bg-[#E43D12]/15 text-[#E43D12]' : 'bg-surface-secondary text-text-primary'
-                    }`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isConflict ? 'bg-accent/15 text-accent' : 'bg-surface-secondary text-text-primary'
+                      }`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
@@ -390,13 +386,13 @@ export default function CrossDocumentChecker() {
 
                   <div>
                     {isConflict ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#E43D12]/10 border border-[#E43D12]/30 text-[#E43D12] font-mono font-bold text-xs">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-accent/10 border border-accent/30 text-accent font-mono font-bold text-xs">
                         <AlertTriangle className="w-3.5 h-3.5" />
                         Conflicting Values Detected
                       </span>
                     ) : group.documents.length >= 2 ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 font-mono font-bold text-xs">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-status-success-bg border border-status-success text-status-success font-mono font-bold text-xs">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-status-success" />
                         Cross-Document Consistent
                       </span>
                     ) : (
@@ -409,7 +405,7 @@ export default function CrossDocumentChecker() {
 
                 {/* Conflict Notice if present */}
                 {isConflict && (
-                  <div className="mt-3 p-3 rounded-xl bg-white border border-[#E43D12]/30 text-xs text-[#E43D12] space-y-1">
+                  <div className="mt-3 p-3 rounded-xl bg-surface-elevated border border-accent/30 text-xs text-accent space-y-1">
                     <span className="font-bold">Discrepancy Note:</span>
                     <p className="text-text-primary leading-relaxed font-sans">
                       Different values were extracted across supporting filings. Reviewers must inspect the original documents to confirm whether an amendment, typographical variance, or deficiency exists.
@@ -422,11 +418,10 @@ export default function CrossDocumentChecker() {
                   {group.documents.map((doc, idx) => (
                     <div
                       key={idx}
-                      className={`p-3.5 rounded-xl border space-y-1.5 transition-colors ${
-                        isConflict
-                          ? 'border-[#E43D12]/30 bg-white'
+                      className={`p-3.5 rounded-xl border space-y-1.5 transition-colors ${isConflict
+                          ? 'border-accent/30 bg-surface-elevated'
                           : 'border-border bg-surface-secondary/40'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between text-[11px] text-text-muted font-mono">
                         <span className="truncate max-w-[180px] font-medium text-text-secondary">
@@ -441,7 +436,7 @@ export default function CrossDocumentChecker() {
 
                       {doc.normalized && doc.normalized !== doc.value && (
                         <div className="text-[10px] font-mono text-text-muted">
-                          Normalized: <span className="text-[#E43D12] font-semibold">{doc.normalized}</span>
+                          Normalized: <span className="text-accent font-semibold">{doc.normalized}</span>
                         </div>
                       )}
 
@@ -449,7 +444,7 @@ export default function CrossDocumentChecker() {
                         <span>Confidence: {((doc.confidence || 0.95) * 100).toFixed(0)}%</span>
                         <Link
                           to={`/review?app=${selectedAppId}`}
-                          className="text-[#E43D12] font-semibold hover:underline flex items-center gap-0.5"
+                          className="text-accent font-semibold hover:underline flex items-center gap-0.5"
                         >
                           View Scan &rarr;
                         </Link>

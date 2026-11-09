@@ -137,7 +137,7 @@ export default function PassportPage() {
 
   return (
     <div className="space-y-8 pb-16 animate-fadeIn">
-      
+
       {/* Top Header & Case Selector with Evidence Passport Doodles */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border relative">
         <div className="flex items-center gap-3.5">
@@ -146,7 +146,7 @@ export default function PassportPage() {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#E43D12] font-mono">
+              <span className="text-xs font-semibold text-accent font-mono">
                 EVIDENCE PASSPORT
               </span>
               <span className="text-text-muted">&bull;</span>
@@ -185,14 +185,14 @@ export default function PassportPage() {
       {/* Cryptographic Summary Banner */}
       <div className="p-6 rounded-2xl border border-border bg-surface shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <p className="text-xs font-medium text-text-secondary">
             Application Status
           </p>
           <div className="mt-2 flex items-center gap-2">
             <span className="font-mono text-lg font-bold text-text-primary">
               {application?.id}
             </span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-status-success-bg text-status-success border border-status-success-bg">
               {application?.status}
             </span>
           </div>
@@ -202,7 +202,7 @@ export default function PassportPage() {
         </div>
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <p className="text-xs font-medium text-text-secondary">
             Documents Ingested
           </p>
           <p className="mt-2 font-mono text-2xl font-bold text-text-primary">
@@ -214,22 +214,22 @@ export default function PassportPage() {
         </div>
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <p className="text-xs font-medium text-text-secondary">
             Extracted Entities
           </p>
           <p className="mt-2 font-mono text-2xl font-bold text-text-primary">
             {evidence_summary?.total_fields_extracted ?? extracted_fields.length}
           </p>
-          <p className="text-[11px] text-emerald-700 font-medium mt-1">
+          <p className="text-[11px] text-status-success font-medium mt-1">
             {evidence_summary?.verified_fields ?? 0} confirmed with OCR coordinates
           </p>
         </div>
 
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          <p className="text-xs font-medium text-text-secondary">
             Audit Ledger Status
           </p>
-          <div className="mt-2 flex items-center gap-1.5 text-emerald-700 font-bold text-sm">
+          <div className="mt-2 flex items-center gap-1.5 text-status-success font-semibold text-sm">
             <CheckCircle2 className="w-4 h-4" />
             <span>Tamper-Proof Chained</span>
           </div>
@@ -254,7 +254,7 @@ export default function PassportPage() {
         <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-surface-secondary/70 border-b border-border text-text-secondary font-semibold uppercase tracking-wider">
+              <thead className="bg-surface-secondary/70 border-b border-border text-text-secondary font-medium">
                 <tr>
                   <th className="py-3 px-4">Document ID & Filename</th>
                   <th className="py-3 px-4">Category</th>
@@ -318,7 +318,7 @@ export default function PassportPage() {
         <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-surface-secondary/70 border-b border-border text-text-secondary font-semibold uppercase tracking-wider">
+              <thead className="bg-surface-secondary/70 border-b border-border text-text-secondary font-medium">
                 <tr>
                   <th className="py-3 px-4">Field Name</th>
                   <th className="py-3 px-4">Extracted Value</th>
@@ -341,9 +341,8 @@ export default function PassportPage() {
                         {f.field_value || <span className="text-text-muted italic">Not found / unverified</span>}
                       </td>
                       <td className="py-3 px-4 font-mono">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                          isHigh ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${isHigh ? 'bg-status-success-bg text-status-success' : 'bg-status-warning-bg text-status-warning'
+                          }`}>
                           {(conf * 100).toFixed(0)}%
                         </span>
                       </td>
@@ -354,7 +353,7 @@ export default function PassportPage() {
                         Page {f.page_number || 1}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <span className="text-[11px] font-medium text-emerald-700">
+                        <span className="text-[11px] font-medium text-status-success">
                           {f.confirmed ? 'Confirmed' : 'Verified'}
                         </span>
                       </td>
@@ -381,9 +380,8 @@ export default function PassportPage() {
                 <span className="font-mono text-[11px] font-semibold text-text-muted uppercase">
                   {sig.signal_type.replace(/_/g, ' ')}
                 </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  sig.result === 'ok' ? 'bg-emerald-50 text-emerald-700' : 'bg-surface-secondary text-text-muted'
-                }`}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sig.result === 'ok' ? 'bg-status-success-bg text-status-success' : 'bg-surface-secondary text-text-muted'
+                  }`}>
                   {sig.result.toUpperCase()}
                 </span>
               </div>

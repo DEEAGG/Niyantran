@@ -27,7 +27,8 @@ import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
 import Pagination from '../components/common/Pagination';
 import ScrollReveal from '../components/common/ScrollReveal';
-import { DocumentStackDoodle } from '../components/common/Doodles';
+import PageHeader from '../components/common/PageHeader';
+import DataTable from '../components/common/DataTable';
 
 export default function Applications() {
   const navigate = useNavigate();
@@ -115,34 +116,22 @@ export default function Applications() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
-        <div className="flex items-center gap-3.5">
-          <div className="hidden sm:block">
-            <DocumentStackDoodle className="w-11 h-11" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-text-primary">
-              Institutional <span className="text-accent">Cases</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-text-secondary mt-1 font-medium">
-              Review institutional <span className="text-accent font-semibold">approval filings</span>, examine evidentiary proof, and track <span className="text-accent font-semibold">statutory decisions</span>.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
+      {/* Page header */}
+      <PageHeader
+        eyebrow="Institutional Filings"
+        title="Cases"
+        description="Review approval filings, examine evidentiary proof, and track statutory decisions."
+        actions={
           <Button
             variant="primary"
             size="sm"
             icon={Plus}
             onClick={() => navigate('/applications/new')}
-            className="bg-[#E43D12] hover:bg-[#CC340E] text-white font-bold text-xs sm:text-sm px-4 py-2 shadow-xs"
           >
             New Application
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Unified KPI Ribbon */}
       <ScrollReveal stagger={1} className="bg-surface rounded-2xl border border-border overflow-hidden shadow-xs">
@@ -150,60 +139,56 @@ export default function Applications() {
           <button
             type="button"
             onClick={() => setStatusFilter('All')}
-            className={`p-5 text-left transition-colors cursor-pointer ${
-              statusFilter === 'All' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
-            }`}
+            className={`p-5 text-left transition-colors cursor-pointer ${statusFilter === 'All' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
+              }`}
           >
             <div className="text-xs sm:text-sm font-semibold text-text-secondary">All Active Cases</div>
             <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{totalCount}</div>
             <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
               <span className="w-2 h-2 rounded-full bg-accent" />
-              <span>Full Workload</span>
+              <span>Full workload</span>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter('Verified')}
-            className={`p-5 text-left transition-colors cursor-pointer ${
-              statusFilter === 'Verified' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
-            }`}
+            className={`p-5 text-left transition-colors cursor-pointer ${statusFilter === 'Verified' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
+              }`}
           >
             <div className="text-xs sm:text-sm font-semibold text-text-secondary">Verified Clear</div>
             <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{verifiedCount}</div>
             <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Zero Violations</span>
+              <span className="w-2 h-2 rounded-full bg-status-success" />
+              <span>Zero violations</span>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter('Discrepancy Detected')}
-            className={`p-5 text-left transition-colors cursor-pointer ${
-              statusFilter === 'Discrepancy Detected' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
-            }`}
+            className={`p-5 text-left transition-colors cursor-pointer ${statusFilter === 'Discrepancy Detected' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
+              }`}
           >
             <div className="text-xs sm:text-sm font-semibold text-text-secondary">Issues Flagged</div>
             <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{reviewCount}</div>
             <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
-              <span className="w-2 h-2 rounded-full bg-rose-500" />
-              <span>Officer Action Needed</span>
+              <span className="w-2 h-2 rounded-full bg-status-error" />
+              <span>Officer action needed</span>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => setStatusFilter('Missing Documents')}
-            className={`p-5 text-left transition-colors cursor-pointer ${
-              statusFilter === 'Missing Documents' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
-            }`}
+            className={`p-5 text-left transition-colors cursor-pointer ${statusFilter === 'Missing Documents' ? 'bg-surface-elevated font-semibold' : 'hover:bg-surface-hover'
+              }`}
           >
             <div className="text-xs sm:text-sm font-semibold text-text-secondary">Missing Documents</div>
             <div className="text-2xl sm:text-3xl font-bold text-text-primary mt-1 font-mono tracking-tight">{missingDocsCount}</div>
             <div className="text-xs text-text-muted mt-1.5 flex items-center gap-1.5 font-medium">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
-              <span>Incomplete Filing</span>
+              <span className="w-2 h-2 rounded-full bg-status-warning" />
+              <span>Incomplete filing</span>
             </div>
           </button>
         </div>
@@ -251,9 +236,8 @@ export default function Applications() {
               type="button"
               onClick={() => setViewMode('table')}
               title="Table View"
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                viewMode === 'table' ? 'bg-surface text-accent shadow-xs' : 'text-text-muted hover:text-text-primary'
-              }`}
+              className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === 'table' ? 'bg-surface text-accent shadow-xs' : 'text-text-muted hover:text-text-primary'
+                }`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -261,9 +245,8 @@ export default function Applications() {
               type="button"
               onClick={() => setViewMode('cards')}
               title="Card Grid View"
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
-                viewMode === 'cards' ? 'bg-surface text-accent shadow-xs' : 'text-text-muted hover:text-text-primary'
-              }`}
+              className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === 'cards' ? 'bg-surface text-accent shadow-xs' : 'text-text-muted hover:text-text-primary'
+                }`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -328,8 +311,8 @@ export default function Applications() {
                         app.complianceStatus === 'Passed' || app.status === 'validated' || app.status === 'Verified'
                           ? 'success'
                           : app.complianceStatus === 'Discrepancy Detected'
-                          ? 'danger'
-                          : 'warning'
+                            ? 'danger'
+                            : 'warning'
                       }
                     >
                       {app.complianceStatus || (app.status === 'validated' ? 'Verified Clear' : app.status)}
@@ -386,102 +369,91 @@ export default function Applications() {
         </ScrollReveal>
       ) : (
         /* TABLE VIEW */
-        <ScrollReveal stagger={2} className="bg-surface rounded-2xl border border-border shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-surface-elevated text-text-muted border-b border-border/70 font-medium">
-                  <th
-                    onClick={() => handleSort('institutionName')}
-                    className="py-3 px-4 cursor-pointer hover:text-text-primary transition-colors select-none"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>Institution &amp; Program</span>
-                      <ArrowUpDown className="w-3 h-3 text-text-muted" />
+        <ScrollReveal stagger={2}>
+          <DataTable
+            columns={[
+              {
+                key: 'institutionName',
+                label: 'Institution & program',
+                sortable: true,
+                render: (_, app) => (
+                  <div>
+                    <div className="font-medium text-text-primary group-hover:text-accent transition-colors">
+                      {getDisplayName(app)}
                     </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('id')}
-                    className="py-3 px-4 cursor-pointer hover:text-text-primary transition-colors select-none"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>Case Reference</span>
-                      <ArrowUpDown className="w-3 h-3 text-text-muted" />
+                    <div className="text-[11px] text-text-muted mt-0.5">
+                      {app.applicationType || 'Technical Approval'} &bull; {app.applicantName || 'Institutional Filing'}
                     </div>
-                  </th>
-                  <th
-                    onClick={() => handleSort('intakeCapacity')}
-                    className="py-3 px-4 cursor-pointer hover:text-text-primary transition-colors select-none"
+                  </div>
+                ),
+              },
+              {
+                key: 'id',
+                label: 'Case reference',
+                sortable: true,
+                render: (v) => (
+                  <span className="font-mono font-medium text-text-secondary">{v}</span>
+                ),
+              },
+              {
+                key: 'intakeCapacity',
+                label: 'Intake',
+                sortable: true,
+                render: (v) => (
+                  <span className="font-mono text-text-secondary">{v ? `${v} seats` : 'Standard intake'}</span>
+                ),
+              },
+              {
+                key: 'documentCount',
+                label: 'Documents',
+                render: (v) => (
+                  <span className="font-mono text-text-secondary">{v || 1} docs</span>
+                ),
+              },
+              {
+                key: 'complianceStatus',
+                label: 'Compliance status',
+                render: (_, app) => (
+                  <Badge
+                    variant={
+                      app.complianceStatus === 'Passed' || app.status === 'validated' || app.status === 'Verified'
+                        ? 'success'
+                        : app.complianceStatus === 'Discrepancy Detected'
+                          ? 'danger'
+                          : 'warning'
+                    }
                   >
-                    <div className="flex items-center gap-1.5">
-                      <span>Intake</span>
-                      <ArrowUpDown className="w-3 h-3 text-text-muted" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-4">Documents</th>
-                  <th className="py-3 px-4">Compliance Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {paginatedApplications.map((app) => (
-                  <tr
-                    key={app.id}
-                    onClick={() => navigate(`/applications/${app.id}`)}
-                    className="hover:bg-surface-elevated/60 transition-colors group cursor-pointer"
+                    {app.complianceStatus || (app.status === 'validated' ? 'Verified Clear' : app.status)}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'actions',
+                label: '',
+                align: 'right',
+                render: (_, app) => (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/applications/${app.id}`);
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface border border-border hover:bg-accent hover:text-accent-foreground hover:border-accent text-xs font-semibold text-text-primary transition-colors cursor-pointer shadow-xs"
                   >
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-text-primary text-xs group-hover:text-accent transition-colors">
-                        {getDisplayName(app)}
-                      </div>
-                      <div className="text-[11px] text-text-muted mt-0.5">
-                        {app.applicationType || 'Technical Approval'} &bull; {app.applicantName || 'Institutional Filing'}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono font-semibold text-text-secondary text-xs">
-                      {app.id}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-text-secondary">
-                      {app.intakeCapacity ? `${app.intakeCapacity} seats` : "Standard intake"}
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-mono text-text-secondary">
-                        {app.documentCount || 1} docs
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <Badge
-                        variant={
-                          app.complianceStatus === 'Passed' || app.status === 'validated' || app.status === 'Verified'
-                            ? 'success'
-                            : app.complianceStatus === 'Discrepancy Detected'
-                            ? 'danger'
-                            : 'warning'
-                        }
-                      >
-                        {app.complianceStatus || (app.status === 'validated' ? 'Verified Clear' : app.status)}
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/applications/${app.id}`);
-                        }}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface border border-border group-hover:bg-accent group-hover:text-accent-foreground group-hover:border-accent text-xs font-semibold text-text-primary transition-all cursor-pointer shadow-xs"
-                      >
-                        <span>Open Case</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    <span>Open case</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                ),
+              },
+            ]}
+            data={paginatedApplications}
+            keyField="id"
+            sortColumn={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onRowClick={(app) => navigate(`/applications/${app.id}`)}
+          />
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Pagination
               currentPage={currentPage}

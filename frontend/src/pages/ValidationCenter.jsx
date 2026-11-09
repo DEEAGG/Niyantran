@@ -4,17 +4,10 @@ import {
   Play,
   CheckCircle2,
   AlertTriangle,
-  AlertCircle,
-  Clock,
   Layers,
-  Filter,
   ArrowRight,
-  ShieldCheck,
   ChevronDown,
   ChevronRight,
-  RefreshCw,
-  Sparkles,
-  BookOpen
 } from 'lucide-react';
 import { validationService } from '../services/validationService';
 import { applicationService } from '../services/applicationService';
@@ -127,12 +120,12 @@ export default function ValidationCenter() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 font-semibold">
-              Compliance Center
+            <span className="text-[10px] font-mono text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 font-semibold">
+              Compliance center
             </span>
             <span className="text-xs text-text-muted font-mono">&bull; ReguTrace Engine</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary">
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
             Automated Regulatory Validation
           </h1>
           <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
@@ -154,10 +147,10 @@ export default function ValidationCenter() {
       </div>
 
       {/* Target Application Selector Ribbon */}
-      <div className="bg-surface rounded-2xl border border-border p-5 shadow-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-surface rounded-xl border border-border p-5 shadow-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1 space-y-1">
-          <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted block">
-            Target Application for Evaluation
+          <label className="text-[10px] font-mono text-text-muted block">
+            Target application for evaluation
           </label>
           <div className="relative max-w-lg">
             <select
@@ -192,22 +185,22 @@ export default function ValidationCenter() {
         {selectedApp && (
           <div className="flex items-center gap-4 text-xs font-mono border-t md:border-t-0 md:border-l border-border pt-3 md:pt-0 md:pl-6 text-text-secondary">
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Code</span>
+              <span className="text-[10px] text-text-muted block">Code</span>
               <span className="font-bold text-text-primary">{selectedApp.institutionCode}</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Capacity</span>
+              <span className="text-[10px] text-text-muted block">Capacity</span>
               <span className="font-bold text-accent">{selectedApp.intakeCapacity ? `${selectedApp.intakeCapacity} Seats` : "Standard intake"}</span>
             </div>
             <div>
-              <span className="text-[10px] text-text-muted uppercase block">Compliance</span>
+              <span className="text-[10px] text-text-muted block">Compliance</span>
               <Badge
                 variant={
                   selectedApp.status === 'Verified'
                     ? 'success'
                     : selectedApp.status === 'Discrepancy Detected'
-                    ? 'error'
-                    : 'warning'
+                      ? 'error'
+                      : 'warning'
                 }
                 size="sm"
               >
@@ -268,168 +261,134 @@ export default function ValidationCenter() {
         </div>
       )}
 
-      {/* Findings Table Section */}
-      <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-surface">
-        <div className="p-4 border-b border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary">
-              Validation Findings & Discrepancies
-            </h3>
-            <p className="text-xs text-text-muted">
-              Rule checks failing regulatory compliance criteria for {selectedAppId}.
-            </p>
-          </div>
-
-          {/* Severity Filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted font-mono">Severity:</span>
-            <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-border text-xs">
-              {['All', 'Critical', 'High', 'Medium'].map((sev) => (
-                <button
-                  key={sev}
-                  onClick={() => setSeverityFilter(sev)}
-                  className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                    severityFilter === sev
-                      ? 'bg-surface-elevated text-text-primary font-bold'
-                      : 'text-text-muted hover:text-text-primary'
-                  }`}
-                >
-                  {sev}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Findings Filter Tabs */}
+      {findings.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {['All', 'Critical', 'High', 'Medium', 'Low'].map((sev) => (
+            <button
+              key={sev}
+              onClick={() => setSeverityFilter(sev)}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${severityFilter === sev
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-surface border-border text-text-secondary hover:border-accent/40 hover:text-accent'
+                }`}
+            >
+              {sev}
+            </button>
+          ))}
         </div>
+      )}
 
-        {loading ? (
-          <div className="p-6 space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full" />
-            ))}
-          </div>
-        ) : error ? (
-          <ErrorState message={error} onRetry={fetchFindings} />
-        ) : findings.length === 0 ? (
-          <div className="p-10 text-center">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
-            <h4 className="text-sm font-semibold text-text-primary">All Statutory Checks Cleared</h4>
-            <p className="text-xs text-text-muted max-w-md mx-auto mt-1">
-              No regulatory discrepancies were detected for application {selectedAppId} under the active {severityFilter !== 'All' ? `${severityFilter} severity` : ''} rule-set.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-border/40">
-            {findings.map((f) => {
-              const isExpanded = expandedFindingId === f.id;
-
-              return (
-                <div key={f.id} className="transition-colors hover:bg-surface-elevated/30">
-                  <div
-                    onClick={() => setExpandedFindingId(isExpanded ? null : f.id)}
-                    className="p-4 flex items-center justify-between gap-4 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-rose-950/40 border border-rose-800/40 text-rose-400 flex items-center justify-center shrink-0">
-                        <AlertTriangle className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-accent">{f.id}</span>
-                          <span className="font-semibold text-text-primary text-xs sm:text-sm">{f.title}</span>
-                          <Badge
-                            variant={
-                              f.severity === 'Critical'
-                                ? 'error'
-                                : f.severity === 'High'
-                                ? 'warning'
-                                : 'neutral'
-                            }
-                            size="sm"
-                          >
-                            {f.severity}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-text-secondary mt-1 flex items-center gap-2 font-mono text-[11px]">
-                          <span>Rule: {f.ruleId}</span>
-                          <span>&bull;</span>
-                          <span>Field: {f.affectedField}</span>
-                          <span>&bull;</span>
-                          <span className="text-amber-400">{f.status}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Link
-                        to={`/applications/${selectedAppId}/evidence`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-elevated border border-border text-xs text-accent hover:bg-accent hover:text-accent-foreground transition-colors font-semibold"
-                      >
-                        <Layers className="w-3.5 h-3.5" />
-                        <span>Evidence Explorer</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                      <ChevronRight
-                        className={`w-4 h-4 text-text-muted transition-transform ${
-                          isExpanded ? 'rotate-90' : ''
-                        }`}
-                      />
-                    </div>
+      {/* Findings List */}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((n) => (
+            <Skeleton key={n} className="h-24 rounded-xl" />
+          ))}
+        </div>
+      ) : error ? (
+        <ErrorState message={error} onRetry={fetchFindings} />
+      ) : findings.length === 0 ? (
+        <EmptyState
+          title="No Compliance Findings"
+          description="No discrepancies detected for the selected application. Run validation or adjust the severity filter."
+        />
+      ) : (
+        <div className="space-y-3">
+          {findings.map((f) => (
+            <div
+              key={f.id}
+              className="bg-surface rounded-xl border border-border overflow-hidden"
+            >
+              <button
+                onClick={() => setExpandedFindingId(expandedFindingId === f.id ? null : f.id)}
+                className="w-full flex items-start justify-between gap-4 p-4 text-left hover:bg-surface-hover transition-colors cursor-pointer"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 bg-status-error-bg text-status-error border border-status-error/20">
+                    <AlertTriangle className="w-4 h-4" />
                   </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-bold text-accent">{f.id}</span>
+                      <span className="font-semibold text-text-primary text-xs sm:text-sm">
+                        {f.title || f.code || 'Statutory Non-Compliance'}
+                      </span>
+                      <Badge variant="error" size="sm">{f.severity || 'High'}</Badge>
+                      <Badge
+                        variant={
+                          f.status === 'Passed'
+                            ? 'success'
+                            : f.status === 'Resolved'
+                              ? 'success'
+                              : f.status === 'Dismissed'
+                                ? 'neutral'
+                                : f.status === 'Clarification Requested'
+                                  ? 'warning'
+                                  : 'warning'
+                        }
+                        size="sm"
+                      >
+                        {f.status || 'Pending Review'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      {f.explanation || f.message || f.description}
+                    </p>
+                  </div>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-text-muted shrink-0 transition-transform ${expandedFindingId === f.id ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-                  {/* Expandable Explanation Details */}
-                  {isExpanded && (
-                    <div className="px-4 pb-4 pt-1 bg-background/50 border-t border-border/40 text-xs space-y-3 animate-in fade-in duration-150">
-                      <div>
-                        <span className="text-[10px] font-mono uppercase text-text-muted block">
-                          Detection Explanation
-                        </span>
-                        <p className="text-text-secondary mt-0.5 leading-relaxed">
-                          {f.explanation}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        {f.evidenceSources?.map((source, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="bg-surface p-3 rounded-lg border border-border font-mono text-[11px]"
-                          >
-                            <span className="text-accent font-semibold block">
-                              Source {sIdx + 1}: {source.documentType}
-                            </span>
-                            <div className="text-text-primary mt-1 font-bold">
-                              Value: {source.extractedValue}
-                            </div>
-                            <div className="text-text-muted text-[10px] mt-0.5">
-                              Doc: {source.documentName} (Page {source.pageNumber})
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="pt-2 flex items-center justify-between text-[11px]">
-                        <span className="text-text-muted">
-                          Recommended Action:{' '}
-                          <strong className="text-text-primary font-sans font-medium">
-                            {f.recommendedAction}
-                          </strong>
-                        </span>
-                        <Link
-                          to={`/review`}
-                          className="text-accent hover:underline font-semibold"
-                        >
-                          Adjudicate in Review Center &rarr;
-                        </Link>
-                      </div>
+              {expandedFindingId === f.id && (
+                <div className="border-t border-border p-4 bg-surface-elevated space-y-3">
+                  {f.recommendedAction && (
+                    <div className="p-3 rounded-lg bg-surface text-[11px] text-text-primary font-medium border border-border">
+                      <span className="text-accent font-bold">Recommended Action:</span> {f.recommendedAction}
                     </div>
                   )}
+                  <div className="text-[11px] font-mono text-text-muted">
+                    Evaluated by Rule: <span className="text-accent">{f.ruleId || f.rule_id || 'ReguTrace'}</span>
+                  </div>
+                  {f.evidenceSources && f.evidenceSources.length > 0 && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {f.evidenceSources.map((ev, idx) => (
+                        <div key={idx} className="p-3 rounded-lg border border-border bg-surface">
+                          <div className="text-[10px] font-mono text-text-muted uppercase">
+                            {ev.documentType || 'Evidence'}
+                          </div>
+                          <div className="text-xs font-semibold text-text-primary mt-0.5 truncate">
+                            {ev.documentName || 'Document'}
+                          </div>
+                          <div className="text-[10px] text-text-muted font-mono mt-0.5">
+                            Pg {ev.pageNumber || 1} • {ev.extractedValue || '—'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                    <span className="text-[10px] font-mono text-text-muted">
+                      Finding ID {f.id}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      icon={ArrowRight}
+                      onClick={() => selectedApp && navigate(`/applications/${selectedApp.id}/evidence`)}
+                    >
+                      Inspect Evidence
+                    </Button>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
